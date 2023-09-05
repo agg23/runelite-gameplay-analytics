@@ -1,18 +1,31 @@
 package im.agg.gameplayanalytics.server;
 
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
+import im.agg.gameplayanalytics.server.models.ActivityEvent;
+import im.agg.gameplayanalytics.server.models.ActivityKind;
+import im.agg.gameplayanalytics.server.models.MapEvent;
 import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 @Slf4j
 
 @SuppressWarnings("SpellCheckingInspection")
 public class Controller {
+    // Specified in seconds
+    static final Integer MAP_PERIOD = 30;
+    static final Integer STANDARD_PERIOD = 60;
+
+    private Client client;
+
     private final Server server = new Server();
     private final Store store = new Store();
+
+    private Timer timer = new Timer();
 
     // Skills
     private Integer attack = 0;
@@ -43,13 +56,53 @@ public class Controller {
 
     private Integer changedSkills = 0;
 
-    public void init() {
+    public void init(Client client) {
+        this.client = client;
+
         this.store.init();
         this.server.init();
     }
 
     public void shutdown() {
         this.store.shutdown();
+    }
+
+    public void login() {
+        this.initializeTimers();
+
+        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Login, new Date()));
+    }
+
+    public void logout() {
+        if (this.timer != null) {
+            this.timer.cancel();
+        }
+
+        this.timer = new Timer();
+
+        this.writePartialXPEventIfChanged();
+        this.updateMap();
+
+        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Logout, new Date()));
+    }
+
+    private void initializeTimers() {
+        this.timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateMap();
+            }
+            // Capture the map position instantly
+        }, 0, MAP_PERIOD * 1000);
+
+        var standardPeriodSeconds = STANDARD_PERIOD * 1000;
+
+        this.timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                writePartialXPEventIfChanged();
+            }
+        }, standardPeriodSeconds, standardPeriodSeconds);
     }
 
     public void initializeXp(Client client) {
@@ -85,8 +138,7 @@ public class Controller {
         this.writeXPEvent(true);
     }
 
-    // TODO: Remove write
-    public void updateXp(Skill skill, Integer xp, boolean write) {
+    public void updateXp(Skill skill, Integer xp) {
         switch (skill) {
             case Attack -> this.attack = xp;
             case Strength -> this.strength = xp;
@@ -114,10 +166,10 @@ public class Controller {
         }
 
         this.changedSkills |= skill.toPower();
+    }
 
-        // TODO: Remove
-        // Patch type
-        if (write) {
+    private void writePartialXPEventIfChanged() {
+        if (this.changedSkills != 0) {
             this.writeXPEvent(false);
         }
     }
@@ -155,8 +207,18 @@ public class Controller {
                 this.construction,
                 this.hunter);
 
+        log.info("Writing XP event");
+
         this.store.writeXPEvent(event);
 
         this.changedSkills = 0;
+    }
+
+    // TODO: Make incremental
+    private void updateMap() {
+        var worldPoint = this.client.getLocalPlayer().getWorldLocation();
+        log.info(String.format("Region: %d, Tile X: %d, Tile Y: %d", worldPoint.getRegionID(), worldPoint.getX(), worldPoint.getY()));
+
+        this.store.writeMapEvent(new MapEvent(worldPoint.getRegionID(), worldPoint.getX(), worldPoint.getY(), new Date()));
     }
 }

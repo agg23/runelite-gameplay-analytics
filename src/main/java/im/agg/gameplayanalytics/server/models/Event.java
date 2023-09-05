@@ -1,16 +1,14 @@
 package im.agg.gameplayanalytics.server.models;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+import lombok.RequiredArgsConstructor;
 
 import java.util.Date;
 
-@Data
-@SuperBuilder
-@NoArgsConstructor
+@Getter
+@RequiredArgsConstructor
 public class Event {
     @NonNull
-    public Date timestamp;
+    private Date timestamp;
 }

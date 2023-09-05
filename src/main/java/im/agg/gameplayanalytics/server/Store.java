@@ -1,12 +1,12 @@
 package im.agg.gameplayanalytics.server;
 
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
-import im.agg.gameplayanalytics.server.models.XPEvent;
+import im.agg.gameplayanalytics.server.models.ActivityEvent;
+import im.agg.gameplayanalytics.server.models.MapEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 
-import java.util.Arrays;
 import java.util.Properties;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -27,7 +27,7 @@ public class Store {
     }
 
     private void createTables() {
-        var skills = new String[] {
+        var skills = new String[]{
                 "attack",
                 "strength",
                 "defence",
@@ -60,17 +60,36 @@ public class Store {
             skillColumns.append(String.format("%s INTEGER,\n", skill));
         }
 
+        createTable(String.format("""
+                CREATE TABLE IF NOT EXISTS xp_event (
+                    timestamp INTEGER,
+                    type INTEGER,
+                    %s
+                    changed_skills INTEGER
+                )
+                """, skillColumns.toString()));
+
+        createTable("""
+                CREATE TABLE IF NOT EXISTS map_event (
+                    timestamp INTEGER,
+                    region INTEGER,
+                    tile_x INTEGER,
+                    tile_y INTEGER
+                )
+                """);
+
+        createTable("""
+                CREATE TABLE IF NOT EXISTS activity_event (
+                    timestamp INTEGER,
+                    type INTEGER
+                )
+                """);
+    }
+
+    private void createTable(String query) {
         try {
-            Yank.execute(String.format("""
-                    CREATE TABLE IF NOT EXISTS xp_events (
-                        timestamp INTEGER,
-                        type INTEGER,
-                        %s
-                        changed_skills INTEGER
-                    )
-                    """, skillColumns.toString()), new Object[]{});
+            Yank.execute(query, new Object[]{});
         } catch (YankSQLException e) {
-//             Skip, as most likely a
             log.info(e.getMessage());
         }
     }
@@ -80,7 +99,7 @@ public class Store {
     }
 
     public void writeXPEvent(XPDBEvent event) {
-        var parameters = new Object[] {
+        var parameters = new Object[]{
                 event.timestamp,
                 event.type,
 
@@ -112,8 +131,32 @@ public class Store {
         };
 
         Yank.execute("""
-            INSERT INTO xp_events VALUES (?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?)""", parameters);
+                INSERT INTO xp_event VALUES (?, ?,
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                ?)""", parameters);
+    }
+
+    public void writeMapEvent(MapEvent event) {
+        var parameters = new Object[]{
+                event.getTimestamp(),
+                event.getRegion(),
+                event.getX(),
+                event.getY()
+        };
+
+        Yank.execute("""
+                INSERT INTO map_event VALUES (?, ?, ?, ?)
+                """, parameters);
+    }
+
+    public void writeActivityEvent(ActivityEvent event) {
+        var parameters = new Object[]{
+                event.getTimestamp(),
+                event.getType().getState()
+        };
+
+        Yank.execute("""
+                INSERT INTO activity_event VALUES (?, ?)
+                """, parameters);
     }
 }
