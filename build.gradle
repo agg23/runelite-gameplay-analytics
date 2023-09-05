@@ -1,0 +1,41 @@
+plugins {
+	id 'java'
+}
+
+repositories {
+	mavenLocal()
+	maven {
+		url = 'https://repo.runelite.net'
+	}
+	mavenCentral()
+}
+
+def runeLiteVersion = 'latest.release'
+
+dependencies {
+	// Purposefully pinned to old version to prevent slf4j 2.0 issues
+	implementation 'io.javalin:javalin:4.6.6'
+
+	// DB
+	implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
+	implementation 'org.knowm:yank:3.4.0'
+
+	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
+
+	compileOnly 'org.projectlombok:lombok:1.18.20'
+	annotationProcessor 'org.projectlombok:lombok:1.18.20'
+
+	testImplementation 'junit:junit:4.12'
+	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
+	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
+}
+
+group = 'im.agg.gameplayanalytics'
+version = '1.0-SNAPSHOT'
+
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+	options.release.set(15)
+}
+sourceCompatibility = JavaVersion.VERSION_15
+targetCompatibility = JavaVersion.VERSION_15
