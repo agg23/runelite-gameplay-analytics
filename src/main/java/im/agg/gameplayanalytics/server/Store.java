@@ -3,10 +3,12 @@ package im.agg.gameplayanalytics.server;
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
 import im.agg.gameplayanalytics.server.models.ActivityEvent;
 import im.agg.gameplayanalytics.server.models.MapEvent;
+import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 
+import java.util.List;
 import java.util.Properties;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -27,36 +29,9 @@ public class Store {
     }
 
     private void createTables() {
-        var skills = new String[]{
-                "attack",
-                "strength",
-                "defence",
-                "ranged",
-                "prayer",
-                "magic",
-                "runecraft",
-                "hitpoints",
-                "crafting",
-                "mining",
-                "smithing",
-                "fishing",
-                "cooking",
-                "firemaking",
-                "woodcutting",
-
-                "agility",
-                "herblore",
-                "thieving",
-                "fletching",
-                "slayer",
-                "farming",
-                "construction",
-                "hunter"
-        };
-
         var skillColumns = new StringBuilder();
 
-        for (var skill : skills) {
+        for (var skill : Skill.getSkillNames()) {
             skillColumns.append(String.format("%s INTEGER,\n", skill));
         }
 
@@ -100,34 +75,35 @@ public class Store {
 
     public void writeXPEvent(XPDBEvent event) {
         var parameters = new Object[]{
-                event.timestamp,
-                event.type,
+                event.getTimestamp(),
+                event.getType(),
 
-                event.attack,
-                event.strength,
-                event.defence,
-                event.ranged,
-                event.prayer,
-                event.magic,
-                event.runecraft,
-                event.hitpoints,
-                event.crafting,
-                event.mining,
-                event.smithing,
-                event.fishing,
-                event.cooking,
-                event.firemaking,
-                event.woodcutting,
-                event.agility,
-                event.herblore,
-                event.thieving,
-                event.fletching,
-                event.slayer,
-                event.farming,
-                event.construction,
-                event.hunter,
+                event.getAttack(),
+                event.getStrength(),
+                event.getDefence(),
+                event.getRanged(),
+                event.getPrayer(),
+                event.getMagic(),
+                event.getRunecraft(),
+                event.getHitpoints(),
+                event.getCrafting(),
+                event.getMining(),
+                event.getSmithing(),
+                event.getFishing(),
+                event.getCooking(),
+                event.getFiremaking(),
+                event.getWoodcutting(),
 
-                event.changedSkills
+                event.getAgility(),
+                event.getHerblore(),
+                event.getThieving(),
+                event.getFletching(),
+                event.getSlayer(),
+                event.getFarming(),
+                event.getConstruction(),
+                event.getHunter(),
+
+                event.getChangedSkills()
         };
 
         Yank.execute("""
@@ -158,5 +134,15 @@ public class Store {
         Yank.execute("""
                 INSERT INTO activity_event VALUES (?, ?)
                 """, parameters);
+    }
+
+    /* Reading */
+
+    public List<XPDBEvent> getXPEvents() {
+        var skillColumns = String.join(", ", Skill.getSkillNames());
+
+        return Yank.queryBeanList(String.format("""
+                SELECT timestamp, type, changed_skills, %s FROM xp_event
+                """, skillColumns), XPDBEvent.class, new Object[]{});
     }
 }

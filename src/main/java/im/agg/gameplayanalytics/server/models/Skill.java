@@ -1,5 +1,7 @@
 package im.agg.gameplayanalytics.server.models;
 
+import lombok.Getter;
+
 @SuppressWarnings({"SpellCheckingInspection", "EnhancedSwitchMigration"})
 public enum Skill {
     Attack,
@@ -27,6 +29,35 @@ public enum Skill {
     Farming,
     Construction,
     Hunter;
+
+    @Getter
+    private static final String[] skillNames = new String[]{
+            "attack",
+            "strength",
+            "defence",
+            "ranged",
+            "prayer",
+            "magic",
+            "runecraft",
+            "hitpoints",
+            "crafting",
+            "mining",
+            "smithing",
+            "fishing",
+            "cooking",
+            "firemaking",
+            "woodcutting",
+
+            "agility",
+            "herblore",
+            "thieving",
+            "fletching",
+            "slayer",
+            "farming",
+            "construction",
+            "hunter"
+    };
+
 
     public static Skill fromInt(Integer value) {
         switch (value) {

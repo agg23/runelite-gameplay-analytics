@@ -10,15 +10,21 @@ import java.util.HashSet;
 @Slf4j
 
 public class Server {
-    private Javalin app;
+    private final Javalin app = Javalin.create();
+
+    private final Store store;
 
     private final HashSet<WsContext> activeContexts = new HashSet<>();
+
+    public Server(Store store) {
+        this.store = store;
+    }
 
     public void init() {
         // Disable logging
         JavalinLogger.enabled = false;
 
-        this.app = Javalin.create().start(61932);
+        this.app.start(61932);
 
         log.info("Listening on http://localhost:61932");
 
@@ -27,26 +33,25 @@ public class Server {
             ctx.result("Hello world");
         });
 
-        this.app.ws("/api/", ws -> {
-            ws.onConnect(ctx -> {
-                log.info("Connected client");
-
-                activeContexts.add(ctx);
-            });
-
-            ws.onClose(ctx -> {
-                log.info("Disconnected client");
-
-                var didRemove = activeContexts.remove(ctx);
-
-                assert didRemove;
-            });
-        });
-    }
-
-    public void recordXp() {
-//        this.activeContexts.forEach(ctx -> {
-//            ctx.send();
+//        this.app.ws("/api/", ws -> {
+//            ws.onConnect(ctx -> {
+//                log.info("Connected client");
+//
+//                activeContexts.add(ctx);
+//            });
+//
+//            ws.onClose(ctx -> {
+//                log.info("Disconnected client");
+//
+//                var didRemove = activeContexts.remove(ctx);
+//
+//                assert didRemove;
+//            });
 //        });
+        this.app.get("/api/xp/", ctx -> {
+            var events = store.getXPEvents();
+
+            ctx.json(events);
+        });
     }
 }

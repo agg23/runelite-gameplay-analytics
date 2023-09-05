@@ -22,8 +22,8 @@ public class Controller {
 
     private Client client;
 
-    private final Server server = new Server();
-    private final Store store = new Store();
+    private final Server server;
+    private final Store store;
 
     private Timer timer = new Timer();
 
@@ -55,6 +55,11 @@ public class Controller {
     private Integer hunter = 0;
 
     private Integer changedSkills = 0;
+
+    public Controller() {
+        this.store = new Store();
+        this.server = new Server(this.store);
+    }
 
     public void init(Client client) {
         this.client = client;
@@ -178,7 +183,7 @@ public class Controller {
 //        var allSkillsBitArray = Math.pow(2, 23) - 1;
         var allSkillsBitArray = 8388607;
 
-        var event = new XPDBEvent(new Date(),
+        var event = new XPDBEvent(new Date().getTime(),
                 isFullUpdate ? 0 : 1,
                 isFullUpdate ? allSkillsBitArray : this.changedSkills,
                 this.attack,

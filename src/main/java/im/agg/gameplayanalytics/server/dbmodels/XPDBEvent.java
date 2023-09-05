@@ -1,97 +1,83 @@
 package im.agg.gameplayanalytics.server.dbmodels;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
-import lombok.NonNull;
-import org.jetbrains.annotations.NotNull;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.AccessLevel;
 
 import java.util.Date;
 
 // Separate from the main model because we need to generate the columns for the DB
 @AllArgsConstructor
+// Used specifically for Yank
+@NoArgsConstructor(force = true)
+@Data
 @SuppressWarnings("SpellCheckingInspection")
 public class XPDBEvent {
-    @NonNull
-    public Date timestamp;
+    Long timestamp;
 
     /**
      * 0 is a full update, 1 is a patch update
      */
-    @NotNull
-    public Integer type;
+    Integer type;
+
+    Integer changedSkills;
 
     // Skills
 
-    @NonNull
-    public Integer changedSkills;
-
-    @NonNull
-    public Integer attack;
-
-    @NonNull
-    public Integer strength;
-
-    @NonNull
-    public Integer defence;
-
-    @NonNull
-    public Integer ranged;
-
-    @NonNull
-    public Integer prayer;
-
-    @NonNull
-    public Integer magic;
-
-    @NonNull
-    public Integer runecraft;
-
-    @NonNull
-    public Integer hitpoints;
-
-    @NonNull
-    public Integer crafting;
-
-    @NonNull
-    public Integer mining;
-
-    @NonNull
-    public Integer smithing;
-
-    @NonNull
-    public Integer fishing;
-
-    @NonNull
-    public Integer cooking;
-
-    @NonNull
-    public Integer firemaking;
-
-    @NonNull
-    public Integer woodcutting;
+    Integer attack;
+    Integer strength;
+    Integer defence;
+    Integer ranged;
+    Integer prayer;
+    Integer magic;
+    Integer runecraft;
+    Integer hitpoints;
+    Integer crafting;
+    Integer mining;
+    Integer smithing;
+    Integer fishing;
+    Integer cooking;
+    Integer firemaking;
+    Integer woodcutting;
 
     // Members
 
-    @NonNull
-    public Integer agility;
+    Integer agility;
+    Integer herblore;
+    Integer thieving;
+    Integer fletching;
+    Integer slayer;
+    Integer farming;
+    Integer construction;
+    Integer hunter;
 
-    @NonNull
-    public Integer herblore;
-
-    @NonNull
-    public Integer thieving;
-
-    @NonNull
-    public Integer fletching;
-
-    @NonNull
-    public Integer slayer;
-
-    @NonNull
-    public Integer farming;
-
-    @NonNull
-    public Integer construction;
-
-    @NonNull
-    public Integer hunter;
+    @JsonProperty("xpTotal")
+    public Integer xpTotal() {
+        return this.attack +
+                this.strength +
+                this.defence +
+                this.ranged +
+                this.prayer +
+                this.magic +
+                this.runecraft +
+                this.hitpoints +
+                this.crafting +
+                this.mining +
+                this.smithing +
+                this.fishing +
+                this.cooking +
+                this.firemaking +
+                this.woodcutting +
+                this.agility +
+                this.herblore +
+                this.thieving +
+                this.fletching +
+                this.slayer +
+                this.farming +
+                this.construction +
+                this.hunter;
+    }
 }

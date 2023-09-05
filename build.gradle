@@ -15,6 +15,7 @@ def runeLiteVersion = 'latest.release'
 dependencies {
 	// Purposefully pinned to old version to prevent slf4j 2.0 issues
 	implementation 'io.javalin:javalin:4.6.6'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
 
 	// DB
 	implementation 'org.xerial:sqlite-jdbc:3.43.0.0'
