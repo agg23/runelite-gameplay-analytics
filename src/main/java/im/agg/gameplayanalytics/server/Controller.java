@@ -215,6 +215,7 @@ public class Controller {
         log.info("Writing XP event");
 
         this.store.writeXPEvent(event);
+        this.server.updatedXPData(event);
 
         this.changedSkills = 0;
     }
