@@ -19,8 +19,8 @@ public class MapEvent extends Event {
     @Column("tile_y")
     private final Integer y;
 
-    public MapEvent(@NotNull Integer region, @NotNull Integer x, @NotNull Integer y, Date timestamp) {
-        super(timestamp);
+    public MapEvent(@NotNull Integer region, @NotNull Integer x, @NotNull Integer y, long accountId, Date timestamp) {
+        super(timestamp, accountId);
 
         this.region = region;
         this.x = x;

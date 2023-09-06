@@ -12,11 +12,13 @@ import java.util.Date;
 // Separate from the main model because we need to generate the columns for the DB
 @AllArgsConstructor
 // Used specifically for Yank
-@NoArgsConstructor(force = true)
+@NoArgsConstructor
 @Data
 @SuppressWarnings("SpellCheckingInspection")
 public class XPDBEvent {
     Long timestamp;
+
+    long accountId;
 
     /**
      * 0 is a full update, 1 is a patch update

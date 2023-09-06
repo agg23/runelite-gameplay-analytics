@@ -10,5 +10,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class Event {
     @NonNull
-    private Date timestamp;
+    private final Date timestamp;
+
+    private final long accountId;
 }

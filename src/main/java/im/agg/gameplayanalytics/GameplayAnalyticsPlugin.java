@@ -4,12 +4,9 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 
 import im.agg.gameplayanalytics.server.Controller;
-import im.agg.gameplayanalytics.server.models.ActivityEvent;
-import im.agg.gameplayanalytics.server.models.ActivityKind;
 import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.StatChanged;
@@ -17,10 +14,6 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static net.runelite.api.GameState.LOGIN_SCREEN;
 
@@ -38,7 +31,7 @@ public class GameplayAnalyticsPlugin extends Plugin
 
 	private final Controller controller = new Controller();
 
-	private boolean initializeXP = true;
+	private boolean firstTick = true;
 
 	private boolean didLogin = false;
 
@@ -61,8 +54,6 @@ public class GameplayAnalyticsPlugin extends Plugin
 
 		switch (state) {
 			case LOGGED_IN -> {
-				this.controller.login();
-
 				this.didLogin = true;
 			}
 			case CONNECTION_LOST, LOGIN_SCREEN -> {
@@ -75,23 +66,23 @@ public class GameplayAnalyticsPlugin extends Plugin
 		}
 
 		if (state == LOGIN_SCREEN) {
-			this.initializeXP = true;
+			this.firstTick = true;
 		}
 	}
 
 	@Subscribe
 	public void onGameTick(GameTick event) {
 		// On first tick, initialize XP
-		if (this.initializeXP) {
-			this.initializeXP = false;
+		if (this.firstTick) {
+			this.firstTick = false;
 
-			this.controller.initializeXp(this.client);
+			this.controller.startDataflow();
 		}
 	}
 
 	@Subscribe
 	public void onStatChanged(StatChanged statChanged) {
-		if (this.initializeXP) {
+		if (this.firstTick) {
 			return;
 		}
 

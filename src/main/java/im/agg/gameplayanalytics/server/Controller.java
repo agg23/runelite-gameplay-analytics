@@ -1,10 +1,7 @@
 package im.agg.gameplayanalytics.server;
 
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
-import im.agg.gameplayanalytics.server.models.ActivityEvent;
-import im.agg.gameplayanalytics.server.models.ActivityKind;
-import im.agg.gameplayanalytics.server.models.MapEvent;
-import im.agg.gameplayanalytics.server.models.Skill;
+import im.agg.gameplayanalytics.server.models.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 
@@ -26,6 +23,10 @@ public class Controller {
     private final Store store;
 
     private Timer timer = new Timer();
+
+    // User
+
+    private Account account;
 
     // Skills
     private Integer attack = 0;
@@ -73,9 +74,6 @@ public class Controller {
     }
 
     public void login() {
-        this.initializeTimers();
-
-        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Login, new Date()));
     }
 
     public void logout() {
@@ -88,7 +86,17 @@ public class Controller {
         this.writePartialXPEventIfChanged();
         this.updateMap();
 
-        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Logout, new Date()));
+        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Logout, this.account.getId(), new Date()));
+    }
+
+    public void startDataflow() {
+        this.initializePlayer();
+
+        this.initializeTimers();
+
+        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Login, this.account.getId(), new Date()));
+
+        this.initializeXp();
     }
 
     private void initializeTimers() {
@@ -110,37 +118,46 @@ public class Controller {
         }, standardPeriodSeconds, standardPeriodSeconds);
     }
 
-    public void initializeXp(Client client) {
-        this.attack = client.getSkillExperience(net.runelite.api.Skill.ATTACK);
-        this.strength = client.getSkillExperience(net.runelite.api.Skill.STRENGTH);
-        this.defence = client.getSkillExperience(net.runelite.api.Skill.DEFENCE);
-        this.ranged = client.getSkillExperience(net.runelite.api.Skill.RANGED);
-        this.prayer = client.getSkillExperience(net.runelite.api.Skill.PRAYER);
-        this.magic = client.getSkillExperience(net.runelite.api.Skill.MAGIC);
-        this.runecraft = client.getSkillExperience(net.runelite.api.Skill.RUNECRAFT);
-        this.hitpoints = client.getSkillExperience(net.runelite.api.Skill.HITPOINTS);
-        this.crafting = client.getSkillExperience(net.runelite.api.Skill.CRAFTING);
-        this.mining = client.getSkillExperience(net.runelite.api.Skill.MINING);
-        this.smithing = client.getSkillExperience(net.runelite.api.Skill.SMITHING);
-        this.fishing = client.getSkillExperience(net.runelite.api.Skill.FISHING);
-        this.cooking = client.getSkillExperience(net.runelite.api.Skill.COOKING);
-        this.firemaking = client.getSkillExperience(net.runelite.api.Skill.FIREMAKING);
-        this.woodcutting = client.getSkillExperience(net.runelite.api.Skill.WOODCUTTING);
+    private void initializeXp() {
+        this.attack = this.client.getSkillExperience(net.runelite.api.Skill.ATTACK);
+        this.strength = this.client.getSkillExperience(net.runelite.api.Skill.STRENGTH);
+        this.defence = this.client.getSkillExperience(net.runelite.api.Skill.DEFENCE);
+        this.ranged = this.client.getSkillExperience(net.runelite.api.Skill.RANGED);
+        this.prayer = this.client.getSkillExperience(net.runelite.api.Skill.PRAYER);
+        this.magic = this.client.getSkillExperience(net.runelite.api.Skill.MAGIC);
+        this.runecraft = this.client.getSkillExperience(net.runelite.api.Skill.RUNECRAFT);
+        this.hitpoints = this.client.getSkillExperience(net.runelite.api.Skill.HITPOINTS);
+        this.crafting = this.client.getSkillExperience(net.runelite.api.Skill.CRAFTING);
+        this.mining = this.client.getSkillExperience(net.runelite.api.Skill.MINING);
+        this.smithing = this.client.getSkillExperience(net.runelite.api.Skill.SMITHING);
+        this.fishing = this.client.getSkillExperience(net.runelite.api.Skill.FISHING);
+        this.cooking = this.client.getSkillExperience(net.runelite.api.Skill.COOKING);
+        this.firemaking = this.client.getSkillExperience(net.runelite.api.Skill.FIREMAKING);
+        this.woodcutting = this.client.getSkillExperience(net.runelite.api.Skill.WOODCUTTING);
 
         // Members
-        this.agility = client.getSkillExperience(net.runelite.api.Skill.AGILITY);
-        this.herblore = client.getSkillExperience(net.runelite.api.Skill.HERBLORE);
-        this.thieving = client.getSkillExperience(net.runelite.api.Skill.THIEVING);
-        this.fletching = client.getSkillExperience(net.runelite.api.Skill.FLETCHING);
-        this.slayer = client.getSkillExperience(net.runelite.api.Skill.SLAYER);
-        this.farming = client.getSkillExperience(net.runelite.api.Skill.FARMING);
-        this.construction = client.getSkillExperience(net.runelite.api.Skill.CONSTRUCTION);
-        this.hunter = client.getSkillExperience(net.runelite.api.Skill.HUNTER);
+        this.agility = this.client.getSkillExperience(net.runelite.api.Skill.AGILITY);
+        this.herblore = this.client.getSkillExperience(net.runelite.api.Skill.HERBLORE);
+        this.thieving = this.client.getSkillExperience(net.runelite.api.Skill.THIEVING);
+        this.fletching = this.client.getSkillExperience(net.runelite.api.Skill.FLETCHING);
+        this.slayer = this.client.getSkillExperience(net.runelite.api.Skill.SLAYER);
+        this.farming = this.client.getSkillExperience(net.runelite.api.Skill.FARMING);
+        this.construction = this.client.getSkillExperience(net.runelite.api.Skill.CONSTRUCTION);
+        this.hunter = this.client.getSkillExperience(net.runelite.api.Skill.HUNTER);
 
         log.info("Initialized XP");
 
         // Full update
         this.writeXPEvent(true);
+    }
+
+    private void initializePlayer() {
+        var id = this.client.getAccountHash();
+        var username = this.client.getLocalPlayer().getName();
+
+        this.account = new Account(id, username);
+
+        this.store.createOrUpdatePlayer(this.account);
     }
 
     public void updateXp(Skill skill, Integer xp) {
@@ -184,6 +201,7 @@ public class Controller {
         var allSkillsBitArray = 8388607;
 
         var event = new XPDBEvent(new Date().getTime(),
+                this.account.getId(),
                 isFullUpdate ? 0 : 1,
                 isFullUpdate ? allSkillsBitArray : this.changedSkills,
                 this.attack,
@@ -225,6 +243,6 @@ public class Controller {
         var worldPoint = this.client.getLocalPlayer().getWorldLocation();
         log.info(String.format("Region: %d, Tile X: %d, Tile Y: %d", worldPoint.getRegionID(), worldPoint.getX(), worldPoint.getY()));
 
-        this.store.writeMapEvent(new MapEvent(worldPoint.getRegionID(), worldPoint.getX(), worldPoint.getY(), new Date()));
+        this.store.writeMapEvent(new MapEvent(worldPoint.getRegionID(), worldPoint.getX(), worldPoint.getY(), this.account.getId(), new Date()));
     }
 }
