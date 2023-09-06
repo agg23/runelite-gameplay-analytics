@@ -3,9 +3,12 @@ package im.agg.gameplayanalytics.server;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
+import im.agg.gameplayanalytics.server.models.JSONError;
+import im.agg.gameplayanalytics.server.models.JSONWrapper;
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
 import io.javalin.core.util.JavalinLogger;
+import io.javalin.http.Context;
 import io.javalin.websocket.WsContext;
 import lombok.extern.slf4j.Slf4j;
 
@@ -57,10 +60,25 @@ public class Server {
 //                assert didRemove;
 //            });
 //        });
-        this.app.get("/api/xp/", ctx -> {
-            var events = store.getXPEvents();
+        this.app.get("/api/accounts", ctx -> {
+            var accounts = this.store.getAccounts();
+            ctx.json(new JSONWrapper(accounts));
+        });
 
-            ctx.json(events);
+        this.app.get("/api/xp/{accountId}", ctx -> {
+            var accountIdString = ctx.pathParam("accountId");
+
+            long accountId = 0;
+
+            try {
+                accountId = Long.parseLong(accountIdString);
+            } catch (NumberFormatException e) {
+                errorResponse("Invalid account ID provided", ctx);
+                return;
+            }
+
+            var events = this.store.getXPEvents(accountId);
+            ctx.json(new JSONWrapper(events));
         });
 
         this.app.ws("/api/ws", ws -> {
@@ -84,6 +102,12 @@ public class Server {
         this.activeContexts.forEach(ctx -> {
             ctx.send(message);
         });
+    }
+
+    private void errorResponse(String message, Context ctx) {
+        ctx.status(400);
+
+        ctx.json(new JSONError(message));
     }
 
     public void updatedXPData(XPDBEvent event) {

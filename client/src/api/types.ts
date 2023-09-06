@@ -1,4 +1,8 @@
 interface Routes {
+  accounts: {
+    http: Account[];
+    ws: void;
+  };
   xp: {
     http: XPEvent[];
     ws: XPEvent;
@@ -9,6 +13,20 @@ export type RouteName = keyof Routes;
 
 export type HTTPRoute<T extends RouteName> = Routes[T]["http"];
 export type WSRoute<T extends RouteName> = Routes[T]["ws"];
+
+export interface HTTPSuccess<T> {
+  type: "success";
+  data: T;
+}
+
+export interface HTTPError {
+  type: "error";
+  message: string;
+}
+
+export type HTTPRouteResponse<T extends RouteName> =
+  | HTTPSuccess<HTTPRoute<T>>
+  | HTTPError;
 
 export type FetchState<T> =
   | {
@@ -21,6 +39,11 @@ export type FetchState<T> =
   | {
       type: "error";
     };
+
+export interface Account {
+  id: string;
+  username: string;
+}
 
 export interface XPEvent {
   timestamp: number;

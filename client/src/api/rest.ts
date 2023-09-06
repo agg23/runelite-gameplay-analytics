@@ -1,10 +1,19 @@
-import { HTTPRoute, RouteName } from "./types";
+import { HTTPRouteResponse, RouteName } from "./types";
 
 const HOSTNAME = "localhost:61932";
 
 export const getRoute = async <T extends RouteName>(
-  route: T
-): Promise<HTTPRoute<T>> => get(`http://${HOSTNAME}/api/${route}/`);
+  route: T,
+  additionalPath?: string
+): Promise<HTTPRouteResponse<T>> => {
+  let url = `http://${HOSTNAME}/api/${route}/`;
+
+  if (additionalPath) {
+    url += additionalPath;
+  }
+
+  return get(url);
+};
 
 const get = async <T>(url: string): Promise<T> => {
   const response = await fetch(url, {

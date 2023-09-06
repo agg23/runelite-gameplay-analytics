@@ -1,31 +1,80 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
-import { FetchState, XPEvent } from "../api/types";
+import {
+  Account,
+  FetchState,
+  HTTPRoute,
+  RouteName,
+  XPEvent,
+} from "../api/types";
 import { getRoute } from "../api/rest";
 
 interface State {
+  activeAccount:
+    | {
+        username: string;
+        id: string;
+      }
+    | undefined;
   api: {
+    accounts: FetchState<Array<Account>>;
     xp: FetchState<Array<XPEvent>>;
   };
 }
 
 interface Actions {
   api: {
+    accounts: {
+      requestData: () => Promise<void>;
+    };
     xp: {
       requestData: () => Promise<void>;
       insertUpdate: (data: XPEvent) => void;
     };
   };
+  setActiveAccount: (account: Account) => void;
 }
 
 export const useStore = create(
-  immer<State & Actions>((set) => ({
+  immer<State & Actions>((set, get) => ({
+    activeAccount: undefined,
     api: {
+      accounts: {
+        type: "data",
+        data: [],
+        requestData: async () => {
+          set((existing) => {
+            existing.api.accounts = {
+              ...existing.api.accounts,
+              type: "loading",
+            };
+          });
+
+          const event = await fetchData("accounts");
+
+          set((existing) => {
+            existing.api.accounts = {
+              ...existing.api.accounts,
+              ...event,
+            };
+
+            if (event.type === "data" && event.data.length > 0) {
+              existing.activeAccount = event.data[0];
+            }
+          });
+        },
+      },
       xp: {
         type: "data",
         data: [],
         requestData: async () => {
+          const account = get().activeAccount;
+
+          if (!account) {
+            return;
+          }
+
           set((existing) => {
             existing.api.xp = {
               ...existing.api.xp,
@@ -33,20 +82,7 @@ export const useStore = create(
             };
           });
 
-          let event: FetchState<Array<XPEvent>>;
-
-          try {
-            const data = await getRoute("xp");
-
-            event = {
-              type: "data",
-              data,
-            };
-          } catch (_) {
-            event = {
-              type: "error",
-            };
-          }
+          const event = await fetchData("xp", account.id);
 
           set((existing) => {
             existing.api.xp = {
@@ -81,8 +117,37 @@ export const useStore = create(
           }),
       },
     },
+    setActiveAccount: (account) => {
+      set((existing) => {
+        existing.activeAccount = account;
+      });
+    },
   }))
 );
+
+const fetchData = async <T extends RouteName>(
+  route: T,
+  additionalPath?: string
+): Promise<FetchState<HTTPRoute<T>>> => {
+  try {
+    const data = await getRoute(route, additionalPath);
+
+    if (data.type === "error") {
+      return {
+        type: "error",
+      };
+    }
+
+    return {
+      type: "data",
+      data: data.data,
+    };
+  } catch (_) {
+    return {
+      type: "error",
+    };
+  }
+};
 
 // Taken from https://stackoverflow.com/a/21822316/2108817
 const sortedIndex = <TData, TSort>(

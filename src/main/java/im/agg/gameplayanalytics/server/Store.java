@@ -171,9 +171,15 @@ public class Store {
 
     /* Reading */
 
-    public List<XPDBEvent> getXPEvents() {
+    public List<Account> getAccounts() {
         return Yank.queryBeanList("""
-                SELECT * FROM xp_event
-                """, XPDBEvent.class, new Object[]{});
+                SELECT * FROM player
+                """, Account.class, new Object[]{});
+    }
+
+    public List<XPDBEvent> getXPEvents(long accountId) {
+        return Yank.queryBeanList("""
+                SELECT * FROM xp_event WHERE player_id = ?
+                """, XPDBEvent.class, new Object[]{accountId});
     }
 }

@@ -1,16 +1,17 @@
+/** @jsxImportSource @emotion/react */
 import React, { useEffect, useMemo } from "react";
 import { ResponsiveLine } from "@nivo/line";
 
-import "./XPPage.scss";
-
 import { useStore } from "../store/store";
+import { css } from "@emotion/react";
 
 export const XPPage: React.FC<{}> = () => {
-  const store = useStore((state) => state.api.xp);
+  const activeAccount = useStore((state) => state.activeAccount);
+  const xp = useStore((state) => state.api.xp);
 
   const linechartData = useMemo(() => {
-    if (store.type === "data") {
-      const data = store.data.map((event) => ({
+    if (xp.type === "data") {
+      const data = xp.data.map((event) => ({
         x: new Date(event.timestamp),
         y: event.xpTotal,
       }));
@@ -24,19 +25,19 @@ export const XPPage: React.FC<{}> = () => {
     }
 
     return [];
-  }, [store]);
+  }, [xp]);
 
   useEffect(() => {
-    store.requestData();
+    xp.requestData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeAccount]);
 
-  return store.type === "loading" ? (
+  return xp.type === "loading" ? (
     <div>Loading XP data</div>
-  ) : store.type === "error" ? (
+  ) : xp.type === "error" ? (
     <div>Error loading XP data</div>
   ) : (
-    <div className="chart">
+    <div css={chartCss}>
       <ResponsiveLine
         data={linechartData}
         margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
@@ -44,3 +45,7 @@ export const XPPage: React.FC<{}> = () => {
     </div>
   );
 };
+
+const chartCss = css({
+  height: 600,
+});
