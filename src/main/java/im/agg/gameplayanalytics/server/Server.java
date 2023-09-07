@@ -8,10 +8,26 @@ import im.agg.gameplayanalytics.server.models.JSONWrapper;
 import io.javalin.Javalin;
 import io.javalin.core.JavalinConfig;
 import io.javalin.core.util.JavalinLogger;
+import io.javalin.http.ContentType;
 import io.javalin.http.Context;
+import io.javalin.http.staticfiles.Location;
+import io.javalin.http.staticfiles.StaticFileConfig;
+import io.javalin.http.util.RedirectToLowercasePathPlugin;
 import io.javalin.websocket.WsContext;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.client.util.ImageUtil;
 
+import javax.imageio.ImageIO;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
 
 @Slf4j
@@ -28,8 +44,41 @@ public class Server {
     public Server(Store store) {
         this.store = store;
 
-        // TODO: Make this more targeted
-        this.app = Javalin.create(JavalinConfig::enableCorsForAllOrigins);
+        this.app = Javalin.create(config -> {
+            // TODO: Make this more targeted
+            config.enableCorsForAllOrigins();
+
+            config.registerPlugin(new RedirectToLowercasePathPlugin());
+
+//            try {
+//                var filesystem = FileSystems.newFileSystem(Client.class.getResource("").toURI(), new HashMap<>());
+//
+//                var path = "/skill_icons";
+//
+//                var resourceUri = Client.class.getResource(path).toURI();
+//
+//                Path fsPath;
+//                if (resourceUri.getScheme().equals("jar")) {
+//                    fsPath = filesystem.getPath(path);
+//                } else {
+//                    fsPath = Paths.get(resourceUri);
+//                }
+//
+////                var path = Client.class.getResource("/skill_icons/");
+//
+//                log.info(fsPath.toAbsolutePath().toString());
+//
+//                config.addStaticFiles(ctx -> {
+//                    ctx.hostedPath = "/assets/skillIcons/";
+//                    ctx.directory = fsPath.toAbsolutePath().toString();
+//                });
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            } catch (URISyntaxException e) {
+//                throw new RuntimeException(e);
+//            }
+
+        });
     }
 
     public void init() {
@@ -95,6 +144,20 @@ public class Server {
 
                 assert didRemove;
             });
+        });
+
+        this.app.get("/assets/skillicons/{skill}.png", ctx -> {
+            // TODO: This is extremely inefficient. Instead we should host a static directory from the resource URI
+            var skillName = ctx.pathParam("skill").toLowerCase();
+
+            var skillPath = "/skill_icons/" + skillName + ".png";
+
+            var image = ImageUtil.loadImageResource(Client.class, skillPath);
+
+            var outputStream = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", outputStream);
+            ctx.result(outputStream.toByteArray());
+            ctx.contentType(ContentType.IMAGE_PNG);
         });
     }
 

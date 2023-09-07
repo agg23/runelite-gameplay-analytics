@@ -1,6 +1,6 @@
 import { HTTPRouteResponse, RouteName } from "./types";
 
-const HOSTNAME = "localhost:61932";
+export const HOSTNAME = "localhost:61932";
 
 export const getRoute = async <T extends RouteName>(
   route: T,

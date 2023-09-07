@@ -24,3 +24,12 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Fix Checkbox not having pointer */
+.mantine-Checkbox-input {
+  cursor: pointer;
+}
+
+.mantine-Checkbox-label {
+  cursor: pointer;
+}

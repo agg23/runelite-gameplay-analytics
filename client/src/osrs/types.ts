@@ -1,0 +1,27 @@
+export const ALL_SKILLS = [
+  "attack",
+  "strength",
+  "defence",
+  "ranged",
+  "prayer",
+  "magic",
+  "runecraft",
+  "hitpoints",
+  "crafting",
+  "mining",
+  "smithing",
+  "fishing",
+  "cooking",
+  "firemaking",
+  "woodcutting",
+  "agility",
+  "herblore",
+  "thieving",
+  "fletching",
+  "slayer",
+  "farming",
+  "construction",
+  "hunter",
+] as const;
+
+export type Skill = (typeof ALL_SKILLS)[number];

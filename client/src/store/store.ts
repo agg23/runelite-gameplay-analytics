@@ -9,6 +9,8 @@ import {
   XPEvent,
 } from "../api/types";
 import { getRoute } from "../api/rest";
+import { ALL_SKILLS, Skill } from "../osrs/types";
+import { enableMapSet } from "immer";
 
 interface State {
   activeAccount:
@@ -21,9 +23,21 @@ interface State {
     accounts: FetchState<Array<Account>>;
     xp: FetchState<Array<XPEvent>>;
   };
+  xp: {
+    selectedSkills:
+      | {
+          type: "all";
+        }
+      | {
+          type: "set";
+          set: Set<Skill>;
+        };
+    displayDeltas: boolean;
+  };
 }
 
 interface Actions {
+  setActiveAccount: (account: Account) => void;
   api: {
     accounts: {
       requestData: () => Promise<void>;
@@ -33,12 +47,23 @@ interface Actions {
       insertUpdate: (data: XPEvent) => void;
     };
   };
-  setActiveAccount: (account: Account) => void;
+  xp: {
+    addSkill: (skill: Skill) => void;
+    removeSkill: (skill: Skill) => void;
+    setDisplayDeltas: (value: boolean) => void;
+  };
 }
+
+enableMapSet();
 
 export const useStore = create(
   immer<State & Actions>((set, get) => ({
     activeAccount: undefined,
+    setActiveAccount: (account) => {
+      set((existing) => {
+        existing.activeAccount = account;
+      });
+    },
     api: {
       accounts: {
         type: "data",
@@ -117,10 +142,42 @@ export const useStore = create(
           }),
       },
     },
-    setActiveAccount: (account) => {
-      set((existing) => {
-        existing.activeAccount = account;
-      });
+    xp: {
+      selectedSkills: {
+        type: "all",
+      },
+      displayDeltas: true,
+      addSkill: (skill) =>
+        set((existing) => {
+          if (existing.xp.selectedSkills.type === "all") {
+            return;
+          }
+
+          existing.xp.selectedSkills.set.add(skill);
+
+          if (existing.xp.selectedSkills.set.size === ALL_SKILLS.length) {
+            // We just expanded to the full set, so reset to all
+            existing.xp.selectedSkills = {
+              type: "all",
+            };
+          }
+        }),
+      removeSkill: (skill) =>
+        set((existing) => {
+          if (existing.xp.selectedSkills.type === "all") {
+            // Downgrade to all separate items
+            existing.xp.selectedSkills = {
+              type: "set",
+              set: new Set(ALL_SKILLS),
+            };
+          }
+
+          existing.xp.selectedSkills.set.delete(skill);
+        }),
+      setDisplayDeltas: (value) =>
+        set((existing) => {
+          existing.xp.displayDeltas = value;
+        }),
     },
   }))
 );
