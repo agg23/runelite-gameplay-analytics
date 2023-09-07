@@ -10,7 +10,12 @@ import { format } from "date-fns";
 export const XPPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.activeAccount);
   const xpApi = useStore((state) => state.api.xp);
-  const { displayDeltas, setDisplayDeltas } = useStore((state) => state.xp);
+  const {
+    displayDeltas,
+    selectedSkills,
+    setDisplayDeltas,
+    toggleSelectedSkills,
+  } = useStore((state) => state.xp);
 
   const linechartData = useLinechartData();
 
@@ -52,6 +57,15 @@ export const XPPage: React.FC<{}> = () => {
     <div>Error loading XP data</div>
   ) : (
     <div className={classes.pageWrapper}>
+      <div className={classes.chartSettings}>
+        <Checkbox
+          checked={selectedSkills.type === "all"}
+          onChange={(event) =>
+            toggleSelectedSkills(event.currentTarget.checked)
+          }
+          label="Select all"
+        />
+      </div>
       <AllSkills />
       <div className={classes.chartSettings}>
         <Checkbox

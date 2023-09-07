@@ -50,6 +50,7 @@ interface Actions {
   xp: {
     addSkill: (skill: Skill) => void;
     removeSkill: (skill: Skill) => void;
+    toggleSelectedSkills: (selectAll: boolean) => void;
     setDisplayDeltas: (value: boolean) => void;
   };
 }
@@ -173,6 +174,17 @@ export const useStore = create(
           }
 
           existing.xp.selectedSkills.set.delete(skill);
+        }),
+      toggleSelectedSkills: (selectAll: boolean) =>
+        set((existing) => {
+          existing.xp.selectedSkills = selectAll
+            ? {
+                type: "all",
+              }
+            : {
+                type: "set",
+                set: new Set(),
+              };
         }),
       setDisplayDeltas: (value) =>
         set((existing) => {
