@@ -167,7 +167,7 @@ const useLinechartData = () => {
 
   return useMemo((): FixedSeries => {
     if (xpApi.type === "data") {
-      const eventFields: Array<keyof XPEvent> = [];
+      const eventFields: Array<Exclude<keyof XPEvent, "accountId">> = [];
 
       if (selectedSkills.type === "all") {
         eventFields.push("xpTotal");
@@ -225,6 +225,46 @@ const options: ApexOptions = {
     //     }
     // },
     // },
+  },
+  annotations: {
+    yaxis: [
+      {
+        y: 83,
+        label: {
+          text: "Level 2",
+        },
+      },
+      {
+        y: 174,
+        label: {
+          text: "Level 3",
+        },
+      },
+      {
+        y: 276,
+        label: {
+          text: "Level 4",
+        },
+      },
+      {
+        y: 388,
+        label: {
+          text: "Level 5",
+        },
+      },
+      {
+        y: 512,
+        label: {
+          text: "Level 6",
+        },
+      },
+      {
+        y: 650,
+        label: {
+          text: "Level 7",
+        },
+      },
+    ],
   },
   series: [],
   xaxis: {

@@ -29,6 +29,8 @@ export interface Account {
 export interface XPEvent {
   timestamp: number;
 
+  accountId: string;
+
   type: 0 | 1;
 
   changedSkills: number;

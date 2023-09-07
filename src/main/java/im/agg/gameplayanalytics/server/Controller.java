@@ -63,7 +63,7 @@ public class Controller {
     }
 
     // TODO: Remove
-    private long debugTimestamp = 1694012465368L + 1000*60;
+    private long debugTimestamp = 1694012465368L + 1000*60L;
     public void init(Client client) {
         this.client = client;
 
@@ -75,7 +75,7 @@ public class Controller {
             @Override
             public void run() {
                 debugTimestamp += 1000*60;
-                attack += ((Long)Math.round(Math.random() * 1000)).intValue();
+                attack += ((Long)Math.round(Math.random() * 10)).intValue();
 
                 var event = new XPDBEvent(debugTimestamp,
                         1327996603691643471L,
