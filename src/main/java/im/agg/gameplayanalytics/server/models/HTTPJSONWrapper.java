@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class JSONWrapper {
+public class HTTPJSONWrapper {
     private final String type = "success";
     private final Object data;
 }

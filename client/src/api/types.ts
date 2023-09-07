@@ -1,52 +1,5 @@
 import { Skill } from "../osrs/types";
 
-interface GetRoutes {
-  accounts: {
-    http: Account[];
-    ws: void;
-  };
-  xp: {
-    http: XPEvent[];
-    ws: XPEvent;
-  };
-  settings: {
-    http: SyncedSettings;
-    ws: void;
-  };
-}
-
-interface PostRoutes {
-  settings: {
-    request: SyncedSettings;
-    response: HTTPSuccess<undefined>;
-  };
-}
-
-export type GetRouteName = keyof GetRoutes;
-export type PostRouteName = keyof PostRoutes;
-
-export type HTTPGetRoute<T extends GetRouteName> = GetRoutes[T]["http"];
-export type WSRoute<T extends GetRouteName> = GetRoutes[T]["ws"];
-
-export type HTTPPostRequestRoute<T extends PostRouteName> =
-  PostRoutes[T]["request"];
-export type HTTPPostResponseRoute<T extends PostRouteName> =
-  PostRoutes[T]["response"];
-
-export interface HTTPSuccess<T> {
-  type: "success";
-  data: T;
-}
-
-export interface HTTPError {
-  type: "error";
-  message: string;
-}
-
-export type HTTPGetRouteResponse<T extends GetRouteName> =
-  | HTTPSuccess<HTTPGetRoute<T>>
-  | HTTPError;
-
 export type FetchState<T> =
   | {
       type: "loading";

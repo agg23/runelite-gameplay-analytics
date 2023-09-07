@@ -1,12 +1,11 @@
+import { HOSTNAME } from "./config";
 import {
   HTTPGetRouteResponse,
   HTTPPostRequestRoute,
   GetRouteName,
   PostRouteName,
   HTTPPostResponseRoute,
-} from "./types";
-
-export const HOSTNAME = "localhost:61932";
+} from "./routes";
 
 export const getRoute = async <T extends GetRouteName>(
   route: T,

@@ -4,14 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
 import im.agg.gameplayanalytics.server.models.JSONError;
-import im.agg.gameplayanalytics.server.models.JSONWrapper;
+import im.agg.gameplayanalytics.server.models.HTTPJSONWrapper;
+import im.agg.gameplayanalytics.server.models.WSJSONWrapper;
 import io.javalin.Javalin;
-import io.javalin.core.JavalinConfig;
 import io.javalin.core.util.JavalinLogger;
 import io.javalin.http.ContentType;
 import io.javalin.http.Context;
-import io.javalin.http.staticfiles.Location;
-import io.javalin.http.staticfiles.StaticFileConfig;
 import io.javalin.http.util.RedirectToLowercasePathPlugin;
 import io.javalin.websocket.WsContext;
 import lombok.extern.slf4j.Slf4j;
@@ -19,15 +17,7 @@ import net.runelite.api.Client;
 import net.runelite.client.util.ImageUtil;
 
 import javax.imageio.ImageIO;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URISyntaxException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.HashSet;
 
 @Slf4j
@@ -111,7 +101,7 @@ public class Server {
 //        });
         this.app.get("/api/accounts", ctx -> {
             var accounts = this.store.getAccounts();
-            ctx.json(new JSONWrapper(accounts));
+            ctx.json(new HTTPJSONWrapper(accounts));
         });
 
         this.app.get("/api/xp/{accountId}", ctx -> {
@@ -127,7 +117,7 @@ public class Server {
             }
 
             var events = this.store.getXPEvents(accountId);
-            ctx.json(new JSONWrapper(events));
+            ctx.json(new HTTPJSONWrapper(events));
         });
 
         this.app.get("/api/settings", ctx -> {
@@ -147,7 +137,7 @@ public class Server {
 
             this.store.writeSettings(ctx.body());
 
-            ctx.json(new JSONWrapper(null));
+            ctx.json(new HTTPJSONWrapper(null));
         });
 
         this.app.ws("/api/ws", ws -> {
@@ -178,13 +168,23 @@ public class Server {
             ImageIO.write(image, "png", outputStream);
             ctx.result(outputStream.toByteArray());
             ctx.contentType(ContentType.IMAGE_PNG);
+            // One year cache time
+            ctx.header("Cache-Control", "public, max-age=30758400");
         });
     }
 
-    private void emitWSMessage(String message) {
-        this.activeContexts.forEach(ctx -> {
-            ctx.send(message);
-        });
+    private void emitWSMessage(String route, Object data) {
+        var wrappedData = new WSJSONWrapper(route, data);
+
+        try {
+            var json = this.jsonMapper.writeValueAsString(wrappedData);
+
+            this.activeContexts.forEach(ctx -> {
+                ctx.send(json);
+            });
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+        }
     }
 
     private void errorResponse(String message, Context ctx) {
@@ -195,12 +195,6 @@ public class Server {
 
     public void updatedXPData(XPDBEvent event) {
         // TODO: Check for filtering parameters
-        try {
-            var json = this.jsonMapper.writeValueAsString(event);
-
-            this.emitWSMessage(json);
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage());
-        }
+        this.emitWSMessage("xp", event);
     }
 }

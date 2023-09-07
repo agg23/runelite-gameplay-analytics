@@ -2,17 +2,11 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
-import {
-  Account,
-  FetchState,
-  HTTPGetRoute,
-  GetRouteName,
-  XPEvent,
-  SyncedSettings,
-} from "../api/types";
+import { Account, FetchState, XPEvent, SyncedSettings } from "../api/types";
 import { getRoute } from "../api/rest";
 import { ALL_SKILLS, Skill } from "../osrs/types";
 import { enableMapSet } from "immer";
+import { GetRouteName, HTTPGetRoute } from "../api/routes";
 
 interface State {
   activeAccount: {

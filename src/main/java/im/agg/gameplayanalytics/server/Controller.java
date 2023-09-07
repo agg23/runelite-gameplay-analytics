@@ -62,11 +62,54 @@ public class Controller {
         this.server = new Server(this.store);
     }
 
+    // TODO: Remove
+    private long debugTimestamp = 1694012465368L + 1000*60;
     public void init(Client client) {
         this.client = client;
 
         this.store.init();
         this.server.init();
+
+        // TODO: Remove
+        this.timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                debugTimestamp += 1000*60;
+                attack += ((Long)Math.round(Math.random() * 1000)).intValue();
+
+                var event = new XPDBEvent(debugTimestamp,
+                        1327996603691643471L,
+                        1,
+                        Skill.Attack.toPower(),
+                        attack,
+                        strength,
+                        defence,
+                        ranged,
+                        prayer,
+                        magic,
+                        runecraft,
+                        hitpoints,
+                        crafting,
+                        mining,
+                        smithing,
+                        fishing,
+                        cooking,
+                        firemaking,
+                        woodcutting,
+
+                        // Members
+                        agility,
+                        herblore,
+                        thieving,
+                        fletching,
+                        slayer,
+                        farming,
+                        construction,
+                        hunter);
+
+                server.updatedXPData(event);
+            }
+        }, 1000, 1000);
     }
 
     public void shutdown() {
@@ -108,14 +151,14 @@ public class Controller {
             // Capture the map position instantly
         }, 0, MAP_PERIOD * 1000);
 
-        var standardPeriodSeconds = STANDARD_PERIOD * 1000;
+        var standardPeriodMillieconds = STANDARD_PERIOD * 1000;
 
         this.timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 writePartialXPEventIfChanged();
             }
-        }, standardPeriodSeconds, standardPeriodSeconds);
+        }, standardPeriodMillieconds, standardPeriodMillieconds);
     }
 
     private void initializeXp() {
