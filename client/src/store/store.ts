@@ -97,7 +97,15 @@ export const useStore = create(
               };
 
               if (event.type === "data" && event.data.length > 0) {
-                existing.activeAccount.id = event.data[0].id;
+                const useExistingAccount =
+                  existing.activeAccount.id &&
+                  !!event.data.find(
+                    (account) => account.id === existing.activeAccount.id
+                  );
+
+                if (!useExistingAccount) {
+                  existing.activeAccount.id = event.data[0].id;
+                }
               }
             });
           },
@@ -207,6 +215,8 @@ export const useStore = create(
         loadSettings: (settings) =>
           set((existing) => {
             existing.settings.darkTheme = settings.darkTheme;
+
+            existing.activeAccount.id = settings.activeAccountId;
 
             existing.xp.displayDeltas = settings.xp.displayDeltas;
             existing.xp.selectedSkills = {

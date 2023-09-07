@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo } from "react";
-import { PointTooltipProps, ResponsiveLine } from "@nivo/line";
 import { Checkbox, createStyles } from "@mantine/core";
 
 import { useStore } from "../store/store";
@@ -69,7 +68,9 @@ export const XPPage: React.FC<{}> = () => {
           label="Select all"
         />
       </div>
-      <AllSkills />
+      <div className={classes.allSkills}>
+        <AllSkills />
+      </div>
       <div className={classes.chartSettings}>
         <Checkbox
           checked={displayDeltas}
@@ -106,6 +107,9 @@ const useStyles = createStyles((theme) => ({
     marginTop: theme.spacing.md,
     marginLeft: theme.spacing.xs,
     marginRight: theme.spacing.xs,
+  },
+  allSkills: {
+    width: 600,
   },
   chartSettings: {
     margin: theme.spacing.md,

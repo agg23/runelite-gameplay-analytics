@@ -1,4 +1,5 @@
 import { shallow } from "zustand/shallow";
+import deepEqual from "deep-equal";
 
 import { ALL_SKILLS, Skill } from "../osrs/types";
 import { useStore } from "../store/store";
@@ -6,6 +7,7 @@ import { SyncedSettings } from "./types";
 import { getRoute, postRoute } from "./rest";
 
 let timer: NodeJS.Timeout | undefined;
+let savedSettings: SyncedSettings | undefined;
 
 export const init = () => {
   // Immediately begin settings fetch
@@ -20,6 +22,7 @@ export const init = () => {
       return;
     }
 
+    savedSettings = settings.data;
     useStore.getState().settings.loadSettings(settings.data);
   });
 
@@ -49,7 +52,13 @@ export const init = () => {
         clearInterval(timer);
         timer = undefined;
 
+        if (deepEqual(settings, savedSettings)) {
+          // These settings haven't changed. Nothing to save
+          return;
+        }
+
         console.log("Saving settings");
+        savedSettings = settings;
         postRoute("settings", settings);
       }, 5000);
     },
