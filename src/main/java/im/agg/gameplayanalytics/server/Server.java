@@ -130,6 +130,26 @@ public class Server {
             ctx.json(new JSONWrapper(events));
         });
 
+        this.app.get("/api/settings", ctx -> {
+            var settings = this.store.getSettings();
+            // Inject JSONWrapper around string. Can't use object because this isn't a string, but a serialized JSON object
+            ctx.result(String.format("{\"type\": \"success\", \"data\": %s}", settings));
+            ctx.contentType(ContentType.JSON);
+        });
+
+        this.app.post("/api/settings", ctx -> {
+            var body = ctx.body();
+
+            if (body.isEmpty()) {
+                errorResponse("Empty body", ctx);
+                return;
+            }
+
+            this.store.writeSettings(ctx.body());
+
+            ctx.json(new JSONWrapper(null));
+        });
+
         this.app.ws("/api/ws", ws -> {
             ws.onConnect(ctx -> {
                 log.info("Connected client");

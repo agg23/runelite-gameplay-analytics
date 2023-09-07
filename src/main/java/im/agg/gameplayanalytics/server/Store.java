@@ -58,6 +58,13 @@ public class Store {
         this.createEventsTable("activity_event", """
                     type INTEGER NOT NULL,
                 """);
+
+        this.sqlExecute("""
+                CREATE TABLE IF NOT EXISTS setting (
+                    id INTEGER PRIMARY KEY NOT NULL,
+                    setting BLOB NOT NULL
+                )
+                """);
     }
 
     private void createEventsTable(String name, String fields) {
@@ -169,7 +176,21 @@ public class Store {
                 """, parameters);
     }
 
+    public void writeSettings(String blob) {
+        Yank.execute("""
+                INSERT OR REPLACE INTO setting
+                    (id, setting)
+                VALUES (1, ?)
+                """, new Object[]{blob});
+    }
+
     /* Reading */
+
+    public String getSettings() {
+        return Yank.queryScalar("""
+                SELECT setting FROM setting
+                """, String.class, new Object[]{});
+    }
 
     public List<Account> getAccounts() {
         return Yank.queryBeanList("""

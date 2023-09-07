@@ -1,24 +1,23 @@
 import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 import {
   Account,
   FetchState,
-  HTTPRoute,
-  RouteName,
+  HTTPGetRoute,
+  GetRouteName,
   XPEvent,
+  SyncedSettings,
 } from "../api/types";
 import { getRoute } from "../api/rest";
 import { ALL_SKILLS, Skill } from "../osrs/types";
 import { enableMapSet } from "immer";
 
 interface State {
-  activeAccount:
-    | {
-        username: string;
-        id: string;
-      }
-    | undefined;
+  activeAccount: {
+    id: string | undefined;
+  };
   api: {
     accounts: FetchState<Array<Account>>;
     xp: FetchState<Array<XPEvent>>;
@@ -34,10 +33,15 @@ interface State {
         };
     displayDeltas: boolean;
   };
+  settings: {
+    darkTheme: boolean;
+  };
 }
 
 interface Actions {
-  setActiveAccount: (account: Account) => void;
+  activeAccount: {
+    setActiveAccount: (accountId: string) => void;
+  };
   api: {
     accounts: {
       requestData: () => Promise<void>;
@@ -53,151 +57,176 @@ interface Actions {
     toggleSelectedSkills: (selectAll: boolean) => void;
     setDisplayDeltas: (value: boolean) => void;
   };
+  settings: {
+    loadSettings: (settings: SyncedSettings) => void;
+    setDarkTheme: (value: boolean) => void;
+  };
 }
 
 enableMapSet();
 
 export const useStore = create(
-  immer<State & Actions>((set, get) => ({
-    activeAccount: undefined,
-    setActiveAccount: (account) => {
-      set((existing) => {
-        existing.activeAccount = account;
-      });
-    },
-    api: {
-      accounts: {
-        type: "data",
-        data: [],
-        requestData: async () => {
+  subscribeWithSelector(
+    immer<State & Actions>((set, get) => ({
+      activeAccount: {
+        id: undefined,
+        setActiveAccount: (accountId) => {
           set((existing) => {
-            existing.api.accounts = {
-              ...existing.api.accounts,
-              type: "loading",
-            };
-          });
-
-          const event = await fetchData("accounts");
-
-          set((existing) => {
-            existing.api.accounts = {
-              ...existing.api.accounts,
-              ...event,
-            };
-
-            if (event.type === "data" && event.data.length > 0) {
-              existing.activeAccount = event.data[0];
-            }
+            existing.activeAccount.id = accountId;
           });
         },
       },
-      xp: {
-        type: "data",
-        data: [],
-        requestData: async () => {
-          const account = get().activeAccount;
+      api: {
+        accounts: {
+          type: "data",
+          data: [],
+          requestData: async () => {
+            set((existing) => {
+              existing.api.accounts = {
+                ...existing.api.accounts,
+                type: "loading",
+              };
+            });
 
-          if (!account) {
-            return;
-          }
+            const event = await fetchData("accounts");
 
-          set((existing) => {
-            existing.api.xp = {
-              ...existing.api.xp,
-              type: "loading",
-            };
-          });
+            set((existing) => {
+              existing.api.accounts = {
+                ...existing.api.accounts,
+                ...event,
+              };
 
-          const event = await fetchData("xp", account.id);
-
-          set((existing) => {
-            existing.api.xp = {
-              ...existing.api.xp,
-              ...event,
-            };
-          });
+              if (event.type === "data" && event.data.length > 0) {
+                existing.activeAccount.id = event.data[0].id;
+              }
+            });
+          },
         },
-        insertUpdate: (data: XPEvent) =>
-          set((existing) => {
-            if (existing.api.xp.type === "error") {
+        xp: {
+          type: "data",
+          data: [],
+          requestData: async () => {
+            const accountId = get().activeAccount.id;
+
+            if (!accountId) {
               return;
             }
 
-            const existingData =
-              existing.api.xp.type === "data" ? existing.api.xp.data : [];
+            set((existing) => {
+              existing.api.xp = {
+                ...existing.api.xp,
+                type: "loading",
+              };
+            });
 
-            // Make sure we insert this data into the correct location
-            const index = sortedIndex(
-              existingData,
-              data.timestamp,
-              (event) => event.timestamp
-            );
+            const event = await fetchData("xp", accountId);
 
-            existingData.splice(index, 0, data);
+            set((existing) => {
+              existing.api.xp = {
+                ...existing.api.xp,
+                ...event,
+              };
+            });
+          },
+          insertUpdate: (data: XPEvent) =>
+            set((existing) => {
+              if (existing.api.xp.type === "error") {
+                return;
+              }
 
-            existing.api.xp = {
-              ...existing.api.xp,
-              type: "data",
-              data: existingData,
-            };
+              const existingData =
+                existing.api.xp.type === "data" ? existing.api.xp.data : [];
+
+              // Make sure we insert this data into the correct location
+              const index = sortedIndex(
+                existingData,
+                data.timestamp,
+                (event) => event.timestamp
+              );
+
+              existingData.splice(index, 0, data);
+
+              existing.api.xp = {
+                ...existing.api.xp,
+                type: "data",
+                data: existingData,
+              };
+            }),
+        },
+      },
+      xp: {
+        selectedSkills: {
+          type: "all",
+        },
+        displayDeltas: true,
+        addSkill: (skill) =>
+          set((existing) => {
+            if (existing.xp.selectedSkills.type === "all") {
+              return;
+            }
+
+            existing.xp.selectedSkills.set.add(skill);
+
+            if (existing.xp.selectedSkills.set.size === ALL_SKILLS.length) {
+              // We just expanded to the full set, so reset to all
+              existing.xp.selectedSkills = {
+                type: "all",
+              };
+            }
+          }),
+        removeSkill: (skill) =>
+          set((existing) => {
+            if (existing.xp.selectedSkills.type === "all") {
+              // Downgrade to all separate items
+              existing.xp.selectedSkills = {
+                type: "set",
+                set: new Set(ALL_SKILLS),
+              };
+            }
+
+            existing.xp.selectedSkills.set.delete(skill);
+          }),
+        toggleSelectedSkills: (selectAll: boolean) =>
+          set((existing) => {
+            existing.xp.selectedSkills = selectAll
+              ? {
+                  type: "all",
+                }
+              : {
+                  type: "set",
+                  set: new Set(),
+                };
+          }),
+        setDisplayDeltas: (value) =>
+          set((existing) => {
+            existing.xp.displayDeltas = value;
           }),
       },
-    },
-    xp: {
-      selectedSkills: {
-        type: "all",
-      },
-      displayDeltas: true,
-      addSkill: (skill) =>
-        set((existing) => {
-          if (existing.xp.selectedSkills.type === "all") {
-            return;
-          }
+      settings: {
+        darkTheme: true,
+        loadSettings: (settings) =>
+          set((existing) => {
+            existing.settings.darkTheme = settings.darkTheme;
 
-          existing.xp.selectedSkills.set.add(skill);
-
-          if (existing.xp.selectedSkills.set.size === ALL_SKILLS.length) {
-            // We just expanded to the full set, so reset to all
-            existing.xp.selectedSkills = {
-              type: "all",
-            };
-          }
-        }),
-      removeSkill: (skill) =>
-        set((existing) => {
-          if (existing.xp.selectedSkills.type === "all") {
-            // Downgrade to all separate items
+            existing.xp.displayDeltas = settings.xp.displayDeltas;
             existing.xp.selectedSkills = {
               type: "set",
-              set: new Set(ALL_SKILLS),
+              set: new Set(settings.xp.selectedSkills),
             };
-          }
-
-          existing.xp.selectedSkills.set.delete(skill);
-        }),
-      toggleSelectedSkills: (selectAll: boolean) =>
-        set((existing) => {
-          existing.xp.selectedSkills = selectAll
-            ? {
-                type: "all",
-              }
-            : {
-                type: "set",
-                set: new Set(),
-              };
-        }),
-      setDisplayDeltas: (value) =>
-        set((existing) => {
-          existing.xp.displayDeltas = value;
-        }),
-    },
-  }))
+          }),
+        setDarkTheme: (value) =>
+          set((existing) => {
+            existing.settings.darkTheme = value;
+          }),
+      },
+    }))
+  )
 );
 
-const fetchData = async <T extends RouteName>(
+const fetchData = async <T extends GetRouteName>(
   route: T,
   additionalPath?: string
-): Promise<FetchState<HTTPRoute<T>>> => {
+): Promise<FetchState<HTTPGetRoute<T>>> => {
   try {
     const data = await getRoute(route, additionalPath);
 

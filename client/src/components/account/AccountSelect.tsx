@@ -4,9 +4,8 @@ import { Select } from "@mantine/core";
 import { useStore } from "../../store/store";
 
 export const AccountSelect: React.FC<{}> = () => {
-  const account = useStore((state) => state.activeAccount);
   const accountData = useStore((state) => state.api.accounts);
-  const setActiveAccount = useStore((state) => state.setActiveAccount);
+  const { id, setActiveAccount } = useStore((state) => state.activeAccount);
 
   const [allAccountValues, onChange] = useMemo(() => {
     const onChange = (newId: string | null) => {
@@ -21,7 +20,7 @@ export const AccountSelect: React.FC<{}> = () => {
         return;
       }
 
-      setActiveAccount(account);
+      setActiveAccount(newId);
     };
 
     if (accountData.type !== "data") {
@@ -38,10 +37,6 @@ export const AccountSelect: React.FC<{}> = () => {
   }, [accountData, setActiveAccount]);
 
   return (
-    <Select
-      value={account?.id ?? null}
-      data={allAccountValues}
-      onChange={onChange}
-    />
+    <Select value={id ?? null} data={allAccountValues} onChange={onChange} />
   );
 };

@@ -1,4 +1,6 @@
-interface Routes {
+import { Skill } from "../osrs/types";
+
+interface GetRoutes {
   accounts: {
     http: Account[];
     ws: void;
@@ -7,12 +9,29 @@ interface Routes {
     http: XPEvent[];
     ws: XPEvent;
   };
+  settings: {
+    http: SyncedSettings;
+    ws: void;
+  };
 }
 
-export type RouteName = keyof Routes;
+interface PostRoutes {
+  settings: {
+    request: SyncedSettings;
+    response: HTTPSuccess<undefined>;
+  };
+}
 
-export type HTTPRoute<T extends RouteName> = Routes[T]["http"];
-export type WSRoute<T extends RouteName> = Routes[T]["ws"];
+export type GetRouteName = keyof GetRoutes;
+export type PostRouteName = keyof PostRoutes;
+
+export type HTTPGetRoute<T extends GetRouteName> = GetRoutes[T]["http"];
+export type WSRoute<T extends GetRouteName> = GetRoutes[T]["ws"];
+
+export type HTTPPostRequestRoute<T extends PostRouteName> =
+  PostRoutes[T]["request"];
+export type HTTPPostResponseRoute<T extends PostRouteName> =
+  PostRoutes[T]["response"];
 
 export interface HTTPSuccess<T> {
   type: "success";
@@ -24,8 +43,8 @@ export interface HTTPError {
   message: string;
 }
 
-export type HTTPRouteResponse<T extends RouteName> =
-  | HTTPSuccess<HTTPRoute<T>>
+export type HTTPGetRouteResponse<T extends GetRouteName> =
+  | HTTPSuccess<HTTPGetRoute<T>>
   | HTTPError;
 
 export type FetchState<T> =
@@ -39,6 +58,15 @@ export type FetchState<T> =
   | {
       type: "error";
     };
+
+export interface SyncedSettings {
+  activeAccountId: string | undefined;
+  darkTheme: boolean;
+  xp: {
+    selectedSkills: Skill[];
+    displayDeltas: boolean;
+  };
+}
 
 export interface Account {
   id: string;

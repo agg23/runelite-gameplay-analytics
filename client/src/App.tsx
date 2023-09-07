@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   ColorScheme,
   ColorSchemeProvider,
@@ -9,11 +8,20 @@ import { XPPage } from "./components/XPPage";
 import { Page } from "./components/layout/Page";
 
 import "./App.css";
+import { useStore } from "./store/store";
 
 export const App = () => {
-  const [colorScheme, setColorScheme] = useState<ColorScheme>("light");
-  const toggleColorScheme = (value?: ColorScheme) =>
-    setColorScheme(value || (colorScheme === "dark" ? "light" : "dark"));
+  const { darkTheme, setDarkTheme } = useStore((state) => state.settings);
+
+  const toggleColorScheme = (value?: ColorScheme) => {
+    if (value) {
+      setDarkTheme(value === "dark");
+    } else {
+      setDarkTheme(!darkTheme);
+    }
+  };
+
+  const colorScheme = darkTheme ? "dark" : "light";
 
   return (
     <div className="App">
