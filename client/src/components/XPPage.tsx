@@ -6,6 +6,9 @@ import { useStore } from "../store/store";
 import { AllSkills } from "./osrs/skills/AllSkills";
 import { XPEvent } from "../api/types";
 import { format } from "date-fns";
+import Chart from "react-apexcharts";
+import { ApexOptions } from "apexcharts";
+import { FixedSeries } from "../types/ApexCharts";
 
 export const XPPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.activeAccount);
@@ -19,30 +22,30 @@ export const XPPage: React.FC<{}> = () => {
 
   const linechartData = useLinechartData();
 
-  const formatDate = useMemo(
-    () => (value: Date) => format(value, "E eo, h:m a"),
-    []
-  );
+  // const formatDate = useMemo(
+  //   () => (value: Date) => format(value, "E eo, h:m a"),
+  //   []
+  // );
 
-  const tooltipFormatter = useMemo(
-    () =>
-      ({ point }: PointTooltipProps) => {
-        const date = formatDate(point.data.x as Date);
-        const deltaAddition = displayDeltas ? "+" : "";
+  // const tooltipFormatter = useMemo(
+  //   () =>
+  //     ({ point }: PointTooltipProps) => {
+  //       const date = formatDate(point.data.x as Date);
+  //       const deltaAddition = displayDeltas ? "+" : "";
 
-        // TODO: Add commas
-        return (
-          <div>
-            <div>
-              {deltaAddition}
-              {point.data.y as number} XP
-            </div>
-            <div>{date}</div>
-          </div>
-        );
-      },
-    [displayDeltas, formatDate]
-  );
+  //       // TODO: Add commas
+  //       return (
+  //         <div>
+  //           <div>
+  //             {deltaAddition}
+  //             {point.data.y as number} XP
+  //           </div>
+  //           <div>{date}</div>
+  //         </div>
+  //       );
+  //     },
+  //   [displayDeltas, formatDate]
+  // );
 
   useEffect(() => {
     xpApi.requestData();
@@ -75,7 +78,7 @@ export const XPPage: React.FC<{}> = () => {
         />
       </div>
       <div className={classes.chartWrapper}>
-        <ResponsiveLine
+        {/* <ResponsiveLine
           data={linechartData}
           isInteractive
           useMesh
@@ -87,6 +90,11 @@ export const XPPage: React.FC<{}> = () => {
             format: formatDate,
           }}
           margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+        /> */}
+        <Chart
+          series={linechartData as ApexAxisChartSeries}
+          options={options}
+          height="600"
         />
       </div>
     </div>
@@ -104,14 +112,56 @@ const useStyles = createStyles((theme) => ({
   },
   chartWrapper: {
     height: 600,
+    padding: theme.spacing.md,
   },
 }));
+
+// const useLinechartData = () => {
+//   const xpApi = useStore((state) => state.api.xp);
+//   const { selectedSkills, displayDeltas } = useStore((state) => state.xp);
+
+//   return useMemo(() => {
+//     if (xpApi.type === "data") {
+//       const eventFields: Array<keyof XPEvent> = [];
+
+//       if (selectedSkills.type === "all") {
+//         eventFields.push("xpTotal");
+//       } else {
+//         eventFields.push(...selectedSkills.set);
+//       }
+
+//       // TODO: Move this into its own memo?
+//       const datedEntries = xpApi.data.map((event) => ({
+//         date: new Date(event.timestamp),
+//         ...event,
+//       }));
+
+//       return eventFields.map((fieldName) => {
+//         // If we display deltas, get the first (which is by definition the lowest) value and subtract
+//         const baseValue =
+//           displayDeltas && datedEntries.length > 0
+//             ? datedEntries[0][fieldName]
+//             : 0;
+
+//         return {
+//           id: fieldName,
+//           data: datedEntries.map((event) => ({
+//             x: event.date,
+//             y: event[fieldName] - baseValue,
+//           })),
+//         };
+//       });
+//     }
+
+//     return [];
+//   }, [selectedSkills, displayDeltas, xpApi]);
+// };
 
 const useLinechartData = () => {
   const xpApi = useStore((state) => state.api.xp);
   const { selectedSkills, displayDeltas } = useStore((state) => state.xp);
 
-  return useMemo(() => {
+  return useMemo((): FixedSeries => {
     if (xpApi.type === "data") {
       const eventFields: Array<keyof XPEvent> = [];
 
@@ -121,29 +171,59 @@ const useLinechartData = () => {
         eventFields.push(...selectedSkills.set);
       }
 
-      // TODO: Move this into its own memo?
-      const datedEntries = xpApi.data.map((event) => ({
-        date: new Date(event.timestamp),
-        ...event,
-      }));
-
       return eventFields.map((fieldName) => {
         // If we display deltas, get the first (which is by definition the lowest) value and subtract
         const baseValue =
-          displayDeltas && datedEntries.length > 0
-            ? datedEntries[0][fieldName]
-            : 0;
+          displayDeltas && xpApi.data.length > 0 ? xpApi.data[0][fieldName] : 0;
 
         return {
-          id: fieldName,
-          data: datedEntries.map((event) => ({
-            x: event.date,
-            y: event[fieldName] - baseValue,
-          })),
+          name: fieldName,
+          data: xpApi.data.map(
+            (event) =>
+              [event.timestamp, event[fieldName] - baseValue] as [
+                number,
+                number
+              ]
+          ),
         };
       });
     }
 
     return [];
   }, [selectedSkills, displayDeltas, xpApi]);
+};
+
+const options: ApexOptions = {
+  chart: {
+    id: "datetime",
+    type: "line",
+    height: "600px",
+    zoom: {
+      autoScaleYaxis: true,
+      // Zoom disabled until I can figure out what to do with it
+      enabled: false,
+    },
+    // events: {
+    //   beforeZoom: (chart, options) => {
+    //     console.log(chart);
+    //     console.log(options);
+    //     console.log(options.xaxis.max - options.xaxis.min);
+    //     // Allow zooming out to 10 minutes
+    //     if (options.xaxis.max - options.xaxis.min < 10 * 60 * 1000) {
+    //       // Block zoom
+    //       console.log("Small");
+    //       return {
+    //         xaxis: {
+    //           min: chart.minX,
+    //           max: chart.maxX,
+    //         },
+    //       };
+    //     }
+    // },
+    // },
+  },
+  series: [],
+  xaxis: {
+    type: "datetime",
+  },
 };
