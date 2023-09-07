@@ -14,19 +14,19 @@ export const AllSkills: React.FC<{}> = () => {
   const { classes } = useStyles();
 
   return (
-    <SimpleGrid cols={6}>
+    <SimpleGrid cols={3}>
       {skillEntries.map(({ title, image, skill }) => (
         <FancyCheckbox
           key={title}
           className={classes.checkbox}
           // Use integer scaling on images
-          imageWidth={23 * 2}
+          imageWidth={23}
           checked={
             selectedSkills.type === "all" || selectedSkills.set.has(skill)
           }
           title={title}
           image={image}
-          description="Dummy"
+          description=""
           pixelated
           onChange={(checked) => {
             if (checked) {
@@ -43,7 +43,7 @@ export const AllSkills: React.FC<{}> = () => {
 
 const useStyles = createStyles((theme) => ({
   checkbox: {
-    height: theme.spacing.lg,
+    height: "2.5rem",
   },
 }));
 

@@ -37,8 +37,8 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
 
   return (
     <UnstyledButton
-      onClick={() => onChange?.(!checked)}
       className={cx(classes.button, className)}
+      onClick={() => onChange?.(!checked)}
     >
       <Image
         className={cx({
@@ -48,11 +48,12 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
         alt={title}
         width={imageWidth}
       />
-
       <div className={classes.body}>
-        <Text color="dimmed" size="xs" sx={{ lineHeight: 1 }} mb={5}>
-          {description}
-        </Text>
+        {!!description && (
+          <Text color="dimmed" size="xs" sx={{ lineHeight: 1 }} mb={5}>
+            {description}
+          </Text>
+        )}
         <Text weight={500} size="sm" sx={{ lineHeight: 1 }}>
           {title}
         </Text>
@@ -60,8 +61,8 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
 
       <Checkbox
         checked={checked}
-        onChange={() => {}}
         tabIndex={-1}
+        transitionDuration={100}
         styles={{ input: { cursor: "pointer" } }}
       />
     </UnstyledButton>
@@ -73,7 +74,7 @@ const useStyles = createStyles((theme, { checked }: { checked: boolean }) => ({
     display: "flex",
     alignItems: "center",
     width: "100%",
-    transition: "background-color 150ms ease, border-color 150ms ease",
+    transition: "background-color 50ms ease, border-color 50ms ease",
     border: `${rem(1)} solid ${
       checked
         ? theme.fn.variant({ variant: "outline", color: theme.primaryColor })
@@ -97,6 +98,6 @@ const useStyles = createStyles((theme, { checked }: { checked: boolean }) => ({
 
   body: {
     flex: 1,
-    marginLeft: theme.spacing.md,
+    marginLeft: theme.spacing.xs,
   },
 }));

@@ -61,18 +61,6 @@ export const XPPage: React.FC<{}> = () => {
     <div className={classes.pageWrapper}>
       <div className={classes.chartSettings}>
         <Checkbox
-          checked={selectedSkills.type === "all"}
-          onChange={(event) =>
-            toggleSelectedSkills(event.currentTarget.checked)
-          }
-          label="Select all"
-        />
-      </div>
-      <div className={classes.allSkills}>
-        <AllSkills />
-      </div>
-      <div className={classes.chartSettings}>
-        <Checkbox
           checked={displayDeltas}
           onChange={(event) => setDisplayDeltas(event.currentTarget.checked)}
           label="Display deltas"
@@ -97,6 +85,20 @@ export const XPPage: React.FC<{}> = () => {
           options={options}
           height="600"
         />
+        <div className={classes.chartSettings}>
+          <div className={classes.chartManualSettings}>
+            <Checkbox
+              checked={selectedSkills.type === "all"}
+              onChange={(event) =>
+                toggleSelectedSkills(event.currentTarget.checked)
+              }
+              label="Select all"
+            />
+          </div>
+          <div className={classes.allSkills}>
+            <AllSkills />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -109,12 +111,18 @@ const useStyles = createStyles((theme) => ({
     marginRight: theme.spacing.xs,
   },
   allSkills: {
-    width: 600,
+    width: 550,
   },
   chartSettings: {
     margin: theme.spacing.md,
   },
+  chartManualSettings: {
+    marginBottom: theme.spacing.md,
+  },
   chartWrapper: {
+    display: "grid",
+    gridTemplateColumns: "1fr 550px",
+    columnGap: theme.spacing.md,
     height: 600,
     padding: theme.spacing.md,
   },
@@ -207,6 +215,10 @@ const options: ApexOptions = {
       // Zoom disabled until I can figure out what to do with it
       enabled: false,
     },
+    toolbar: {
+      autoSelected: "pan",
+      show: false,
+    },
     // events: {
     //   beforeZoom: (chart, options) => {
     //     console.log(chart);
@@ -269,5 +281,13 @@ const options: ApexOptions = {
   series: [],
   xaxis: {
     type: "datetime",
+    title: {
+      text: "Timestamp",
+    },
+  },
+  yaxis: {
+    title: {
+      text: "XP",
+    },
   },
 };

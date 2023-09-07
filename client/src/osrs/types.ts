@@ -1,25 +1,32 @@
 export const ALL_SKILLS = [
   "attack",
-  "strength",
-  "defence",
-  "ranged",
-  "prayer",
-  "magic",
-  "runecraft",
   "hitpoints",
-  "crafting",
   "mining",
-  "smithing",
-  "fishing",
-  "cooking",
-  "firemaking",
-  "woodcutting",
+
+  "strength",
   "agility",
+  "smithing",
+
+  "defence",
   "herblore",
+  "fishing",
+
+  "ranged",
   "thieving",
+  "cooking",
+
+  "prayer",
+  "crafting",
+  "firemaking",
+
+  "magic",
   "fletching",
+  "woodcutting",
+
+  "runecraft",
   "slayer",
   "farming",
+
   "construction",
   "hunter",
 ] as const;

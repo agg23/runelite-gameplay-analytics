@@ -1,8 +1,10 @@
 import React from "react";
 import { AccountSelect } from "../account/AccountSelect";
-import { Box, rem } from "@mantine/core";
+import { Box, createStyles, rem, Text } from "@mantine/core";
 
 export const NavAccountSelector: React.FC<{}> = () => {
+  const { classes } = useStyles();
+
   return (
     <Box
       sx={(theme) => ({
@@ -17,7 +19,15 @@ export const NavAccountSelector: React.FC<{}> = () => {
         }`,
       })}
     >
+      <Text className={classes.text}>Account:</Text>
       <AccountSelect />
     </Box>
   );
 };
+
+const useStyles = createStyles((theme) => ({
+  text: {
+    textAlign: "left",
+    margin: theme.spacing.xs,
+  },
+}));
