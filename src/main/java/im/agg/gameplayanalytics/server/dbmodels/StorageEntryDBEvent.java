@@ -1,15 +1,13 @@
 package im.agg.gameplayanalytics.server.dbmodels;
 
+import im.agg.gameplayanalytics.server.models.MapEvent;
 import lombok.*;
 
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode
 public class StorageEntryDBEvent {
-    @EqualsAndHashCode.Exclude
     private long eventId;
-    @EqualsAndHashCode.Exclude
     private long timestamp;
 
     private int itemId;
@@ -17,8 +15,24 @@ public class StorageEntryDBEvent {
     private int quantity;
     private int gePerItem;
 
-    public StorageEntryDBEvent(long timestamp, int itemId, int slot, int quantity, int gePerItem) {
+    public StorageEntryDBEvent(long timestamp, int itemId, int slot,
+                               int quantity, int gePerItem) {
         // Set ID to 0, as that will be set later
         this(0, timestamp, itemId, slot, quantity, gePerItem);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this.changedEquals((StorageEntryDBEvent) obj);
+    }
+
+    /**
+     * Compares two entries by non-unique properties for equality
+     */
+    public boolean changedEquals(StorageEntryDBEvent event) {
+        return event != null && this.itemId == event.getItemId() &&
+                this.slot == event.getSlot() &&
+                this.quantity == event.getQuantity() &&
+                this.gePerItem == event.getGePerItem();
     }
 }

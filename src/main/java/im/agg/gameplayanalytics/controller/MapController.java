@@ -1,12 +1,8 @@
 package im.agg.gameplayanalytics.controller;
 
-import im.agg.gameplayanalytics.server.Server;
-import im.agg.gameplayanalytics.server.Store;
 import im.agg.gameplayanalytics.server.models.Account;
 import im.agg.gameplayanalytics.server.models.MapEvent;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
 
 import java.util.Date;
 import java.util.Timer;
@@ -17,6 +13,8 @@ public class MapController extends Controller {
     static final Integer UPDATE_PERIOD = 30;
 
     private Timer timer = new Timer();
+
+    private MapEvent lastMapEvent;
 
     @Override
     public void logout() {
@@ -44,11 +42,23 @@ public class MapController extends Controller {
         }, 0, UPDATE_PERIOD * 1000);
     }
 
-    // TODO: Make incremental
     private void updateMap() {
         var worldPoint = this.client.getLocalPlayer().getWorldLocation();
-        log.info(String.format("Region: %d, Tile X: %d, Tile Y: %d", worldPoint.getRegionID(), worldPoint.getX(), worldPoint.getY()));
 
-        this.store.writeMapEvent(new MapEvent(worldPoint.getRegionID(), worldPoint.getX(), worldPoint.getY(), this.account.getId(), new Date()));
+        var event = new MapEvent(worldPoint.getRegionID(), worldPoint.getX(),
+                worldPoint.getY(), this.account.getId(), new Date());
+
+        if (event.changedEquals(this.lastMapEvent)) {
+            return;
+        }
+
+        log.info(
+                String.format("Writing map: Region: %d, Tile X: %d, Tile Y: %d",
+                        worldPoint.getRegionID(), worldPoint.getX(),
+                        worldPoint.getY()));
+
+        this.store.writeMapEvent(event);
+
+        this.lastMapEvent = event;
     }
 }
