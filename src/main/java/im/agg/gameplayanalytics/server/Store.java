@@ -1,16 +1,17 @@
 package im.agg.gameplayanalytics.server;
 
 import im.agg.gameplayanalytics.server.dbmodels.*;
-import im.agg.gameplayanalytics.server.models.Account;
-import im.agg.gameplayanalytics.server.models.ActivityEvent;
-import im.agg.gameplayanalytics.server.models.MapEvent;
-import im.agg.gameplayanalytics.server.models.Skill;
+import im.agg.gameplayanalytics.server.models.*;
 import lombok.extern.slf4j.Slf4j;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+
+import static im.agg.gameplayanalytics.server.Util.groupSequentialList;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
@@ -332,5 +333,56 @@ public class Store {
         return Yank.queryBeanList("""
                 SELECT * FROM xp_event WHERE account_id = ?
                 """, XPDBEvent.class, new Object[]{accountId});
+    }
+
+    public List<StorageEvent> getStorageEvents(long accountId) {
+        var entries = Yank.queryBeanList("""
+                SELECT
+                    id, timestamp, account_id, type, item_id, slot, quantity, ge_per_item
+                FROM storage_event JOIN storage_entry
+                ON storage_event.id == storage_entry.event_id
+                WHERE account_id = ?
+                """, StorageDBRetrieval.class, new Object[]{accountId});
+
+        return groupSequentialList(entries, StorageDBRetrieval::getId).stream()
+                .map(group -> {
+                    var groupedEntries = group.stream()
+                            .map(entry -> new StorageEntryEvent(
+                                    entry.getItemId(), entry.getSlot(),
+                                    entry.getQuantity(), entry.getGePerItem()))
+                            .collect(Collectors.toList());
+
+                    var first = group.getFirst();
+
+                    return new StorageEvent(first.getId(), first.getTimestamp(),
+                            first.getAccountId(), first.getType(),
+                            groupedEntries);
+                }).collect(Collectors.toList());
+    }
+
+    public List<LootEvent> getLootEvents(long accountId) {
+        var entries = Yank.queryBeanList("""
+                SELECT
+                    id, timestamp, account_id, type, npc_id, combat_level, item_id, quantity, ge_per_item
+                FROM loot_event JOIN loot_entry
+                ON loot_event.id == loot_entry.loot_id
+                WHERE account_id = ?
+                """, LootDBRetrival.class, new Object[]{accountId});
+
+        return groupSequentialList(entries, LootDBRetrival::getId).stream()
+                .map(group -> {
+                    var groupedEntries = group.stream()
+                            .map(entry -> new LootEntryEvent(
+                                    entry.getItemId(), entry.getQuantity(),
+                                    entry.getGePerItem()))
+                            .collect(Collectors.toList());
+
+                    var first = group.getFirst();
+
+                    return new LootEvent(first.getId(), first.getTimestamp(),
+                            first.getAccountId(), first.getType(),
+                            first.getNpcId(), first.getCombatLevel(),
+                            groupedEntries);
+                }).collect(Collectors.toList());
     }
 }

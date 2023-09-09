@@ -15,6 +15,7 @@ import io.javalin.websocket.WsContext;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.client.util.ImageUtil;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.io.ByteArrayOutputStream;
@@ -104,21 +105,21 @@ public class Server {
             ctx.json(new HTTPJSONWrapper(accounts));
         });
 
-        this.app.get("/api/xp/{accountId}", ctx -> {
-            var accountIdString = ctx.pathParam("accountId");
-
-            long accountId = 0;
-
-            try {
-                accountId = Long.parseLong(accountIdString);
-            } catch (NumberFormatException e) {
-                errorResponse("Invalid account ID provided", ctx);
-                return;
-            }
-
+        this.createAccountRoute("/api/xp/{accountId}", ((ctx, accountId) -> {
             var events = this.store.getXPEvents(accountId);
             ctx.json(new HTTPJSONWrapper(events));
-        });
+        }));
+
+        this.createAccountRoute("/api/storage/{accountId}",
+                (ctx, accountId) -> {
+                    var events = this.store.getStorageEvents(accountId);
+                    ctx.json(new HTTPJSONWrapper(events));
+                });
+
+        this.createAccountRoute("/api/loot/{accountId}", ((ctx, accountId) -> {
+            var events = this.store.getLootEvents(accountId);
+            ctx.json(new HTTPJSONWrapper(events));
+        }));
 
         this.app.get("/api/settings", ctx -> {
             var settings = this.store.getSettings();
@@ -171,6 +172,27 @@ public class Server {
             ctx.contentType(ContentType.IMAGE_PNG);
             // One year cache time
             ctx.header("Cache-Control", "public, max-age=30758400");
+        });
+    }
+
+    interface AccountRouteHandler {
+        void handle(@NotNull Context ctx, long accountId) throws Exception;
+    }
+
+    private void createAccountRoute(String route, AccountRouteHandler handler) {
+        this.app.get(route, ctx -> {
+            var accountIdString = ctx.pathParam("accountId");
+
+            long accountId = 0;
+
+            try {
+                accountId = Long.parseLong(accountIdString);
+            } catch (NumberFormatException e) {
+                errorResponse("Invalid account ID provided", ctx);
+                return;
+            }
+
+            handler.handle(ctx, accountId);
         });
     }
 

@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class StorageEvent {
+public class LootEvent {
     private long id;
 
     private long timestamp;
@@ -19,5 +19,8 @@ public class StorageEvent {
 
     private int type;
 
-    private List<StorageEntryEvent> entries;
+    private int npcId;
+    private int combatLevel;
+
+    private List<LootEntryEvent> entries;
 }
