@@ -118,7 +118,7 @@ public class GameplayAnalyticsPlugin extends Plugin {
             this.account = new Account(id, username);
 
             // Write character to store
-            this.store.createOrUpdatePlayer(this.account);
+            this.store.createOrUpdateAccount(this.account);
 
             Arrays.stream(this.controllers)
                     .forEach(controller -> controller.startDataFlow(
@@ -143,11 +143,10 @@ public class GameplayAnalyticsPlugin extends Plugin {
 
     @Subscribe
     public void onNpcLootReceived(NpcLootReceived npcLootReceived) {
+        // TODO: If a NPC doesn't drop any loot, we don't get this event
+        // Is there some other way to detect kills?
         var npc = npcLootReceived.getNpc();
         var items = npcLootReceived.getItems();
-
-        log.info(String.format("Loot - Name: %s, Level: %d, ID: %d",
-                npc.getName(), npc.getCombatLevel(), npc.getId()));
 
         var event =
                 new LootDBEvent(new Date().getTime(), this.account.getId(), 0,

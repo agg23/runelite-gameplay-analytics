@@ -18,8 +18,7 @@ public class XPDBEvent {
     long timestamp;
 
     @JsonSerialize(using = ToStringSerializer.class)
-    @JsonProperty("accountId")
-    long playerId;
+    long accountId;
 
     /**
      * 0 is a full update, 1 is a patch update

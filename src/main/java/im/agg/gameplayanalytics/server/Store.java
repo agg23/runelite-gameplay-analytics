@@ -33,7 +33,7 @@ public class Store {
         }
 
         this.sqlExecute("""
-                CREATE TABLE IF NOT EXISTS player (
+                CREATE TABLE IF NOT EXISTS account (
                     id INTEGER NOT NULL PRIMARY KEY,
                     username STRING NOT NULL
                 )
@@ -124,11 +124,11 @@ public class Store {
         this.sqlExecute(String.format("""
                         CREATE TABLE IF NOT EXISTS %s (
                             %s
-                            player_id INTEGER NOT NULL,
+                            account_id INTEGER NOT NULL,
                             timestamp INTEGER NOT NULL,
                             %s
                             %s
-                            FOREIGN KEY (player_id) REFERENCES player (id)
+                            FOREIGN KEY (account_id) REFERENCES account (id)
                         )
                         """, name,
                 hasCustomPrimaryKey ? "id INTEGER PRIMARY KEY AUTOINCREMENT," :
@@ -155,17 +155,17 @@ public class Store {
         Yank.releaseDefaultConnectionPool();
     }
 
-    public void createOrUpdatePlayer(Account account) {
+    public void createOrUpdateAccount(Account account) {
         Yank.execute("""
-                INSERT OR IGNORE INTO player (id, username) VALUES (?, ?);
-                UPDATE player SET username = ? WHERE id = ?
+                INSERT OR IGNORE INTO account (id, username) VALUES (?, ?);
+                UPDATE account SET username = ? WHERE id = ?
                 """, new Object[]{account.getId(), account.getUsername()});
     }
 
     public void writeXPEvent(XPDBEvent event) {
         var parameters = new Object[]{
                 event.getTimestamp(),
-                event.getPlayerId(),
+                event.getAccountId(),
                 event.getType(),
 
                 event.getAttack(),
@@ -197,7 +197,7 @@ public class Store {
         };
 
         Yank.execute("""
-                INSERT INTO xp_event (timestamp, player_id, type,
+                INSERT INTO xp_event (timestamp, account_id, type,
                     attack, strength, defence, ranged, prayer, magic, runecraft, hitpoints, crafting,
                     mining, smithing, fishing, cooking, firemaking, woodcutting, agility, herblore,
                     thieving, fletching, slayer, farming, construction, hunter,
@@ -218,7 +218,7 @@ public class Store {
 
         Yank.execute("""
                 INSERT INTO map_event
-                    (timestamp, player_id, region, tile_x, tile_y)
+                    (timestamp, account_id, region, tile_x, tile_y)
                 VALUES (?, ?, ?, ?, ?)
                 """, parameters);
     }
@@ -232,7 +232,7 @@ public class Store {
 
         Yank.execute("""
                 INSERT INTO activity_event
-                    (timestamp, player_id, type)
+                    (timestamp, account_id, type)
                 VALUES (?, ?, ?)
                 """, parameters);
     }
@@ -241,13 +241,13 @@ public class Store {
                                   List<StorageEntryDBEvent> entries) {
         var eventParams = new Object[]{
                 event.getTimestamp(),
-                event.getPlayerId(),
+                event.getAccountId(),
                 event.getType()
         };
 
         var id = Yank.insert("""
                 INSERT INTO storage_event
-                    (timestamp, player_id, type)
+                    (timestamp, account_id, type)
                 VALUES (?, ?, ?)
                 """, eventParams);
 
@@ -275,7 +275,7 @@ public class Store {
                                List<LootEntryDBEvent> entries) {
         var eventParams = new Object[]{
                 event.getTimestamp(),
-                event.getPlayerId(),
+                event.getAccountId(),
                 event.getType(),
                 event.getNpcId(),
                 event.getCombatLevel()
@@ -283,7 +283,7 @@ public class Store {
 
         var id = Yank.insert("""
                 INSERT INTO loot_event
-                    (timestamp, player_id, type, npc_id, combat_level)
+                    (timestamp, account_id, type, npc_id, combat_level)
                 VALUES (?, ?, ?, ?, ?)
                 """, eventParams);
 
@@ -324,13 +324,13 @@ public class Store {
 
     public List<Account> getAccounts() {
         return Yank.queryBeanList("""
-                SELECT * FROM player
+                SELECT * FROM account
                 """, Account.class, new Object[]{});
     }
 
     public List<XPDBEvent> getXPEvents(long accountId) {
         return Yank.queryBeanList("""
-                SELECT * FROM xp_event WHERE player_id = ?
+                SELECT * FROM xp_event WHERE account_id = ?
                 """, XPDBEvent.class, new Object[]{accountId});
     }
 }

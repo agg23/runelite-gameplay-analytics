@@ -17,8 +17,7 @@ public class LootDBEvent {
     private long timestamp;
 
     @JsonSerialize(using = ToStringSerializer.class)
-    @JsonProperty("accountId")
-    private long playerId;
+    private long accountId;
 
     /**
      * 0 is monster, 1 is player
@@ -28,10 +27,10 @@ public class LootDBEvent {
     private int npcId;
     private int combatLevel;
 
-    public LootDBEvent(long timestamp, long playerId, int type,
+    public LootDBEvent(long timestamp, long accountId, int type,
                        int npcId,
                        int combatLevel) {
         // Set ID to 0, as that will be set by DB
-        this(0, timestamp, playerId, type, npcId, combatLevel);
+        this(0, timestamp, accountId, type, npcId, combatLevel);
     }
 }
