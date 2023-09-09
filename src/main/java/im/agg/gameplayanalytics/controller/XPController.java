@@ -1,15 +1,9 @@
 package im.agg.gameplayanalytics.controller;
 
-import im.agg.gameplayanalytics.server.Server;
-import im.agg.gameplayanalytics.server.Store;
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
 import im.agg.gameplayanalytics.server.models.Account;
-import im.agg.gameplayanalytics.server.models.ActivityEvent;
-import im.agg.gameplayanalytics.server.models.ActivityKind;
 import im.agg.gameplayanalytics.server.models.Skill;
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Client;
 
 import java.util.Date;
 import java.util.Timer;
@@ -52,11 +46,24 @@ public class XPController extends Controller {
 
     private Integer changedSkills = 0;
 
+    @Override
+    public void logout() {
+        super.logout();
+
+        if (this.timer != null) {
+            this.timer.cancel();
+        }
+
+        this.timer = new Timer();
+
+        this.writePartialXPEventIfChanged();
+    }
+
     private long debugTimestamp = 1694012465368L + 1000*60L;
 
     @Override
-    public void init(@NonNull Client client, @NonNull Store store, @NonNull Server server) {
-        super.init(client, store, server);
+    public void startDataFlow(Account account) {
+        super.startDataFlow(account);
 
         // TODO: Remove. This exists only for testing
         attack = 136;
@@ -109,24 +116,6 @@ public class XPController extends Controller {
                 server.updatedXPData(event);
             }
         }, 1000, 1000);
-    }
-
-    @Override
-    public void logout() {
-        super.logout();
-
-        if (this.timer != null) {
-            this.timer.cancel();
-        }
-
-        this.timer = new Timer();
-
-        this.writePartialXPEventIfChanged();
-    }
-
-    @Override
-    public void startDataFlow(Account account) {
-        super.startDataFlow(account);
 
         var standardPeriodMillieconds = UPDATE_PERIOD * 1000;
 

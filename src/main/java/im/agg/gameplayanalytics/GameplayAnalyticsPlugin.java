@@ -4,23 +4,20 @@ import com.google.inject.Provides;
 
 import javax.inject.Inject;
 
-import im.agg.gameplayanalytics.controller.ActivityController;
-import im.agg.gameplayanalytics.controller.Controller;
-import im.agg.gameplayanalytics.controller.MapController;
-import im.agg.gameplayanalytics.controller.XPController;
+import im.agg.gameplayanalytics.controller.*;
 import im.agg.gameplayanalytics.server.Server;
 import im.agg.gameplayanalytics.server.Store;
 import im.agg.gameplayanalytics.server.models.Account;
 import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.api.Client;
-import net.runelite.api.InventoryID;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
-import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.StatChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
@@ -39,14 +36,22 @@ public class GameplayAnalyticsPlugin extends Plugin {
     @Inject
     private GameplayAnalyticsConfig config;
 
+    @Inject
+    private ItemManager itemManager;
+
+    @Inject
+    private ClientThread clientThread;
+
     private final Store store = new Store();
     private final Server server = new Server(this.store);
 
     private final ActivityController activityController = new ActivityController();
     private final MapController mapController = new MapController();
+    private final StorageController storageController = new StorageController();
     private final XPController xpController = new XPController();
 
-    private final Controller[] controllers = new Controller[]{activityController, mapController, xpController};
+    private final Controller[] controllers = new Controller[]{
+            activityController, mapController, storageController, xpController};
 
     private boolean firstTick = true;
 
@@ -57,7 +62,7 @@ public class GameplayAnalyticsPlugin extends Plugin {
         this.store.init();
         this.server.init();
 
-        Arrays.stream(this.controllers).forEach(controller -> controller.init(this.client, this.store, this.server));
+        Arrays.stream(this.controllers).forEach(controller -> controller.init(this.client, this.clientThread, this.itemManager, this.store, this.server));
     }
 
     @Override
@@ -104,18 +109,6 @@ public class GameplayAnalyticsPlugin extends Plugin {
             this.store.createOrUpdatePlayer(account);
 
             Arrays.stream(this.controllers).forEach(controller -> controller.startDataFlow(account));
-
-//			var container = this.client.getItemContainer(InventoryID.INVENTORY);
-//
-//			for (var i = 0; i < container.size(); i++) {
-//				var item = container.getItem(i);
-//
-//				if (item == null) {
-//					log.info(String.format("No item in slot %d", i));
-//				} else {
-//					log.info(String.format("Item at %d, ID %d, quantity %d", i, item.getId(), item.getQuantity()));
-//				}
-//			}
         }
     }
 

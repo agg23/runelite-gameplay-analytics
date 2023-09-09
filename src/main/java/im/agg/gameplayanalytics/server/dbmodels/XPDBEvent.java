@@ -1,15 +1,12 @@
 package im.agg.gameplayanalytics.server.dbmodels;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.AccessLevel;
-
-import java.util.Date;
 
 // Separate from the main model because we need to generate the columns for the DB
 @AllArgsConstructor
@@ -21,7 +18,8 @@ public class XPDBEvent {
     long timestamp;
 
     @JsonSerialize(using = ToStringSerializer.class)
-    long accountId;
+    @JsonProperty("accountId")
+    long playerId;
 
     /**
      * 0 is a full update, 1 is a patch update
