@@ -4,8 +4,8 @@ import { Select } from "@mantine/core";
 import { useStore } from "../../store/store";
 
 export const AccountSelect: React.FC<{}> = () => {
-  const accountData = useStore((state) => state.api.accounts);
-  const { id, setActiveAccount } = useStore((state) => state.activeAccount);
+  const accountData = useStore((state) => state.accounts.api);
+  const { activeId, setActiveAccount } = useStore((state) => state.accounts);
 
   const [allAccountValues, onChange] = useMemo(() => {
     const onChange = (newId: string | null) => {
@@ -37,6 +37,10 @@ export const AccountSelect: React.FC<{}> = () => {
   }, [accountData, setActiveAccount]);
 
   return (
-    <Select value={id ?? null} data={allAccountValues} onChange={onChange} />
+    <Select
+      value={activeId ?? null}
+      data={allAccountValues}
+      onChange={onChange}
+    />
   );
 };

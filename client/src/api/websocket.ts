@@ -3,7 +3,7 @@ import { HOSTNAME } from "./config";
 import { ValidWSRouteName, WSRouteHandlers, WSSuccess } from "./routes";
 
 const connections: WSRouteHandlers = {
-  xp: useStore.getState().api.xp.insertUpdate,
+  xp: useStore.getState().xp.insertUpdate,
 };
 
 export const open = () => {

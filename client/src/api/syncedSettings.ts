@@ -23,7 +23,7 @@ export const init = () => {
     }
 
     savedSettings = settings.data;
-    useStore.getState().settings.loadSettings(settings.data);
+    useStore.getState().loadSettings(settings.data);
   });
 
   useStore.subscribe(
@@ -35,7 +35,7 @@ export const init = () => {
           : [...state.xp.selectedSkills.set];
 
       return {
-        activeAccountId: state.activeAccount?.id,
+        activeAccountId: state.accounts.activeId,
         darkTheme: state.settings.darkTheme,
         xp: {
           selectedSkills,

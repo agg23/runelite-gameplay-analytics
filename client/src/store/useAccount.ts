@@ -13,17 +13,19 @@ interface UseAccount {
 }
 
 export const useAccount = (): UseAccount => {
-  const { id, setActiveAccount } = useStore((state) => state.activeAccount);
-  const accounts = useStore((state) => state.api.accounts);
+  const { activeId, setActiveAccount } = useStore((state) => state.accounts);
+  const accounts = useStore((state) => state.accounts.api);
 
   return useMemo(() => {
     const output = {
-      id,
+      id: activeId,
       setActiveAccount,
     };
 
     if (accounts.type === "data") {
-      const matchedAccount = accounts.data.find((account) => account.id === id);
+      const matchedAccount = accounts.data.find(
+        (account) => account.id === activeId
+      );
 
       return {
         ...output,
@@ -35,5 +37,5 @@ export const useAccount = (): UseAccount => {
         account: undefined,
       };
     }
-  }, [id, accounts, setActiveAccount]);
+  }, [activeId, accounts, setActiveAccount]);
 };

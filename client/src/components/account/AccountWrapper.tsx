@@ -4,20 +4,20 @@ import { useStore } from "../../store/store";
 export const AccountWrapper: React.FC<React.PropsWithChildren<{}>> = ({
   children,
 }) => {
-  const account = useStore((state) => state.activeAccount);
-  const accountData = useStore((state) => state.api.accounts);
+  const accountId = useStore((state) => state.accounts.activeId);
+  const { api, requestData } = useStore((state) => state.accounts);
 
   const [initialLoad, setInitialLoad] = useState<boolean>(true);
 
   useEffect(() => {
     setInitialLoad(false);
-    accountData.requestData();
+    requestData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return initialLoad || accountData.type === "loading" ? (
+  return initialLoad || api.type === "loading" ? (
     <div>Accounts loading</div>
-  ) : !account ? (
+  ) : !accountId ? (
     <div>No accounts found</div>
   ) : (
     <>{children}</>

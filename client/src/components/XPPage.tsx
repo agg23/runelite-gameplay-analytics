@@ -4,14 +4,13 @@ import { Checkbox, createStyles } from "@mantine/core";
 import { useStore } from "../store/store";
 import { AllSkills } from "./osrs/skills/AllSkills";
 import { XPEvent } from "../api/types";
-import { format } from "date-fns";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { FixedSeries } from "../types/ApexCharts";
 
 export const XPPage: React.FC<{}> = () => {
-  const activeAccount = useStore((state) => state.activeAccount);
-  const xpApi = useStore((state) => state.api.xp);
+  const activeAccount = useStore((state) => state.accounts.activeId);
+  const { api: xpApi, requestData } = useStore((state) => state.xp);
   const {
     displayDeltas,
     selectedSkills,
@@ -47,7 +46,11 @@ export const XPPage: React.FC<{}> = () => {
   // );
 
   useEffect(() => {
-    xpApi.requestData();
+    if (!activeAccount) {
+      return;
+    }
+
+    requestData(activeAccount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAccount]);
 
@@ -170,7 +173,7 @@ const useStyles = createStyles((theme) => ({
 // };
 
 const useLinechartData = () => {
-  const xpApi = useStore((state) => state.api.xp);
+  const xpApi = useStore((state) => state.xp.api);
   const { selectedSkills, displayDeltas } = useStore((state) => state.xp);
 
   return useMemo((): FixedSeries => {
