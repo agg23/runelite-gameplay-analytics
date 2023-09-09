@@ -85,6 +85,9 @@ public class Store {
                     type INTEGER NOT NULL,
                     npc_id INTEGER NOT NULL,
                     combat_level INTEGER NOT NULL,
+                    region INTEGER NOT NULL,
+                    tile_x INTEGER NOT NULL,
+                    tile_y INTEGER NOT NULL,
                 """);
 
         this.sqlExecute("""
@@ -279,13 +282,16 @@ public class Store {
                 event.getAccountId(),
                 event.getType(),
                 event.getNpcId(),
-                event.getCombatLevel()
+                event.getCombatLevel(),
+                event.getRegion(),
+                event.getTileX(),
+                event.getTileY()
         };
 
         var id = Yank.insert("""
                 INSERT INTO loot_event
-                    (timestamp, account_id, type, npc_id, combat_level)
-                VALUES (?, ?, ?, ?, ?)
+                    (timestamp, account_id, type, npc_id, combat_level, region, tile_x, tile_y)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """, eventParams);
 
         var entryParams = new Object[entries.size()][];
@@ -363,7 +369,7 @@ public class Store {
     public List<LootEvent> getLootEvents(long accountId) {
         var entries = Yank.queryBeanList("""
                 SELECT
-                    id, timestamp, account_id, type, npc_id, combat_level, item_id, quantity, ge_per_item
+                    id, timestamp, account_id, type, npc_id, combat_level, item_id, quantity, ge_per_item, region, tile_x, tile_y
                 FROM loot_event JOIN loot_entry
                 ON loot_event.id == loot_entry.loot_id
                 WHERE account_id = ?
@@ -382,6 +388,8 @@ public class Store {
                     return new LootEvent(first.getId(), first.getTimestamp(),
                             first.getAccountId(), first.getType(),
                             first.getNpcId(), first.getCombatLevel(),
+                            first.getRegion(), first.getTileX(),
+                            first.getTileY(),
                             groupedEntries);
                 }).collect(Collectors.toList());
     }

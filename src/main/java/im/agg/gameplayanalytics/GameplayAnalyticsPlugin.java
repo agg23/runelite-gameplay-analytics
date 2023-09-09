@@ -148,9 +148,13 @@ public class GameplayAnalyticsPlugin extends Plugin {
         var npc = npcLootReceived.getNpc();
         var items = npcLootReceived.getItems();
 
+        var location = npc.getWorldLocation();
+
         var event =
                 new LootDBEvent(new Date().getTime(), this.account.getId(), 0,
-                        npc.getId(), npc.getCombatLevel());
+                        npc.getId(), npc.getCombatLevel(),
+                        location.getRegionID(), location.getX(),
+                        location.getY());
 
         var entries =
                 items.stream().map(item -> new LootEntryDBEvent(item.getId(),

@@ -22,5 +22,9 @@ public class LootEvent {
     private int npcId;
     private int combatLevel;
 
+    private int region;
+    private int tileX;
+    private int tileY;
+
     private List<LootEntryEvent> entries;
 }

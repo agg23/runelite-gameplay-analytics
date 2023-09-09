@@ -27,10 +27,15 @@ public class LootDBEvent {
     private int npcId;
     private int combatLevel;
 
+    private int region;
+    private int tileX;
+    private int tileY;
+
     public LootDBEvent(long timestamp, long accountId, int type,
                        int npcId,
-                       int combatLevel) {
+                       int combatLevel, int region, int tileX, int tileY) {
         // Set ID to 0, as that will be set by DB
-        this(0, timestamp, accountId, type, npcId, combatLevel);
+        this(0, timestamp, accountId, type, npcId, combatLevel, region, tileX,
+                tileY);
     }
 }

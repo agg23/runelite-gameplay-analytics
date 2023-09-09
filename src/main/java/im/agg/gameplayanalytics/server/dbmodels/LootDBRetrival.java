@@ -22,4 +22,8 @@ public class LootDBRetrival {
     private Integer itemId;
     private Integer quantity;
     private Integer gePerItem;
+
+    private Integer region;
+    private Integer tileX;
+    private Integer tileY;
 }
