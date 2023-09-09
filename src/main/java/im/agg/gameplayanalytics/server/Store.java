@@ -1,8 +1,6 @@
 package im.agg.gameplayanalytics.server;
 
-import im.agg.gameplayanalytics.server.dbmodels.StorageDBEvent;
-import im.agg.gameplayanalytics.server.dbmodels.StorageEntryDBEvent;
-import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
+import im.agg.gameplayanalytics.server.dbmodels.*;
 import im.agg.gameplayanalytics.server.models.Account;
 import im.agg.gameplayanalytics.server.models.ActivityEvent;
 import im.agg.gameplayanalytics.server.models.MapEvent;
@@ -63,7 +61,7 @@ public class Store {
                     type INTEGER NOT NULL,
                 """);
 
-        // Storage (Inventory, bank)
+        // Storage (Inventory, Bank)
 
         this.createEventsTable("storage_event", true, """
                     type INTEGER NOT NULL,
@@ -72,7 +70,6 @@ public class Store {
         this.sqlExecute("""
                 CREATE TABLE IF NOT EXISTS storage_entry (
                     event_id INTEGER NOT NULL,
-                    timestamp INTEGER NOT NULL,
                     item_id INTEGER NOT NULL,
                     slot INTEGER NOT NULL,
                     quantity INTEGER NOT NULL,
@@ -81,7 +78,23 @@ public class Store {
                 )
                 """);
 
-        this.createTimestampIndex("storage_entry");
+        // Monster loot
+
+        this.createEventsTable("loot_event", true, """
+                    type INTEGER NOT NULL,
+                    npc_id INTEGER NOT NULL,
+                    combat_level INTEGER NOT NULL,
+                """);
+
+        this.sqlExecute("""
+                CREATE TABLE IF NOT EXISTS loot_entry (
+                    loot_id INTEGER NOT NULL,
+                    item_id INTEGER NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    ge_per_item INTEGER NOT NULL,
+                    FOREIGN KEY (loot_id) REFERENCES loot_event (id)
+                )
+                """);
 
         // Settings
 
@@ -226,25 +239,24 @@ public class Store {
 
     public void writeStorageEvent(StorageDBEvent event,
                                   List<StorageEntryDBEvent> entries) {
-        var parameters = new Object[]{
-                event.getType(),
+        var eventParams = new Object[]{
+                event.getTimestamp(),
                 event.getPlayerId(),
-                event.getTimestamp()
+                event.getType()
         };
 
         var id = Yank.insert("""
                 INSERT INTO storage_event
-                    (type, player_id, timestamp)
+                    (timestamp, player_id, type)
                 VALUES (?, ?, ?)
-                """, parameters);
+                """, eventParams);
 
-        var params = new Object[entries.size()][];
+        var entryParams = new Object[entries.size()][];
 
         for (var i = 0; i < entries.size(); i++) {
             var entry = entries.get(i);
-            params[i] = new Object[]{
+            entryParams[i] = new Object[]{
                     id,
-                    entry.getTimestamp(),
                     entry.getItemId(),
                     entry.getSlot(),
                     entry.getQuantity(),
@@ -254,9 +266,44 @@ public class Store {
 
         Yank.executeBatch("""
                 INSERT INTO storage_entry
-                    (event_id, timestamp, item_id, slot, quantity, ge_per_item)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """, params);
+                    (event_id, item_id, slot, quantity, ge_per_item)
+                VALUES (?, ?, ?, ?, ?)
+                """, entryParams);
+    }
+
+    public void writeLootEvent(LootDBEvent event,
+                               List<LootEntryDBEvent> entries) {
+        var eventParams = new Object[]{
+                event.getTimestamp(),
+                event.getPlayerId(),
+                event.getType(),
+                event.getNpcId(),
+                event.getCombatLevel()
+        };
+
+        var id = Yank.insert("""
+                INSERT INTO loot_event
+                    (timestamp, player_id, type, npc_id, combat_level)
+                VALUES (?, ?, ?, ?, ?)
+                """, eventParams);
+
+        var entryParams = new Object[entries.size()][];
+
+        for (var i = 0; i < entries.size(); i++) {
+            var entry = entries.get(i);
+            entryParams[i] = new Object[]{
+                    id,
+                    entry.getItemId(),
+                    entry.getQuantity(),
+                    entry.getGePerItem()
+            };
+        }
+
+        Yank.executeBatch("""
+                INSERT INTO loot_entry
+                    (loot_id, item_id, quantity, ge_per_item)
+                VALUES (?, ?, ?, ?)
+                """, entryParams);
     }
 
     public void writeSettings(String blob) {

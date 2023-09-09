@@ -3,12 +3,15 @@ package im.agg.gameplayanalytics.server.dbmodels;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor
-public class StorageDBEvent {
+public class LootDBEvent {
     private long id;
 
     private long timestamp;
@@ -18,12 +21,17 @@ public class StorageDBEvent {
     private long playerId;
 
     /**
-     * 0 is player's inventory
+     * 0 is monster, 1 is player
      */
     private int type;
 
-    public StorageDBEvent(int type, long timestamp, long playerId) {
+    private int npcId;
+    private int combatLevel;
+
+    public LootDBEvent(long timestamp, long playerId, int type,
+                       int npcId,
+                       int combatLevel) {
         // Set ID to 0, as that will be set by DB
-        this(0, timestamp, playerId, type);
+        this(0, timestamp, playerId, type, npcId, combatLevel);
     }
 }

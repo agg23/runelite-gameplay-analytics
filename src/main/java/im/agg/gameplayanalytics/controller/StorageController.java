@@ -82,7 +82,7 @@ public class StorageController extends Controller {
 
             if (item != null) {
                 var price = this.itemManager.getItemPrice(item.getId());
-                var entry = new StorageEntryDBEvent(timestamp, item.getId(), i,
+                var entry = new StorageEntryDBEvent(item.getId(), i,
                         item.getQuantity(), price);
 
                 entries.add(entry);

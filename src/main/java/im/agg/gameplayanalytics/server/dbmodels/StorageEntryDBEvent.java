@@ -4,21 +4,20 @@ import im.agg.gameplayanalytics.server.models.MapEvent;
 import lombok.*;
 
 @Getter
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor
 public class StorageEntryDBEvent {
     private long eventId;
-    private long timestamp;
 
     private int itemId;
     private int slot;
     private int quantity;
     private int gePerItem;
 
-    public StorageEntryDBEvent(long timestamp, int itemId, int slot,
+    public StorageEntryDBEvent(int itemId, int slot,
                                int quantity, int gePerItem) {
         // Set ID to 0, as that will be set later
-        this(0, timestamp, itemId, slot, quantity, gePerItem);
+        this(0, itemId, slot, quantity, gePerItem);
     }
 
     @Override

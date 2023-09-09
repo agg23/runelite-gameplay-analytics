@@ -7,9 +7,13 @@ import javax.inject.Inject;
 import im.agg.gameplayanalytics.controller.*;
 import im.agg.gameplayanalytics.server.Server;
 import im.agg.gameplayanalytics.server.Store;
+import im.agg.gameplayanalytics.server.dbmodels.LootDBEvent;
+import im.agg.gameplayanalytics.server.dbmodels.LootEntryDBEvent;
 import im.agg.gameplayanalytics.server.models.Account;
 import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Player;
+import net.runelite.api.events.ActorDeath;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.api.Client;
 import net.runelite.api.events.GameStateChanged;
@@ -17,11 +21,14 @@ import net.runelite.api.events.GameTick;
 import net.runelite.api.events.StatChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
 import java.util.Arrays;
+import java.util.Date;
+import java.util.stream.Collectors;
 
 import static net.runelite.api.GameState.LOGIN_SCREEN;
 
@@ -53,6 +60,8 @@ public class GameplayAnalyticsPlugin extends Plugin {
 
     private final Controller[] controllers = new Controller[]{
             activityController, mapController, storageController, xpController};
+
+    private Account account;
 
     private boolean firstTick = true;
 
@@ -106,13 +115,14 @@ public class GameplayAnalyticsPlugin extends Plugin {
             var id = this.client.getAccountHash();
             var username = this.client.getLocalPlayer().getName();
 
-            var account = new Account(id, username);
+            this.account = new Account(id, username);
 
             // Write character to store
-            this.store.createOrUpdatePlayer(account);
+            this.store.createOrUpdatePlayer(this.account);
 
             Arrays.stream(this.controllers)
-                    .forEach(controller -> controller.startDataFlow(account));
+                    .forEach(controller -> controller.startDataFlow(
+                            this.account));
         }
     }
 
@@ -129,6 +139,44 @@ public class GameplayAnalyticsPlugin extends Plugin {
         var skill = Skill.fromRLSkill(statChanged.getSkill());
 
         this.xpController.updateXp(skill, statChanged.getXp());
+    }
+
+    @Subscribe
+    public void onNpcLootReceived(NpcLootReceived npcLootReceived) {
+        var npc = npcLootReceived.getNpc();
+        var items = npcLootReceived.getItems();
+
+        log.info(String.format("Loot - Name: %s, Level: %d, ID: %d",
+                npc.getName(), npc.getCombatLevel(), npc.getId()));
+
+        var event =
+                new LootDBEvent(new Date().getTime(), this.account.getId(), 0,
+                        npc.getId(), npc.getCombatLevel());
+
+        var entries =
+                items.stream().map(item -> new LootEntryDBEvent(item.getId(),
+                        item.getQuantity(),
+                        this.itemManager.getItemPrice(item.getId()))).collect(
+                        Collectors.toList());
+
+        this.store.writeLootEvent(event, entries);
+    }
+
+    @Subscribe
+    public void onActorDeath(ActorDeath actorDeath) {
+        var actor = actorDeath.getActor();
+        if (actor instanceof Player) {
+            var player = (Player) actor;
+            var location = player.getWorldLocation();
+
+            if (player == this.client.getLocalPlayer()) {
+                // TODO
+                log.info(
+                        String.format("Player died at Region: %d, X: %d, Y: %d",
+                                location.getRegionID(), location.getX(),
+                                location.getY()));
+            }
+        }
     }
 
 
