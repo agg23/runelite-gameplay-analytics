@@ -123,7 +123,8 @@ public class Server {
         this.app.get("/api/settings", ctx -> {
             var settings = this.store.getSettings();
             // Inject JSONWrapper around string. Can't use object because this isn't a string, but a serialized JSON object
-            ctx.result(String.format("{\"type\": \"success\", \"data\": %s}", settings));
+            ctx.result(String.format("{\"type\": \"success\", \"data\": %s}",
+                    settings));
             ctx.contentType(ContentType.JSON);
         });
 

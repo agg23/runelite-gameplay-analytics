@@ -68,7 +68,8 @@ public class StorageController extends Controller {
         final List<StorageEntryDBEvent> entries;
     }
 
-    private StorageEventWrapper getInventory(InventoryID inventoryID, int dbType) {
+    private StorageEventWrapper getInventory(InventoryID inventoryID,
+                                             int dbType) {
         var container = this.client.getItemContainer(inventoryID);
 
         var timestamp = new Date().getTime();
@@ -81,7 +82,8 @@ public class StorageController extends Controller {
 
             if (item != null) {
                 var price = this.itemManager.getItemPrice(item.getId());
-                var entry = new StorageEntryDBEvent(timestamp, item.getId(), i, item.getQuantity(), price);
+                var entry = new StorageEntryDBEvent(timestamp, item.getId(), i,
+                        item.getQuantity(), price);
 
                 entries.add(entry);
             }

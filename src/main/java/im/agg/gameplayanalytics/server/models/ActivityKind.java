@@ -11,8 +11,7 @@ public enum ActivityKind {
 
     private final int state;
 
-    ActivityKind(int state)
-    {
+    ActivityKind(int state) {
         this.state = state;
     }
 

@@ -15,13 +15,17 @@ public class ActivityController extends Controller {
     public void logout() {
         super.logout();
 
-        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Logout, this.account.getId(), new Date()));
+        this.store.writeActivityEvent(
+                new ActivityEvent(ActivityKind.Logout, this.account.getId(),
+                        new Date()));
     }
 
     @Override
     public void startDataFlow(Account account) {
         super.startDataFlow(account);
 
-        this.store.writeActivityEvent(new ActivityEvent(ActivityKind.Login, this.account.getId(), new Date()));
+        this.store.writeActivityEvent(
+                new ActivityEvent(ActivityKind.Login, this.account.getId(),
+                        new Date()));
     }
 }

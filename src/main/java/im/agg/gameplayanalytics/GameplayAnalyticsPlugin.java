@@ -45,7 +45,8 @@ public class GameplayAnalyticsPlugin extends Plugin {
     private final Store store = new Store();
     private final Server server = new Server(this.store);
 
-    private final ActivityController activityController = new ActivityController();
+    private final ActivityController activityController =
+            new ActivityController();
     private final MapController mapController = new MapController();
     private final StorageController storageController = new StorageController();
     private final XPController xpController = new XPController();
@@ -62,7 +63,9 @@ public class GameplayAnalyticsPlugin extends Plugin {
         this.store.init();
         this.server.init();
 
-        Arrays.stream(this.controllers).forEach(controller -> controller.init(this.client, this.clientThread, this.itemManager, this.store, this.server));
+        Arrays.stream(this.controllers).forEach(
+                controller -> controller.init(this.client, this.clientThread,
+                        this.itemManager, this.store, this.server));
     }
 
     @Override
@@ -108,7 +111,8 @@ public class GameplayAnalyticsPlugin extends Plugin {
             // Write character to store
             this.store.createOrUpdatePlayer(account);
 
-            Arrays.stream(this.controllers).forEach(controller -> controller.startDataFlow(account));
+            Arrays.stream(this.controllers)
+                    .forEach(controller -> controller.startDataFlow(account));
         }
     }
 
@@ -118,7 +122,10 @@ public class GameplayAnalyticsPlugin extends Plugin {
             return;
         }
 
-        log.info(String.format("Skill: %s, XP: %d, Level: %d, Boosted level: %d", statChanged.getSkill().getName(), statChanged.getXp(), statChanged.getLevel(), statChanged.getBoostedLevel()));
+        log.info(
+                String.format("Skill: %s, XP: %d, Level: %d, Boosted level: %d",
+                        statChanged.getSkill().getName(), statChanged.getXp(),
+                        statChanged.getLevel(), statChanged.getBoostedLevel()));
         var skill = Skill.fromRLSkill(statChanged.getSkill());
 
         this.xpController.updateXp(skill, statChanged.getXp());

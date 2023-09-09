@@ -10,7 +10,8 @@ public class ActivityEvent extends Event {
     @NotNull
     private final ActivityKind type;
 
-    public ActivityEvent(@NotNull ActivityKind type, long accountId, Date timestamp) {
+    public ActivityEvent(@NotNull ActivityKind type, long accountId,
+                         Date timestamp) {
         super(timestamp, accountId);
 
         this.type = type;

@@ -93,7 +93,8 @@ public class Store {
                 """);
     }
 
-    private void createEventsTable(String name, boolean hasCustomPrimaryKey, String fields) {
+    private void createEventsTable(String name, boolean hasCustomPrimaryKey,
+                                   String fields) {
         this.createEventsTable(name, hasCustomPrimaryKey, fields, "");
     }
 
@@ -105,17 +106,20 @@ public class Store {
      * @param fields              The fields to insert, with a trailing comma
      * @param foreignKeys         Foreign keys to apply
      */
-    private void createEventsTable(String name, boolean hasCustomPrimaryKey, String fields, String foreignKeys) {
+    private void createEventsTable(String name, boolean hasCustomPrimaryKey,
+                                   String fields, String foreignKeys) {
         this.sqlExecute(String.format("""
-                CREATE TABLE IF NOT EXISTS %s (
-                    %s
-                    player_id INTEGER NOT NULL,
-                    timestamp INTEGER NOT NULL,
-                    %s
-                    %s
-                    FOREIGN KEY (player_id) REFERENCES player (id)
-                )
-                """, name, hasCustomPrimaryKey ? "id INTEGER PRIMARY KEY AUTOINCREMENT," : "", fields, foreignKeys));
+                        CREATE TABLE IF NOT EXISTS %s (
+                            %s
+                            player_id INTEGER NOT NULL,
+                            timestamp INTEGER NOT NULL,
+                            %s
+                            %s
+                            FOREIGN KEY (player_id) REFERENCES player (id)
+                        )
+                        """, name,
+                hasCustomPrimaryKey ? "id INTEGER PRIMARY KEY AUTOINCREMENT," :
+                        "", fields, foreignKeys));
 
         this.createTimestampIndex(name);
     }
@@ -220,7 +224,8 @@ public class Store {
                 """, parameters);
     }
 
-    public void writeStorageEvent(StorageDBEvent event, List<StorageEntryDBEvent> entries) {
+    public void writeStorageEvent(StorageDBEvent event,
+                                  List<StorageEntryDBEvent> entries) {
         var parameters = new Object[]{
                 event.getType(),
                 event.getPlayerId(),

@@ -19,7 +19,8 @@ public abstract class Controller {
 
     protected Account account;
 
-    public void init(Client client, ClientThread clientThread, ItemManager itemManager, Store store, Server server) {
+    public void init(Client client, ClientThread clientThread,
+                     ItemManager itemManager, Store store, Server server) {
         this.client = client;
         this.clientThread = clientThread;
         this.itemManager = itemManager;
