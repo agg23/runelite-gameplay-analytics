@@ -22,6 +22,10 @@ export const NavLinks: React.FC<{}> = () => {
         label: "Kills",
         link: "/loot",
       },
+      {
+        label: "Inventory",
+        link: "/inventory",
+      },
     ],
     []
   );

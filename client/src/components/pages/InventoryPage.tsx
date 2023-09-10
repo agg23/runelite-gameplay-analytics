@@ -7,43 +7,44 @@ import { FixedSeries } from "../../types/ApexCharts";
 import { ApexOptions } from "apexcharts";
 import { NoData } from "../error/NoData";
 import { Timeline } from "react-svg-timeline";
-import { LootEvent } from "../../api/internal/types";
-import { NPC } from "../osrs/npc/NPC";
+import { InventoryEvent, LootEvent } from "../../api/internal/types";
 import { ItemGrid } from "../osrs/items/ItemGrid";
+import { NPC } from "../osrs/npc/NPC";
+import { InventoryGrid } from "../osrs/items/InventoryGrid";
 
-export const LootPage: React.FC<{}> = () => {
+export const InventoryPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
   const {
     selectedEntry,
-    api: lootApi,
+    api: inventoryApi,
     requestData,
     setSelectedEntry,
-  } = useStore((state) => state.loot);
+  } = useStore((state) => state.inventory);
 
   // const chartData = useMemo((): FixedSeries => {
-  //   if (lootApi.type !== "data") {
+  //   if (inventoryApi.type !== "data") {
   //     return [];
   //   }
 
   //   return [
   //     {
   //       name: "loot",
-  //       data: lootApi.data.map((event) => [event.timestamp, 1]),
+  //       data: inventoryApi.data.map((event) => [event.timestamp, 1]),
   //     },
   //   ];
-  // }, [lootApi]);
+  // }, [inventoryApi]);
 
   const chartData = useMemo(() => {
-    if (lootApi.type !== "data") {
+    if (inventoryApi.type !== "data") {
       return [];
     }
 
-    return lootApi.data.map((event) => ({
+    return inventoryApi.data.map((event) => ({
       laneId: "0",
       eventId: `${event.timestamp}`,
       startTimeMillis: event.timestamp,
     }));
-  }, [lootApi]);
+  }, [inventoryApi]);
 
   useEffect(() => {
     if (!activeAccount) {
@@ -54,11 +55,11 @@ export const LootPage: React.FC<{}> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAccount]);
 
-  const noData = lootApi.type === "data" && lootApi.data.length === 0;
+  const noData = inventoryApi.type === "data" && inventoryApi.data.length === 0;
 
   return (
     <>
-      <LoadingOverlay visible={lootApi.type !== "data"} />
+      <LoadingOverlay visible={inventoryApi.type !== "data"} />
       <NoData hasData={!noData}>
         {/* <Chart
           height="200"
@@ -79,9 +80,9 @@ export const LootPage: React.FC<{}> = () => {
               return;
             }
 
-            const data = lootApi.type === "data" ? lootApi.data : [];
+            const data = inventoryApi.type === "data" ? inventoryApi.data : [];
 
-            let lastEvent: LootEvent | undefined = undefined;
+            let lastEvent: InventoryEvent | undefined = undefined;
             for (const event of data) {
               if (event.timestamp > cursor) {
                 setSelectedEntry(lastEvent);
@@ -97,25 +98,8 @@ export const LootPage: React.FC<{}> = () => {
           width={400}
         />
         <div>Selected: {selectedEntry?.timestamp}</div>
-        {!!selectedEntry && <NPC id={selectedEntry.npcId} />}
-        {/* <ItemGrid
-          itemIds={selectedEntry?.entries.map((entry) => entry.itemId) ?? []}
-        /> */}
+        <InventoryGrid entries={selectedEntry?.entries ?? []} />
       </NoData>
     </>
   );
-};
-
-const useStyles = createStyles((theme) => ({}));
-
-const options: ApexOptions = {
-  chart: {
-    height: "200px",
-  },
-  xaxis: {
-    type: "datetime",
-    title: {
-      text: "Timestamp",
-    },
-  },
 };

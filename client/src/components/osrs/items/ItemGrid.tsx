@@ -1,16 +1,16 @@
 import { Grid } from "@mantine/core";
 import { Item } from "./Item";
 
-interface InventoryGridProps {
+interface ItemGridProps {
   itemIds: number[];
 }
 
-export const InventoryGrid: React.FC<InventoryGridProps> = ({ itemIds }) => {
+export const ItemGrid: React.FC<ItemGridProps> = ({ itemIds }) => {
   return (
     <Grid>
-      {itemIds.map((id) => (
+      {/* {itemIds.map((id) => (
         <Item key={id} id={id} />
-      ))}
+      ))} */}
     </Grid>
   );
 };

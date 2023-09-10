@@ -341,14 +341,14 @@ public class Store {
                 """, XPDBEvent.class, new Object[]{accountId});
     }
 
-    public List<StorageEvent> getStorageEvents(long accountId) {
+    public List<StorageEvent> getStorageEvents(long accountId, int type) {
         var entries = Yank.queryBeanList("""
                 SELECT
                     id, timestamp, account_id, type, item_id, slot, quantity, ge_per_item
                 FROM storage_event JOIN storage_entry
                 ON storage_event.id == storage_entry.event_id
-                WHERE account_id = ?
-                """, StorageDBRetrieval.class, new Object[]{accountId});
+                WHERE account_id = ? AND type = ?
+                """, StorageDBRetrieval.class, new Object[]{accountId, type});
 
         return groupSequentialList(entries, StorageDBRetrieval::getId).stream()
                 .map(group -> {

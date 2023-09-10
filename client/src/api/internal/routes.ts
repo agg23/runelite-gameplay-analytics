@@ -1,8 +1,18 @@
-import { Account, LootEvent, SyncedSettings, XPEvent } from "./types";
+import {
+  Account,
+  InventoryEvent,
+  LootEvent,
+  SyncedSettings,
+  XPEvent,
+} from "./types";
 
 interface GetRoutes {
   accounts: {
     http: Account[];
+    ws: void;
+  };
+  inventory: {
+    http: InventoryEvent[];
     ws: void;
   };
   loot: {
@@ -22,6 +32,12 @@ interface GetRoutes {
     ws: void;
   };
 }
+
+export const alternateRoutePaths: {
+  [key in keyof GetRoutes]?: string;
+} = {
+  inventory: "storage",
+};
 
 interface PostRoutes {
   settings: {

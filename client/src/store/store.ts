@@ -8,6 +8,7 @@ import { AccountsState, createAccountsSlice } from "./accounts";
 import { XPState, createXPSlice } from "./xp";
 import { SettingsState, createSettingsSlice } from "./settings";
 import { LootState, createLootSlice } from "./loot";
+import { InventoryState, createInventorySlice } from "./inventory";
 
 interface StateExtraActions {
   loadSettings: (settings: SyncedSettings) => void;
@@ -15,6 +16,7 @@ interface StateExtraActions {
 
 export type Store = StateExtraActions & {
   accounts: AccountsState;
+  inventory: InventoryState;
   loot: LootState;
   xp: XPState;
   settings: SettingsState;
@@ -29,6 +31,7 @@ export const useStore = create(
 
       return {
         accounts: createAccountsSlice(...args),
+        inventory: createInventorySlice(...args),
         loot: createLootSlice(...args),
         xp: createXPSlice(...args),
         settings: createSettingsSlice(...args),

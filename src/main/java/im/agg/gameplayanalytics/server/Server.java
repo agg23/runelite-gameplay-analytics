@@ -84,9 +84,19 @@ public class Server {
             ctx.json(new HTTPJSONWrapper(events));
         }));
 
-        this.createAccountRoute("/api/storage/{accountId}",
+        this.createAccountRoute("/api/storage/{accountId}/{type}",
                 (ctx, accountId) -> {
-                    var events = this.store.getStorageEvents(accountId);
+                    var typeParam = ctx.pathParam("type");
+
+                    int type = 0;
+
+                    try {
+                        type = Integer.parseInt(typeParam);
+                    } catch (NumberFormatException e) {
+                        errorResponse("Invalid storage type provided", ctx);
+                    }
+
+                    var events = this.store.getStorageEvents(accountId, type);
                     ctx.json(new HTTPJSONWrapper(events));
                 });
 

@@ -6,13 +6,18 @@ import {
   GetRouteName,
   PostRouteName,
   HTTPPostResponseRoute,
+  alternateRoutePaths,
 } from "./routes";
 
 export const getRoute = async <T extends GetRouteName>(
   route: T,
   additionalPath?: string
 ): Promise<HTTPGetRouteResponse<T>> => {
-  let url = `http://${HOSTNAME}/api/${route}/`;
+  const alternateRoute = alternateRoutePaths[route];
+
+  const finalRoute = alternateRoute ? alternateRoute : route;
+
+  let url = `http://${HOSTNAME}/api/${finalRoute}/`;
 
   if (additionalPath) {
     url += additionalPath;

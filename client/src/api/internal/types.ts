@@ -14,6 +14,26 @@ export interface Account {
   username: string;
 }
 
+// Inventory
+
+export interface InventoryEvent {
+  id: number;
+  timestamp: number;
+
+  accountId: string;
+
+  type: number;
+
+  entries: InventoryEntry[];
+}
+
+export interface InventoryEntry {
+  itemId: number;
+  slot: number;
+  quantity: number;
+  gePerItem: number;
+}
+
 // Loot
 
 export interface LootEvent {
