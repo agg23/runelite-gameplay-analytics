@@ -1,21 +1,28 @@
 /** @jsxImportSource @emotion/react */
 import React from "react";
 import { Nav } from "./Nav";
-import { css } from "@emotion/react";
+import { createStyles } from "@mantine/core";
 
 export const Page: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+  const { classes } = useStyles();
+
   return (
-    <div css={pageCss}>
+    <div className={classes.page}>
       <Nav />
-      <div css={contentCss}>{children}</div>
+      <div className={classes.content}>{children}</div>
     </div>
   );
 };
 
-const pageCss = css({
-  display: "flex",
-});
+const useStyles = createStyles((theme) => ({
+  page: {
+    display: "flex",
+  },
+  content: {
+    flexGrow: 1,
 
-const contentCss = css({
-  flexGrow: 1,
-});
+    marginTop: theme.spacing.md,
+    marginLeft: theme.spacing.xs,
+    marginRight: theme.spacing.xs,
+  },
+}));

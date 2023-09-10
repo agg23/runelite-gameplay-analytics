@@ -1,9 +1,16 @@
-import { exhaustiveStringTuple } from "../types/util";
-import { Account, SyncedSettings, XPEvent } from "./types";
+import { Account, LootEvent, SyncedSettings, XPEvent } from "./types";
 
 interface GetRoutes {
   accounts: {
     http: Account[];
+    ws: void;
+  };
+  loot: {
+    http: LootEvent[];
+    ws: void;
+  };
+  storage: {
+    http: StorageEvent[];
     ws: void;
   };
   xp: {
@@ -58,7 +65,7 @@ export type ValidWSRouteName = {
 }[keyof GetRoutes];
 
 // export const websocketRouteNames: Array<WSRouteName<GetRouteName>> = [];
-const websocketRouteNames = exhaustiveStringTuple<ValidWSRouteName>()("xp");
+// const websocketRouteNames = exhaustiveStringTuple<ValidWSRouteName>()("xp");
 
 export type WSRouteHandlers = {
   [Key in ValidWSRouteName]: (newData: WSRoute<Key>) => void;

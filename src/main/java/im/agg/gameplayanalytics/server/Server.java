@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.imageio.ImageIO;
 import java.io.ByteArrayOutputStream;
 import java.util.HashSet;
+import java.util.concurrent.*;
 
 @Slf4j
 
@@ -29,46 +30,19 @@ public class Server {
     private final ObjectMapper jsonMapper = new ObjectMapper();
 
     private final Store store;
+    private final InternalMetadataServer internalMetadataServer;
 
     private final HashSet<WsContext> activeContexts = new HashSet<>();
 
-    public Server(Store store) {
+    public Server(Store store, InternalMetadataServer internalMetadataServer) {
         this.store = store;
+        this.internalMetadataServer = internalMetadataServer;
 
         this.app = Javalin.create(config -> {
             // TODO: Make this more targeted
             config.enableCorsForAllOrigins();
 
             config.registerPlugin(new RedirectToLowercasePathPlugin());
-
-//            try {
-//                var filesystem = FileSystems.newFileSystem(Client.class.getResource("").toURI(), new HashMap<>());
-//
-//                var path = "/skill_icons";
-//
-//                var resourceUri = Client.class.getResource(path).toURI();
-//
-//                Path fsPath;
-//                if (resourceUri.getScheme().equals("jar")) {
-//                    fsPath = filesystem.getPath(path);
-//                } else {
-//                    fsPath = Paths.get(resourceUri);
-//                }
-//
-////                var path = Client.class.getResource("/skill_icons/");
-//
-//                log.info(fsPath.toAbsolutePath().toString());
-//
-//                config.addStaticFiles(ctx -> {
-//                    ctx.hostedPath = "/assets/skillIcons/";
-//                    ctx.directory = fsPath.toAbsolutePath().toString();
-//                });
-//            } catch (IOException e) {
-//                throw new RuntimeException(e);
-//            } catch (URISyntaxException e) {
-//                throw new RuntimeException(e);
-//            }
-
         });
     }
 
@@ -156,6 +130,23 @@ public class Server {
 
                 assert didRemove;
             });
+        });
+
+        this.app.get("/assets/items/{itemId}.png", ctx -> {
+            var itemIdString = ctx.pathParam("itemId");
+
+            int itemId = 0;
+            try {
+                itemId = Integer.parseInt(itemIdString);
+            } catch (NumberFormatException e) {
+                ctx.result("Invalid itemID");
+                return;
+            }
+            var future = this.internalMetadataServer.getItemImage(itemId);
+
+            // TODO: This might be bad because it hits the main thread
+            ctx.future(future.thenAccept(bytes -> ctx.result(bytes)
+                    .contentType(ContentType.IMAGE_PNG)));
         });
 
         this.app.get("/assets/skillicons/{skill}.png", ctx -> {

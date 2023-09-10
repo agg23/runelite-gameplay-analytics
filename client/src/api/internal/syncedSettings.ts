@@ -1,8 +1,8 @@
 import { shallow } from "zustand/shallow";
 import deepEqual from "deep-equal";
 
-import { ALL_SKILLS, Skill } from "../osrs/types";
-import { useStore } from "../store/store";
+import { ALL_SKILLS, Skill } from "../../osrs/types";
+import { useStore } from "../../store/store";
 import { SyncedSettings } from "./types";
 import { getRoute, postRoute } from "./rest";
 
@@ -25,6 +25,17 @@ export const init = () => {
     savedSettings = settings.data;
     useStore.getState().loadSettings(settings.data);
   });
+
+  const saveSettings = (settings: SyncedSettings) => {
+    if (deepEqual(settings, savedSettings)) {
+      // These settings haven't changed. Nothing to save
+      return;
+    }
+
+    console.log("Saving settings");
+    savedSettings = settings;
+    postRoute("settings", settings);
+  };
 
   useStore.subscribe(
     (state): SyncedSettings => {
@@ -52,14 +63,7 @@ export const init = () => {
         clearInterval(timer);
         timer = undefined;
 
-        if (deepEqual(settings, savedSettings)) {
-          // These settings haven't changed. Nothing to save
-          return;
-        }
-
-        console.log("Saving settings");
-        savedSettings = settings;
-        postRoute("settings", settings);
+        saveSettings(settings);
       }, 5000);
     },
     { equalityFn: shallow }

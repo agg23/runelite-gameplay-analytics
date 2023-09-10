@@ -4,7 +4,7 @@ import { SimpleGrid, createStyles } from "@mantine/core";
 import { FancyCheckbox } from "./FancyCheckbox";
 import { ALL_SKILLS } from "../../../osrs/types";
 import { useStore } from "../../../store/store";
-import { HOSTNAME } from "../../../api/config";
+import { HOSTNAME } from "../../../api/internal/config";
 
 export const AllSkills: React.FC<{}> = () => {
   const { selectedSkills, addSkill, removeSkill } = useStore(

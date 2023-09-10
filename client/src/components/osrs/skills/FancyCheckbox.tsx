@@ -21,6 +21,8 @@ interface FancyCheckboxProps
   pixelated?: boolean;
 }
 
+const noop = () => {};
+
 export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
   className,
   imageWidth,
@@ -64,6 +66,8 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
         tabIndex={-1}
         transitionDuration={100}
         styles={{ input: { cursor: "pointer" } }}
+        // Supress React readonly checkbox message
+        onChange={noop}
       />
     </UnstyledButton>
   );

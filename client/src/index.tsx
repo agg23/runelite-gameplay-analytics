@@ -2,8 +2,8 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import { App } from "./App";
-import { init as syncSettingsInit } from "./api/syncedSettings";
-import { open as openWebsocket } from "./api/websocket";
+import { init as syncSettingsInit } from "./api/internal/syncedSettings";
+import { open as openWebsocket } from "./api/internal/websocket";
 
 syncSettingsInit();
 openWebsocket();

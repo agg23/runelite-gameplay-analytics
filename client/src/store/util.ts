@@ -1,8 +1,8 @@
-import { getRoute } from "../api/rest";
-import { GetRouteName, HTTPGetRoute } from "../api/routes";
+import { getRoute } from "../api/internal/rest";
+import { GetRouteName, HTTPGetRoute } from "../api/internal/routes";
 import { FetchState } from "../api/types";
 
-export const fetchData = async <T extends GetRouteName>(
+export const fetchAPIData = async <T extends GetRouteName>(
   route: T,
   additionalPath?: string
 ): Promise<FetchState<HTTPGetRoute<T>>> => {

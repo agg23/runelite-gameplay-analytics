@@ -3,10 +3,11 @@ import { subscribeWithSelector } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 import { enableMapSet } from "immer";
 
-import { SyncedSettings } from "../api/types";
+import { SyncedSettings } from "../api/internal/types";
 import { AccountsState, createAccountsSlice } from "./accounts";
 import { XPState, createXPSlice } from "./xp";
 import { SettingsState, createSettingsSlice } from "./settings";
+import { LootState, createLootSlice } from "./loot";
 
 interface StateExtraActions {
   loadSettings: (settings: SyncedSettings) => void;
@@ -14,6 +15,7 @@ interface StateExtraActions {
 
 export type Store = StateExtraActions & {
   accounts: AccountsState;
+  loot: LootState;
   xp: XPState;
   settings: SettingsState;
 };
@@ -27,8 +29,10 @@ export const useStore = create(
 
       return {
         accounts: createAccountsSlice(...args),
+        loot: createLootSlice(...args),
         xp: createXPSlice(...args),
         settings: createSettingsSlice(...args),
+
         loadSettings: (settings) =>
           set((existing) => {
             existing.settings.darkTheme = settings.darkTheme;

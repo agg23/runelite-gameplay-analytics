@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo } from "react";
-import { Checkbox, createStyles } from "@mantine/core";
+import { Checkbox, LoadingOverlay, createStyles } from "@mantine/core";
 
-import { useStore } from "../store/store";
-import { AllSkills } from "./osrs/skills/AllSkills";
-import { XPEvent } from "../api/types";
+import { useStore } from "../../store/store";
+import { AllSkills } from "../osrs/skills/AllSkills";
+import { XPEvent } from "../../api/internal/types";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
-import { FixedSeries } from "../types/ApexCharts";
+import { FixedSeries } from "../../types/ApexCharts";
+import { NoData } from "../error/NoData";
 
 export const XPPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -56,21 +57,21 @@ export const XPPage: React.FC<{}> = () => {
 
   const { classes } = useStyles();
 
-  return xpApi.type === "loading" ? (
-    <div>Loading XP data</div>
-  ) : xpApi.type === "error" ? (
-    <div>Error loading XP data</div>
-  ) : (
-    <div className={classes.pageWrapper}>
-      <div className={classes.chartSettings}>
-        <Checkbox
-          checked={displayDeltas}
-          onChange={(event) => setDisplayDeltas(event.currentTarget.checked)}
-          label="Display deltas"
-        />
-      </div>
-      <div className={classes.chartWrapper}>
-        {/* <ResponsiveLine
+  const noData = xpApi.type === "data" && xpApi.data.length === 0;
+
+  return (
+    <>
+      <LoadingOverlay visible={xpApi.type !== "data"} />
+      <NoData hasData={!noData}>
+        <div className={classes.chartSettings}>
+          <Checkbox
+            checked={displayDeltas}
+            onChange={(event) => setDisplayDeltas(event.currentTarget.checked)}
+            label="Display deltas"
+          />
+        </div>
+        <div className={classes.chartWrapper}>
+          {/* <ResponsiveLine
           data={linechartData}
           isInteractive
           useMesh
@@ -83,36 +84,32 @@ export const XPPage: React.FC<{}> = () => {
           }}
           margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
         /> */}
-        <Chart
-          series={linechartData as ApexAxisChartSeries}
-          options={options}
-          height="600"
-        />
-        <div className={classes.chartSettings}>
-          <div className={classes.chartManualSettings}>
-            <Checkbox
-              checked={selectedSkills.type === "all"}
-              onChange={(event) =>
-                toggleSelectedSkills(event.currentTarget.checked)
-              }
-              label="Select all"
-            />
-          </div>
-          <div className={classes.allSkills}>
-            <AllSkills />
+          <Chart
+            series={linechartData as ApexAxisChartSeries}
+            options={options}
+            height="600"
+          />
+          <div className={classes.chartSettings}>
+            <div className={classes.chartManualSettings}>
+              <Checkbox
+                checked={selectedSkills.type === "all"}
+                onChange={(event) =>
+                  toggleSelectedSkills(event.currentTarget.checked)
+                }
+                label="Select all"
+              />
+            </div>
+            <div className={classes.allSkills}>
+              <AllSkills />
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </NoData>
+    </>
   );
 };
 
 const useStyles = createStyles((theme) => ({
-  pageWrapper: {
-    marginTop: theme.spacing.md,
-    marginLeft: theme.spacing.xs,
-    marginRight: theme.spacing.xs,
-  },
   allSkills: {
     width: 550,
   },
@@ -177,40 +174,36 @@ const useLinechartData = () => {
   const { selectedSkills, displayDeltas } = useStore((state) => state.xp);
 
   return useMemo((): FixedSeries => {
-    if (xpApi.type === "data") {
-      const eventFields: Array<Exclude<keyof XPEvent, "accountId">> = [];
-
-      if (selectedSkills.type === "all") {
-        eventFields.push("xpTotal");
-      } else {
-        eventFields.push(...selectedSkills.set);
-      }
-
-      return eventFields.map((fieldName) => {
-        // If we display deltas, get the first (which is by definition the lowest) value and subtract
-        const baseValue =
-          displayDeltas && xpApi.data.length > 0 ? xpApi.data[0][fieldName] : 0;
-
-        return {
-          name: fieldName,
-          data: xpApi.data.map(
-            (event) =>
-              [event.timestamp, event[fieldName] - baseValue] as [
-                number,
-                number
-              ]
-          ),
-        };
-      });
+    if (xpApi.type !== "data") {
+      return [];
     }
 
-    return [];
+    const eventFields: Array<Exclude<keyof XPEvent, "accountId">> = [];
+
+    if (selectedSkills.type === "all") {
+      eventFields.push("xpTotal");
+    } else {
+      eventFields.push(...selectedSkills.set);
+    }
+
+    return eventFields.map((fieldName) => {
+      // If we display deltas, get the first (which is by definition the lowest) value and subtract
+      const baseValue =
+        displayDeltas && xpApi.data.length > 0 ? xpApi.data[0][fieldName] : 0;
+
+      return {
+        name: fieldName,
+        data: xpApi.data.map(
+          (event) =>
+            [event.timestamp, event[fieldName] - baseValue] as [number, number]
+        ),
+      };
+    });
   }, [selectedSkills, displayDeltas, xpApi]);
 };
 
 const options: ApexOptions = {
   chart: {
-    id: "datetime",
     type: "line",
     height: "600px",
     zoom: {

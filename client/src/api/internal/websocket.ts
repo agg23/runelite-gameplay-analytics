@@ -1,4 +1,4 @@
-import { useStore } from "../store/store";
+import { useStore } from "../../store/store";
 import { HOSTNAME } from "./config";
 import { ValidWSRouteName, WSRouteHandlers, WSSuccess } from "./routes";
 

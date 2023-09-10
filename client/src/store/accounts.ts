@@ -1,6 +1,7 @@
-import { Account, FetchState } from "../api/types";
-import { fetchData } from "./util";
+import { FetchState } from "../api/types";
+import { fetchAPIData } from "./util";
 import { StateSliceCreator } from "./types";
+import { Account } from "../api/internal/types";
 
 export interface AccountsState {
   activeId: string | undefined;
@@ -29,7 +30,7 @@ export const createAccountsSlice: StateSliceCreator<AccountsState> = (set) => ({
       };
     });
 
-    const event = await fetchData("accounts");
+    const event = await fetchAPIData("accounts");
 
     set((existing) => {
       existing.accounts.api = {

@@ -1,7 +1,8 @@
-import { FetchState, XPEvent } from "../api/types";
+import { XPEvent } from "../api/internal/types";
+import { FetchState } from "../api/types";
 import { ALL_SKILLS, Skill } from "../osrs/types";
 import { StateSliceCreator } from "./types";
-import { fetchData, sortedIndex } from "./util";
+import { fetchAPIData, sortedIndex } from "./util";
 
 export interface XPState {
   selectedSkills:
@@ -44,7 +45,7 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
       };
     });
 
-    const event = await fetchData("xp", accountId);
+    const event = await fetchAPIData("xp", accountId);
 
     set((existing) => {
       existing.xp.api = {

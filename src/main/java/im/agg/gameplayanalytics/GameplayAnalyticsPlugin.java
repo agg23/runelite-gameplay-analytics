@@ -2,9 +2,11 @@ package im.agg.gameplayanalytics;
 
 import com.google.inject.Provides;
 
+import javax.imageio.ImageIO;
 import javax.inject.Inject;
 
 import im.agg.gameplayanalytics.controller.*;
+import im.agg.gameplayanalytics.server.InternalMetadataServer;
 import im.agg.gameplayanalytics.server.Server;
 import im.agg.gameplayanalytics.server.Store;
 import im.agg.gameplayanalytics.server.dbmodels.LootDBEvent;
@@ -23,9 +25,13 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.NPCManager;
+import net.runelite.client.game.SpriteManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.stream.Collectors;
@@ -45,12 +51,18 @@ public class GameplayAnalyticsPlugin extends Plugin {
 
     @Inject
     private ItemManager itemManager;
+    
+    @Inject
+    private SpriteManager spriteManager;
 
     @Inject
     private ClientThread clientThread;
 
     private final Store store = new Store();
-    private final Server server = new Server(this.store);
+    private final InternalMetadataServer
+            internalMetadataServer = new InternalMetadataServer();
+    private final Server server =
+            new Server(this.store, this.internalMetadataServer);
 
     private final ActivityController activityController =
             new ActivityController();
@@ -70,6 +82,7 @@ public class GameplayAnalyticsPlugin extends Plugin {
     @Override
     protected void startUp() throws Exception {
         this.store.init();
+        this.internalMetadataServer.init(this.clientThread, this.itemManager);
         this.server.init();
 
         Arrays.stream(this.controllers).forEach(

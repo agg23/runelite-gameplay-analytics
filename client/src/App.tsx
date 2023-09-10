@@ -3,12 +3,15 @@ import {
   ColorSchemeProvider,
   MantineProvider,
 } from "@mantine/core";
+import { RouterProvider } from "@tanstack/react-router";
+
 import { AccountWrapper } from "./components/account/AccountWrapper";
-import { XPPage } from "./components/XPPage";
+import { XPPage } from "./components/pages/XPPage";
 import { Page } from "./components/layout/Page";
+import { useStore } from "./store/store";
+import { router } from "./routes";
 
 import "./App.css";
-import { useStore } from "./store/store";
 
 export const App = () => {
   const { darkTheme, setDarkTheme } = useStore((state) => state.settings);
@@ -23,24 +26,26 @@ export const App = () => {
 
   const colorScheme = darkTheme ? "dark" : "light";
 
-  return (
-    <div className="App">
-      <ColorSchemeProvider
-        colorScheme={colorScheme}
-        toggleColorScheme={toggleColorScheme}
-      >
-        <MantineProvider
-          theme={{ colorScheme }}
-          withGlobalStyles
-          withNormalizeCSS
-        >
-          <AccountWrapper>
-            <Page>
-              <XPPage />
-            </Page>
-          </AccountWrapper>
-        </MantineProvider>
-      </ColorSchemeProvider>
-    </div>
-  );
+  return <RouterProvider router={router} />;
 };
+
+{
+  /* <div className="App">
+<ColorSchemeProvider
+  colorScheme={colorScheme}
+  toggleColorScheme={toggleColorScheme}
+>
+  <MantineProvider
+    theme={{ colorScheme }}
+    withGlobalStyles
+    withNormalizeCSS
+  >
+    <AccountWrapper>
+      <Page>
+        <XPPage />
+      </Page>
+    </AccountWrapper>
+  </MantineProvider>
+</ColorSchemeProvider>
+</div> */
+}

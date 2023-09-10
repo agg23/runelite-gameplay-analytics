@@ -1,20 +1,26 @@
-import { Group, UnstyledButton, Text } from "@mantine/core";
+import { Group, UnstyledButton, Text, createStyles } from "@mantine/core";
+import { Link, RegisteredRouter, RoutePaths } from "@tanstack/react-router";
 import React, { useMemo } from "react";
 
 export const NavLinks: React.FC<{}> = () => {
+  const { classes } = useStyles();
+
   const links = useMemo(
-    () => [
+    (): Array<{
+      label: string;
+      link: RoutePaths<RegisteredRouter["routeTree"]>;
+    }> => [
       {
         label: "XP",
-        onClick: () => console.log("Clicked XP"),
+        link: "/",
       },
       {
         label: "Wealth",
-        onClick: () => console.log("Clicked Wealth"),
+        link: "/",
       },
       {
         label: "Kills",
-        onClick: () => console.log("Clicked Kills"),
+        link: "/loot",
       },
     ],
     []
@@ -22,16 +28,24 @@ export const NavLinks: React.FC<{}> = () => {
 
   return (
     <>
-      {links.map(({ label, onClick }) => (
-        <NavLink key={label} label={label} onClick={onClick} />
+      {links.map(({ label, link }) => (
+        <Link key={label} className={classes.link} to={link}>
+          <NavLink label={label} />
+        </Link>
       ))}
     </>
   );
 };
 
+const useStyles = createStyles(() => ({
+  link: {
+    textDecoration: "none",
+  },
+}));
+
 const NavLink: React.FC<{
   label: string;
-  onClick: () => void;
+  onClick?: () => void;
 }> = ({ label, onClick }) => {
   return (
     <UnstyledButton
