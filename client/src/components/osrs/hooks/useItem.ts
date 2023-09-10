@@ -13,7 +13,7 @@ export const useItem = (itemId: number): FetchState<Item> => {
   const requestItem = useItemStore((state) => state.requestItem);
 
   useEffect(() => {
-    if (!item) {
+    if (!item && itemId !== 0) {
       // No data, fetch it
       requestItem(itemId);
     }

@@ -32,7 +32,12 @@ export const InventoryGrid: React.FC<InventoryGridProps> = ({ entries }) => {
     <SimpleGrid className={classes.grid} cols={4}>
       {orderedSlots.map((entry, index) =>
         entry ? (
-          <Item key={entry.slot} id={entry.itemId} quantity={entry.quantity} />
+          <Item
+            key={entry.slot}
+            id={entry.itemId}
+            quantity={entry.quantity}
+            gePerItem={entry.gePerItem}
+          />
         ) : (
           <Item key={index} id={0} quantity={0} empty />
         )

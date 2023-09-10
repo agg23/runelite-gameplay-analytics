@@ -46,6 +46,12 @@ export const InventoryPage: React.FC<{}> = () => {
     }));
   }, [inventoryApi]);
 
+  const geValue = useMemo(() => {
+    return (selectedEntry?.entries ?? []).reduce((acc, current) => {
+      return acc + current.gePerItem * current.quantity;
+    }, 0);
+  }, [selectedEntry]);
+
   useEffect(() => {
     if (!activeAccount) {
       return;
@@ -98,6 +104,7 @@ export const InventoryPage: React.FC<{}> = () => {
           width={400}
         />
         <div>Selected: {selectedEntry?.timestamp}</div>
+        <div>GE Then: {geValue}</div>
         <InventoryGrid entries={selectedEntry?.entries ?? []} />
       </NoData>
     </>
