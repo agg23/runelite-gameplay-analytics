@@ -11,6 +11,7 @@ import { InventoryEvent, LootEvent } from "../../api/internal/types";
 import { ItemGrid } from "../osrs/items/ItemGrid";
 import { NPC } from "../osrs/npc/NPC";
 import { InventoryGrid } from "../osrs/items/InventoryGrid";
+import { useGEPrices } from "../osrs/hooks/useGEPrices";
 
 export const InventoryPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -46,11 +47,15 @@ export const InventoryPage: React.FC<{}> = () => {
     }));
   }, [inventoryApi]);
 
-  const geValue = useMemo(() => {
+  const oldGeTotal = useMemo(() => {
     return (selectedEntry?.entries ?? []).reduce((acc, current) => {
       return acc + current.gePerItem * current.quantity;
     }, 0);
   }, [selectedEntry]);
+
+  const currentPrices = useGEPrices(
+    selectedEntry?.entries.map((entry) => entry.itemId) ?? []
+  );
 
   useEffect(() => {
     if (!activeAccount) {
@@ -104,7 +109,11 @@ export const InventoryPage: React.FC<{}> = () => {
           width={400}
         />
         <div>Selected: {selectedEntry?.timestamp}</div>
-        <div>GE Then: {geValue}</div>
+        <div>
+          GE Now:{" "}
+          {currentPrices.type === "data" ? currentPrices.data.total : "Loading"}
+        </div>
+        <div>GE Then: {oldGeTotal}</div>
         <InventoryGrid entries={selectedEntry?.entries ?? []} />
       </NoData>
     </>

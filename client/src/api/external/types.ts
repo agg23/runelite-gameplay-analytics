@@ -1,3 +1,5 @@
+import { ObjectMap } from "../../types/util";
+
 export interface Item {
   id: string;
   name: string;
@@ -13,4 +15,17 @@ export interface NPC {
 
   // TODO: Many more properties
   // TODO: Add drops and percentage
+}
+
+export interface WikiResponse<T> {
+  data: {
+    [id: number]: T;
+  };
+}
+
+export interface GEPrice {
+  high: number;
+  highTime: number;
+  low: number;
+  lowTime: number;
 }

@@ -44,7 +44,7 @@ const useItemStore = create(
         };
       });
 
-      const item = await getExternalRoute("item", `${id}.json`);
+      const item = await getExternalRoute("item", `/${id}.json`);
 
       set((existing) => {
         existing.items[id] = {

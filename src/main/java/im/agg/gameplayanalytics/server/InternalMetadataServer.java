@@ -1,5 +1,6 @@
 package im.agg.gameplayanalytics.server;
 
+import im.agg.gameplayanalytics.server.models.StorageEvent;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.NPCManager;
@@ -7,12 +8,18 @@ import net.runelite.client.game.NPCManager;
 import javax.imageio.ImageIO;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class InternalMetadataServer {
+    private final Store store;
     private ClientThread clientThread;
 
     private ItemManager itemManager;
+
+    public InternalMetadataServer(Store store) {
+        this.store = store;
+    }
 
     public void init(ClientThread clientThread, ItemManager itemManager
     ) {

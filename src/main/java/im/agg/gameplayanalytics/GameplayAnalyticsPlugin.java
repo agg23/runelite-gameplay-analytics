@@ -51,7 +51,7 @@ public class GameplayAnalyticsPlugin extends Plugin {
 
     @Inject
     private ItemManager itemManager;
-    
+
     @Inject
     private SpriteManager spriteManager;
 
@@ -60,7 +60,7 @@ public class GameplayAnalyticsPlugin extends Plugin {
 
     private final Store store = new Store();
     private final InternalMetadataServer
-            internalMetadataServer = new InternalMetadataServer();
+            internalMetadataServer = new InternalMetadataServer(this.store);
     private final Server server =
             new Server(this.store, this.internalMetadataServer);
 
