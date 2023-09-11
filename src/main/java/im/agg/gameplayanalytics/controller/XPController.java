@@ -58,64 +58,10 @@ public class XPController extends Controller {
 
         this.writePartialXPEventIfChanged();
     }
-
-    private long debugTimestamp = 1694012465368L + 1000 * 60L;
-
+    
     @Override
     public void startDataFlow(Account account) {
         super.startDataFlow(account);
-
-        // TODO: Remove. This exists only for testing
-        attack = 136;
-        ranged = 12;
-        prayer = 18;
-        magic = 9;
-        hitpoints = 1194;
-        mining = 70;
-        smithing = 37;
-        fishing = 80;
-        cooking = 160;
-        firemaking = 40;
-        woodcutting = 24;
-        this.timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                debugTimestamp += 1000 * 60;
-                attack += ((Long) Math.round(Math.random() * 10)).intValue();
-
-                var event = new XPDBEvent(debugTimestamp,
-                        1327996603691643471L,
-                        1,
-                        Skill.Attack.toPower(),
-                        attack,
-                        strength,
-                        defence,
-                        ranged,
-                        prayer,
-                        magic,
-                        runecraft,
-                        hitpoints,
-                        crafting,
-                        mining,
-                        smithing,
-                        fishing,
-                        cooking,
-                        firemaking,
-                        woodcutting,
-
-                        // Members
-                        agility,
-                        herblore,
-                        thieving,
-                        fletching,
-                        slayer,
-                        farming,
-                        construction,
-                        hunter);
-
-                server.updatedXPData(event);
-            }
-        }, 1000, 1000);
 
         var standardPeriodMillieconds = UPDATE_PERIOD * 1000;
 
