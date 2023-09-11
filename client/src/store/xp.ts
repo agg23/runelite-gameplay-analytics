@@ -1,7 +1,7 @@
 import { XPEvent } from "../api/internal/types";
 import { FetchState } from "../api/types";
 import { ALL_SKILLS, Skill } from "../osrs/types";
-import { StateSliceCreator } from "./types";
+import { LineChartState, StateSliceCreator } from "./types";
 import { fetchAPIData, sortedIndex } from "./util";
 
 export interface XPState {
@@ -15,10 +15,17 @@ export interface XPState {
       };
   displayDeltas: boolean;
 
+  chart: LineChartState;
+
   api: FetchState<Array<XPEvent>>;
 
   requestData: (accountId: string) => Promise<void>;
   insertUpdate: (data: XPEvent) => void;
+
+  delayedSetChartRange: (
+    startRangeTimestamp: number,
+    endRangeTimestamp: number
+  ) => void;
 
   addSkill: (skill: Skill) => void;
   removeSkill: (skill: Skill) => void;
@@ -31,6 +38,13 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
     type: "all",
   },
   displayDeltas: true,
+
+  chart: {
+    // Default to now, but will reset when data arrives
+    startRangeTimestamp: calculateStartRangeTimestamp(Date.now()),
+    endRangeTimestamp: Date.now(),
+    zoomUpdateTimer: undefined,
+  },
 
   api: {
     type: "data",
@@ -52,6 +66,23 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
         ...existing.xp.api,
         ...event,
       };
+
+      if (event.type === "data") {
+        const endRangeTimestamp =
+          event.data.length > 0
+            ? event.data[event.data.length - 1].timestamp
+            : Date.now() * 1000;
+
+        if (existing.xp.chart.zoomUpdateTimer) {
+          clearInterval(existing.xp.chart.zoomUpdateTimer);
+        }
+
+        existing.xp.chart = {
+          startRangeTimestamp: calculateStartRangeTimestamp(endRangeTimestamp),
+          endRangeTimestamp,
+          zoomUpdateTimer: undefined,
+        };
+      }
     });
   },
   insertUpdate: (data: XPEvent) =>
@@ -78,6 +109,28 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
         data: existingData,
       };
     }),
+
+  delayedSetChartRange: (startRangeTimestamp, endRangeTimestamp) => {
+    const oldZoomUpdateTimer = get().xp.chart.zoomUpdateTimer;
+
+    if (oldZoomUpdateTimer) {
+      clearInterval(oldZoomUpdateTimer);
+    }
+
+    // const zoomUpdateTimer = setTimeout(() => {
+    set((existing) => {
+      existing.xp.chart = {
+        startRangeTimestamp,
+        endRangeTimestamp,
+        zoomUpdateTimer: undefined,
+      };
+    });
+    // }, 1000);
+
+    // set((existing) => {
+    //   existing.xp.chart.zoomUpdateTimer = zoomUpdateTimer;
+    // });
+  },
 
   addSkill: (skill) =>
     set((existing) => {
@@ -122,3 +175,8 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
       existing.xp.displayDeltas = value;
     }),
 });
+
+const calculateStartRangeTimestamp = (endTime: number): number => {
+  // Default to one day before last data point/now
+  return endTime - 24 * 60 * 60 * 1000;
+};

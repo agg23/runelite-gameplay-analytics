@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox, LoadingOverlay, createStyles } from "@mantine/core";
 
 import { useStore } from "../../store/store";
@@ -8,6 +8,9 @@ import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { FixedSeries } from "../../types/ApexCharts";
 import { LoadingErrorBoundary } from "../error/LoadingErrorBoundary";
+import { ALL_SKILLS } from "../../osrs/types";
+import { ApexChart } from "../external/ApexChart";
+import { usePrevious } from "../../hooks/usePrevious";
 
 export const XPPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -17,7 +20,13 @@ export const XPPage: React.FC<{}> = () => {
     selectedSkills,
     setDisplayDeltas,
     toggleSelectedSkills,
+    delayedSetChartRange,
   } = useStore((state) => state.xp);
+  const { startRangeTimestamp, endRangeTimestamp } = useStore(
+    (state) => state.xp.chart
+  );
+
+  const primaryChartRef = useRef<ApexCharts | null>(null);
 
   const linechartData = useLinechartData();
 
@@ -46,6 +55,31 @@ export const XPPage: React.FC<{}> = () => {
   //   [displayDeltas, formatDate]
   // );
 
+  const previousDataRef = usePrevious(xpApi.type);
+
+  useEffect(() => {
+    if (previousDataRef !== xpApi.type && xpApi.type === "data") {
+      // Fresh load of data
+      const updatedSeries = ALL_SKILLS.map((skill) => ({
+        data: xpApi.data.map((item) => [item.timestamp, item[skill]]),
+      }));
+      primaryChartRef.current?.appendData(updatedSeries);
+      console.log("Sending", updatedSeries[0].data[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [xpApi, previousDataRef]);
+
+  const primaryChartOptions = usePrimaryChartOptions(
+    startRangeTimestamp,
+    endRangeTimestamp
+  );
+
+  const zoomChartOptions = useZoomChartOptions(
+    startRangeTimestamp,
+    endRangeTimestamp,
+    delayedSetChartRange
+  );
+
   useEffect(() => {
     if (!activeAccount) {
       return;
@@ -71,24 +105,24 @@ export const XPPage: React.FC<{}> = () => {
             />
           </div>
           <div className={classes.chartWrapper}>
-            {/* <ResponsiveLine
-          data={linechartData}
-          isInteractive
-          useMesh
-          enableCrosshair
-          tooltip={tooltipFormatter}
-          xScale={{ type: "time", precision: "minute" }}
-          axisBottom={{
-            // Mon 1st, 12:02 AM
-            format: formatDate,
-          }}
-          margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-        /> */}
-            <Chart
-              series={linechartData as ApexAxisChartSeries}
-              options={options}
-              height="600"
-            />
+            <div>
+              {/* <Chart
+                series={linechartData as ApexAxisChartSeries}
+                options={primaryChartOptions}
+                height="600"
+              /> */}
+              <ApexChart
+                ref={primaryChartRef}
+                initialData={linechartData as ApexAxisChartSeries}
+                options={primaryChartOptions}
+              />
+              <Chart
+                type="area"
+                series={linechartData as ApexAxisChartSeries}
+                options={zoomChartOptions}
+                height="130"
+              />
+            </div>
             <div className={classes.chartSettings}>
               <div className={classes.chartManualSettings}>
                 <Checkbox
@@ -129,47 +163,6 @@ const useStyles = createStyles((theme) => ({
   },
 }));
 
-// const useLinechartData = () => {
-//   const xpApi = useStore((state) => state.api.xp);
-//   const { selectedSkills, displayDeltas } = useStore((state) => state.xp);
-
-//   return useMemo(() => {
-//     if (xpApi.type === "data") {
-//       const eventFields: Array<keyof XPEvent> = [];
-
-//       if (selectedSkills.type === "all") {
-//         eventFields.push("xpTotal");
-//       } else {
-//         eventFields.push(...selectedSkills.set);
-//       }
-
-//       // TODO: Move this into its own memo?
-//       const datedEntries = xpApi.data.map((event) => ({
-//         date: new Date(event.timestamp),
-//         ...event,
-//       }));
-
-//       return eventFields.map((fieldName) => {
-//         // If we display deltas, get the first (which is by definition the lowest) value and subtract
-//         const baseValue =
-//           displayDeltas && datedEntries.length > 0
-//             ? datedEntries[0][fieldName]
-//             : 0;
-
-//         return {
-//           id: fieldName,
-//           data: datedEntries.map((event) => ({
-//             x: event.date,
-//             y: event[fieldName] - baseValue,
-//           })),
-//         };
-//       });
-//     }
-
-//     return [];
-//   }, [selectedSkills, displayDeltas, xpApi]);
-// };
-
 const useLinechartData = () => {
   const xpApi = useStore((state) => state.xp.api);
   const { selectedSkills, displayDeltas } = useStore((state) => state.xp);
@@ -181,11 +174,12 @@ const useLinechartData = () => {
 
     const eventFields: Array<Exclude<keyof XPEvent, "accountId">> = [];
 
-    if (selectedSkills.type === "all") {
-      eventFields.push("xpTotal");
-    } else {
-      eventFields.push(...selectedSkills.set);
-    }
+    // if (selectedSkills.type === "all") {
+    //   eventFields.push("xpTotal");
+    // } else {
+    //   eventFields.push(...selectedSkills.set);
+    // }
+    eventFields.push(...ALL_SKILLS);
 
     return eventFields.map((fieldName) => {
       // If we display deltas, get the first (which is by definition the lowest) value and subtract
@@ -200,91 +194,164 @@ const useLinechartData = () => {
         ),
       };
     });
-  }, [selectedSkills, displayDeltas, xpApi]);
+  }, [selectedSkills]);
 };
 
-const options: ApexOptions = {
-  chart: {
-    type: "line",
-    height: "600px",
-    zoom: {
-      autoScaleYaxis: true,
-      // Zoom disabled until I can figure out what to do with it
-      enabled: false,
-    },
-    toolbar: {
-      autoSelected: "pan",
-      show: false,
-    },
-    // events: {
-    //   beforeZoom: (chart, options) => {
-    //     console.log(chart);
-    //     console.log(options);
-    //     console.log(options.xaxis.max - options.xaxis.min);
-    //     // Allow zooming out to 10 minutes
-    //     if (options.xaxis.max - options.xaxis.min < 10 * 60 * 1000) {
-    //       // Block zoom
-    //       console.log("Small");
-    //       return {
-    //         xaxis: {
-    //           min: chart.minX,
-    //           max: chart.maxX,
-    //         },
-    //       };
-    //     }
-    // },
-    // },
-  },
-  annotations: {
-    yaxis: [
-      {
-        y: 83,
-        label: {
-          text: "Level 2",
+const usePrimaryChartOptions = (
+  startRangeTimestamp: number,
+  endRangeTimestamp: number
+): ApexOptions => {
+  return useMemo(
+    () => ({
+      chart: {
+        id: "primary",
+        type: "line",
+        height: "600px",
+        toolbar: {
+          autoSelected: "pan",
+          show: false,
+        },
+        zoom: {
+          autoScaleYaxis: true,
+          // Zoom disabled until I can figure out what to do with it
+          enabled: false,
         },
       },
-      {
-        y: 174,
-        label: {
-          text: "Level 3",
+      annotations: {
+        yaxis: [
+          {
+            y: 83,
+            label: {
+              text: "Level 2",
+            },
+          },
+          {
+            y: 174,
+            label: {
+              text: "Level 3",
+            },
+          },
+          {
+            y: 276,
+            label: {
+              text: "Level 4",
+            },
+          },
+          {
+            y: 388,
+            label: {
+              text: "Level 5",
+            },
+          },
+          {
+            y: 512,
+            label: {
+              text: "Level 6",
+            },
+          },
+          {
+            y: 650,
+            label: {
+              text: "Level 7",
+            },
+          },
+        ],
+      },
+      series: ALL_SKILLS.map((skill) => ({
+        name: skill,
+        data: [],
+      })),
+      xaxis: {
+        type: "datetime",
+        title: {
+          text: "Timestamp",
+        },
+        // min: startRangeTimestamp,
+        // max: endRangeTimestamp,
+      },
+      yaxis: {
+        title: {
+          text: "XP",
         },
       },
-      {
-        y: 276,
-        label: {
-          text: "Level 4",
+    }),
+    []
+  );
+};
+
+const useZoomChartOptions = (
+  startRangeTimestamp: number,
+  endRangeTimestamp: number,
+  setChartRange: (start: number, end: number) => void
+): ApexOptions => {
+  return useMemo(
+    () => ({
+      chart: {
+        id: "zoom",
+        type: "area",
+        brush: {
+          target: "primary",
+          enabled: true,
+        },
+        offsetY: -40,
+        selection: {
+          enabled: true,
+          // xaxis: {
+          //   min: startRangeTimestamp,
+          //   max: endRangeTimestamp,
+          // },
+        },
+        events: {
+          selection: (_, { xaxis }) => {
+            const chart = ApexCharts.getChartByID("primary");
+
+            if (!chart) {
+              return;
+            }
+
+            chart.zoomX(xaxis.min, xaxis.max);
+          },
+          // brushScrolled: (_, { xaxis }) => {
+          //   // setChartRange(xaxis.min, xaxis.max);
+          //   const chart = ApexCharts.getChartByID("primary");
+
+          //   if (!chart) {
+          //     return;
+          //   }
+
+          //   chart.zoomX(xaxis.min, xaxis.max);
+          // },
         },
       },
-      {
-        y: 388,
-        label: {
-          text: "Level 5",
+      colors: ["#008FFB"],
+      fill: {
+        type: "gradient",
+        gradient: {
+          type: "vertical",
+          opacityFrom: 0.7,
+          opacityTo: 0.9,
+          stops: [0, 90, 100],
         },
       },
-      {
-        y: 512,
-        label: {
-          text: "Level 6",
+      grid: {
+        show: false,
+      },
+      legend: {
+        show: false,
+      },
+      xaxis: {
+        type: "datetime",
+        tooltip: {
+          enabled: false,
         },
       },
-      {
-        y: 650,
-        label: {
-          text: "Level 7",
+      yaxis: {
+        labels: {
+          show: false,
         },
       },
-    ],
-  },
-  series: [],
-  xaxis: {
-    type: "datetime",
-    title: {
-      text: "Timestamp",
-    },
-  },
-  yaxis: {
-    title: {
-      text: "XP",
-    },
-  },
+    }),
+    // [startRangeTimestamp, endRangeTimestamp]
+    []
+  );
 };

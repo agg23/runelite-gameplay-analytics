@@ -7,3 +7,10 @@ export type StateSliceCreator<T> = StateCreator<
   [],
   T
 >;
+
+export interface LineChartState {
+  startRangeTimestamp: number;
+  endRangeTimestamp: number;
+
+  zoomUpdateTimer: NodeJS.Timer | undefined;
+}
