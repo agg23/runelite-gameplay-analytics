@@ -37,8 +37,7 @@ public class ActivityController extends Controller {
                 store.updateLastActivityEvent(
                         new ActivityEvent(account.getId(), new Date()));
             }
-            // Capture the map position instantly
-        }, 0, UPDATE_PERIOD * 1000);
+        }, UPDATE_PERIOD * 1000, UPDATE_PERIOD * 1000);
 
         this.store.createNewActivityEvent(
                 new ActivityEvent(this.account.getId(), new Date()));

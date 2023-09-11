@@ -349,15 +349,12 @@ public class Store {
                 accountId
         };
 
-        // Yank is dumb and doesn't allow for nulls in scalar output
-        // IFNULL(MAX(start_timestamp), 0)
         var maxStartTimestamp = Yank.queryBean("""
                 SELECT
                     account_id, MAX(start_timestamp) as start_timestamp, expiration_timestamp
                 FROM membership_status WHERE account_id = ?
                 """, MembershipStatusDBEvent.class, selectParameters);
 
-        // TODO: Check if we're in range of the last membership
         var isInRange = !maxStartTimestamp.isNull() &&
                 maxStartTimestamp.getExpirationTimestamp() >
                         startTimestamp.getTime() &&
