@@ -34,6 +34,7 @@ export const useStore = create(
       const [set] = args;
 
       return {
+        // TODO: Add network status slice
         accounts: createAccountsSlice(...args),
         activity: createActivitySlice(...args),
         geprices: createGEPricesSlice(...args),

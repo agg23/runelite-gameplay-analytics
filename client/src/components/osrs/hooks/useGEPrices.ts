@@ -15,7 +15,7 @@ export const useGEPrices = (itemIds: number[]) => {
   return useMemo((): FetchState<GEPriceTotal> => {
     if (prices.type !== "data") {
       return {
-        type: prices.type,
+        ...prices,
       };
     }
 

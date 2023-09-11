@@ -11,20 +11,25 @@ let savedSettings: SyncedSettings | undefined;
 
 export const init = () => {
   // Immediately begin settings fetch
-  getRoute("settings").then((settings) => {
-    if (settings.type === "error") {
-      console.error(`Could not retrieve settings: ${settings.message}`);
-      return;
-    }
+  getRoute("settings")
+    .then((settings) => {
+      if (settings.type === "error") {
+        console.error(`Could not retrieve settings: ${settings.message}`);
+        return;
+      }
 
-    if (!settings.data) {
-      // No settings data to load
-      return;
-    }
+      if (!settings.data) {
+        // No settings data to load
+        return;
+      }
 
-    savedSettings = settings.data;
-    useStore.getState().loadSettings(settings.data);
-  });
+      savedSettings = settings.data;
+      useStore.getState().loadSettings(settings.data);
+    })
+    .catch(() => {
+      console.error("Failed to load settings");
+      // TODO: Mark offline in store
+    });
 
   const saveSettings = (settings: SyncedSettings) => {
     if (deepEqual(settings, savedSettings)) {
@@ -34,7 +39,9 @@ export const init = () => {
 
     console.log("Saving settings");
     savedSettings = settings;
-    postRoute("settings", settings);
+    postRoute("settings", settings).catch(() => {
+      console.log("Failed to save settings");
+    });
   };
 
   useStore.subscribe(

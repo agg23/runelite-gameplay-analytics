@@ -1,6 +1,6 @@
 import { getRoute } from "../api/internal/rest";
 import { GetRouteName, HTTPGetRoute } from "../api/internal/routes";
-import { FetchState } from "../api/types";
+import { FetchError, FetchState } from "../api/types";
 
 export const fetchAPIData = async <T extends GetRouteName>(
   route: T,
@@ -12,6 +12,8 @@ export const fetchAPIData = async <T extends GetRouteName>(
     if (data.type === "error") {
       return {
         type: "error",
+        variant: FetchError.Server,
+        message: data.message,
       };
     }
 
@@ -19,9 +21,10 @@ export const fetchAPIData = async <T extends GetRouteName>(
       type: "data",
       data: data.data,
     };
-  } catch (_) {
+  } catch (error) {
     return {
       type: "error",
+      variant: FetchError.Network,
     };
   }
 };

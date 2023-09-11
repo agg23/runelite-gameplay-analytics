@@ -8,4 +8,12 @@ export type FetchState<T> =
     }
   | {
       type: "error";
+      variant: FetchError;
+      message?: string;
     };
+
+export enum FetchError {
+  Network,
+  Server,
+  Other,
+}
