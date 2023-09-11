@@ -3,6 +3,7 @@ import { RootPage } from "./components/pages/RootPage";
 import { XPPage } from "./components/pages/XPPage";
 import { LootPage } from "./components/pages/LootPage";
 import { InventoryPage } from "./components/pages/InventoryPage";
+import { ActivityPage } from "./components/pages/ActivityPage";
 
 const rootRoute = new RootRoute({
   component: () => <RootPage />,
@@ -12,6 +13,12 @@ const indexRoute = new Route({
   getParentRoute: () => rootRoute,
   component: () => <XPPage />,
   path: "/",
+});
+
+const activityRoute = new Route({
+  getParentRoute: () => rootRoute,
+  component: () => <ActivityPage />,
+  path: "/activity",
 });
 
 const inventoryRoute = new Route({
@@ -28,6 +35,7 @@ const lootRoute = new Route({
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  activityRoute,
   inventoryRoute,
   lootRoute,
 ]);

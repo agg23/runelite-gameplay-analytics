@@ -10,6 +10,7 @@ import { SettingsState, createSettingsSlice } from "./settings";
 import { LootState, createLootSlice } from "./loot";
 import { InventoryState, createInventorySlice } from "./inventory";
 import { GEPricesState, createGEPricesSlice } from "./geprices";
+import { ActivityState, createActivitySlice } from "./activity";
 
 interface StateExtraActions {
   loadSettings: (settings: SyncedSettings) => void;
@@ -17,6 +18,7 @@ interface StateExtraActions {
 
 export type Store = StateExtraActions & {
   accounts: AccountsState;
+  activity: ActivityState;
   geprices: GEPricesState;
   inventory: InventoryState;
   loot: LootState;
@@ -33,6 +35,7 @@ export const useStore = create(
 
       return {
         accounts: createAccountsSlice(...args),
+        activity: createActivitySlice(...args),
         geprices: createGEPricesSlice(...args),
         inventory: createInventorySlice(...args),
         loot: createLootSlice(...args),

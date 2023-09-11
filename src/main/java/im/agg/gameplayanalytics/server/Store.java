@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -58,8 +57,13 @@ public class Store {
 
         // Activity
 
-        this.createEventsTable("activity_event", false, """
-                    type INTEGER NOT NULL,
+        this.sqlExecute("""
+                CREATE TABLE IF NOT EXISTS activity (
+                    account_id INTEGER NOT NULL,
+                    start_timestamp INTEGER NOT NULL,
+                    last_update_timestamp INTEGER NOT NULL,
+                    FOREIGN KEY (account_id) REFERENCES account (id)
+                )
                 """);
 
         // Storage (Inventory, Bank)
@@ -227,17 +231,31 @@ public class Store {
                 """, parameters);
     }
 
-    public void writeActivityEvent(ActivityEvent event) {
+    public void createNewActivityEvent(ActivitySession session) {
         var parameters = new Object[]{
-                event.getTimestamp(),
-                event.getAccountId(),
-                event.getType().getState()
+                session.getAccountId(),
+                session.getTimestamp(),
+                // Start timestamp is used for the end of the duration as well
+                session.getTimestamp()
         };
 
         Yank.execute("""
-                INSERT INTO activity_event
-                    (timestamp, account_id, type)
+                INSERT INTO activity
+                    (account_id, start_timestamp, last_update_timestamp)
                 VALUES (?, ?, ?)
+                """, parameters);
+    }
+
+    public void updateLastActivityEvent(ActivitySession session) {
+        var parameters = new Object[]{
+                session.getTimestamp(),
+                session.getAccountId()
+        };
+
+        // Update the last activity row for this account
+        Yank.execute("""
+                UPDATE activity SET last_update_timestamp = ?
+                WHERE start_timestamp = (SELECT MAX(start_timestamp) FROM activity WHERE account_id = ?)
                 """, parameters);
     }
 
@@ -333,6 +351,12 @@ public class Store {
         return Yank.queryBeanList("""
                 SELECT * FROM account
                 """, Account.class, new Object[]{});
+    }
+
+    public List<ActivityEvent> getActivity(long accountId) {
+        return Yank.queryBeanList("""
+                SELECT * FROM activity WHERE account_id = ?
+                """, ActivityEvent.class, new Object[]{accountId});
     }
 
     public List<XPDBEvent> getXPEvents(long accountId) {

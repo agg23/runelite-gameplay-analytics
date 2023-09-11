@@ -1,5 +1,6 @@
 import {
   Account,
+  ActivityEvent,
   InventoryEvent,
   LootEvent,
   SyncedSettings,
@@ -9,6 +10,10 @@ import {
 interface GetRoutes {
   accounts: {
     http: Account[];
+    ws: void;
+  };
+  activity: {
+    http: ActivityEvent[];
     ws: void;
   };
   inventory: {

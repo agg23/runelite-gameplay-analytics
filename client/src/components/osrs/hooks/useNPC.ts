@@ -44,7 +44,7 @@ const useItemStore = create(
         };
       });
 
-      const item = await getExternalRoute("npc", `${id}.json`);
+      const item = await getExternalRoute("npc", `/${id}.json`);
 
       set((existing) => {
         existing.npcs[id] = {

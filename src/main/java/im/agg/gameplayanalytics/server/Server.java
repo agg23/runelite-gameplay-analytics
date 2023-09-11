@@ -79,8 +79,14 @@ public class Server {
             ctx.json(new HTTPJSONWrapper(accounts));
         });
 
-        this.createAccountRoute("/api/xp/{accountId}", ((ctx, accountId) -> {
-            var events = this.store.getXPEvents(accountId);
+        this.createAccountRoute("/api/activity/{accountId}",
+                (ctx, accountId) -> {
+                    var events = this.store.getActivity(accountId);
+                    ctx.json(new HTTPJSONWrapper(events));
+                });
+
+        this.createAccountRoute("/api/loot/{accountId}", ((ctx, accountId) -> {
+            var events = this.store.getLootEvents(accountId);
             ctx.json(new HTTPJSONWrapper(events));
         }));
 
@@ -100,8 +106,8 @@ public class Server {
                     ctx.json(new HTTPJSONWrapper(events));
                 });
 
-        this.createAccountRoute("/api/loot/{accountId}", ((ctx, accountId) -> {
-            var events = this.store.getLootEvents(accountId);
+        this.createAccountRoute("/api/xp/{accountId}", ((ctx, accountId) -> {
+            var events = this.store.getXPEvents(accountId);
             ctx.json(new HTTPJSONWrapper(events));
         }));
 

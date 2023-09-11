@@ -14,13 +14,22 @@ export interface Account {
   username: string;
 }
 
+// Activity
+
+export interface ActivityEvent {
+  accountID: string;
+
+  startTimestamp: number;
+  endTimestamp: number;
+}
+
 // Inventory
 
 export interface InventoryEvent {
   id: number;
-  timestamp: number;
-
   accountId: string;
+
+  timestamp: number;
 
   type: number;
 
@@ -37,9 +46,9 @@ export interface InventoryEntry {
 // Loot
 
 export interface LootEvent {
-  timestamp: number;
-
   accountId: string;
+
+  timestamp: number;
 
   type: 0;
 
@@ -58,9 +67,9 @@ export interface LootEntry {
 // Storage
 
 export interface StorageEvent {
-  timestamp: number;
-
   accountId: string;
+
+  timestamp: number;
 
   type: 0;
 
@@ -77,9 +86,9 @@ export interface StorageEntry {
 // XP
 
 export interface XPEvent {
-  timestamp: number;
-
   accountId: string;
+
+  timestamp: number;
 
   type: 0 | 1;
 

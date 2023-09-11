@@ -19,6 +19,8 @@ const useStyles = createStyles((theme) => ({
     display: "flex",
   },
   content: {
+    // Has to be relative so LoadingOverlay is centered in main content
+    position: "relative",
     flexGrow: 1,
 
     marginTop: theme.spacing.md,

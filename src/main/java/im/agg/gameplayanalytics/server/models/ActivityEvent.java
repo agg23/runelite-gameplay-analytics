@@ -1,19 +1,17 @@
 package im.agg.gameplayanalytics.server.models;
 
-import lombok.Getter;
-import org.jetbrains.annotations.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.knowm.yank.annotations.Column;
 
-import java.util.Date;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class ActivityEvent {
+    private long accountId;
 
-@Getter
-public class ActivityEvent extends Event {
-    @NotNull
-    private final ActivityKind type;
-
-    public ActivityEvent(@NotNull ActivityKind type, long accountId,
-                         Date timestamp) {
-        super(timestamp, accountId);
-
-        this.type = type;
-    }
+    private long startTimestamp;
+    @Column("last_update_timestamp")
+    private long endTimestamp;
 }
