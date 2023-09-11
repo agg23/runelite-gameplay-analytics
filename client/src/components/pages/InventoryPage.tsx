@@ -1,17 +1,11 @@
 import { useEffect, useMemo } from "react";
-import { LoadingOverlay, createStyles } from "@mantine/core";
-import Chart from "react-apexcharts";
 
 import { useStore } from "../../store/store";
-import { FixedSeries } from "../../types/ApexCharts";
-import { ApexOptions } from "apexcharts";
-import { NoData } from "../error/NoData";
 import { Timeline } from "react-svg-timeline";
-import { InventoryEvent, LootEvent } from "../../api/internal/types";
-import { ItemGrid } from "../osrs/items/ItemGrid";
-import { NPC } from "../osrs/npc/NPC";
+import { InventoryEvent } from "../../api/internal/types";
 import { InventoryGrid } from "../osrs/items/InventoryGrid";
 import { useGEPrices } from "../osrs/hooks/useGEPrices";
+import { LoadingErrorBoundary } from "../error/LoadingErrorBoundary";
 
 export const InventoryPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -66,56 +60,55 @@ export const InventoryPage: React.FC<{}> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAccount]);
 
-  const noData = inventoryApi.type === "data" && inventoryApi.data.length === 0;
-
   return (
-    <>
-      <LoadingOverlay visible={inventoryApi.type !== "data"} />
-      <NoData hasData={!noData}>
-        {/* <Chart
+    <LoadingErrorBoundary data={inventoryApi}>
+      {(data) => (
+        <>
+          {/* <Chart
           height="200"
           series={chartData as ApexAxisChartSeries}
           options={options}
         /> */}
-        <Timeline
-          events={chartData}
-          lanes={[
-            {
-              laneId: "0" as string,
-              label: "",
-            },
-          ]}
-          dateFormat={(ms) => new Date(ms).toLocaleString()}
-          onCursorMove={(cursor) => {
-            if (!cursor) {
-              return;
-            }
-
-            const data = inventoryApi.type === "data" ? inventoryApi.data : [];
-
-            let lastEvent: InventoryEvent | undefined = undefined;
-            for (const event of data) {
-              if (event.timestamp > cursor) {
-                setSelectedEntry(lastEvent);
+          <Timeline
+            events={chartData}
+            lanes={[
+              {
+                laneId: "0" as string,
+                label: "",
+              },
+            ]}
+            dateFormat={(ms) => new Date(ms).toLocaleString()}
+            onCursorMove={(cursor) => {
+              if (!cursor) {
                 return;
               }
 
-              lastEvent = event;
-            }
+              let lastEvent: InventoryEvent | undefined = undefined;
+              for (const event of data) {
+                if (event.timestamp > cursor) {
+                  setSelectedEntry(lastEvent);
+                  return;
+                }
 
-            setSelectedEntry(lastEvent);
-          }}
-          height={200}
-          width={400}
-        />
-        <div>Selected: {selectedEntry?.timestamp}</div>
-        <div>
-          GE Now:{" "}
-          {currentPrices.type === "data" ? currentPrices.data.total : "Loading"}
-        </div>
-        <div>GE Then: {oldGeTotal}</div>
-        <InventoryGrid entries={selectedEntry?.entries ?? []} />
-      </NoData>
-    </>
+                lastEvent = event;
+              }
+
+              setSelectedEntry(lastEvent);
+            }}
+            height={200}
+            width={400}
+          />
+          <div>Selected: {selectedEntry?.timestamp}</div>
+          <div>
+            GE Now:{" "}
+            {currentPrices.type === "data"
+              ? currentPrices.data.total
+              : "Loading"}
+          </div>
+          <div>GE Then: {oldGeTotal}</div>
+          <InventoryGrid entries={selectedEntry?.entries ?? []} />
+        </>
+      )}
+    </LoadingErrorBoundary>
   );
 };

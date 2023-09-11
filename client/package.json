@@ -15,6 +15,7 @@
     "react": "^18.2.0",
     "react-apexcharts": "^1.4.1",
     "react-dom": "^18.2.0",
+    "react-error-boundary": "^4.0.11",
     "react-svg-timeline": "^0.24.2",
     "web-vitals": "^2.1.4",
     "zustand": "^4.4.1"

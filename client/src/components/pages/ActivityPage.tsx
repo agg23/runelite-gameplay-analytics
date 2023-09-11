@@ -1,9 +1,8 @@
 import { useEffect, useMemo } from "react";
 import { useStore } from "../../store/store";
-import { LoadingOverlay } from "@mantine/core";
-import { NoData } from "../error/NoData";
 import { Timeline } from "react-svg-timeline";
 import { ActivityEvent } from "../../api/internal/types";
+import { LoadingErrorBoundary } from "../error/LoadingErrorBoundary";
 
 export const ActivityPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -30,48 +29,87 @@ export const ActivityPage: React.FC<{}> = () => {
     }
 
     requestData(activeAccount);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeAccount]);
-
-  const noData = api.type === "data" && api.data.length === 0;
+  }, [activeAccount, requestData]);
 
   return (
-    <>
-      <LoadingOverlay visible={api.type !== "data"} />
-      <NoData hasData={!noData}>
-        <Timeline
-          events={chartData}
-          lanes={[
-            {
-              laneId: "0" as string,
-              label: "",
-            },
-          ]}
-          dateFormat={(ms) => new Date(ms).toLocaleString()}
-          onCursorMove={(cursor) => {
-            if (!cursor) {
-              return;
-            }
-
-            const data = api.type === "data" ? api.data : [];
-
-            let lastEvent: ActivityEvent | undefined = undefined;
-            for (const event of data) {
-              if (event.startTimestamp > cursor) {
-                setSelectedEntry(lastEvent);
+    <LoadingErrorBoundary data={api}>
+      {(data) => (
+        <>
+          <Timeline
+            events={chartData}
+            lanes={[
+              {
+                laneId: "0" as string,
+                label: "",
+              },
+            ]}
+            dateFormat={(ms) => new Date(ms).toLocaleString()}
+            onCursorMove={(cursor) => {
+              if (!cursor) {
                 return;
               }
 
-              lastEvent = event;
-            }
+              let lastEvent: ActivityEvent | undefined = undefined;
+              for (const event of data) {
+                if (event.startTimestamp > cursor) {
+                  setSelectedEntry(lastEvent);
+                  return;
+                }
 
-            setSelectedEntry(lastEvent);
-          }}
-          height={200}
-          width={400}
-        />
-        <div>Selected: {selectedEntry?.startTimestamp}</div>
-      </NoData>
-    </>
+                lastEvent = event;
+              }
+
+              setSelectedEntry(lastEvent);
+            }}
+            height={200}
+            width={400}
+          />
+          <div>Selected: {selectedEntry?.startTimestamp}</div>
+        </>
+      )}
+    </LoadingErrorBoundary>
   );
 };
+
+// interface ActivityPageContentProps {
+//   data: ActivityEvent[];
+// }
+
+// const ActivityPageContent: React.FC<ActivityPageContentProps> = ({ data }) => {
+//   return (
+//     <>
+//       <Timeline
+//         events={chartData}
+//         lanes={[
+//           {
+//             laneId: "0" as string,
+//             label: "",
+//           },
+//         ]}
+//         dateFormat={(ms) => new Date(ms).toLocaleString()}
+//         onCursorMove={(cursor) => {
+//           if (!cursor) {
+//             return;
+//           }
+
+//           const data = api.type === "data" ? api.data : [];
+
+//           let lastEvent: ActivityEvent | undefined = undefined;
+//           for (const event of data) {
+//             if (event.startTimestamp > cursor) {
+//               setSelectedEntry(lastEvent);
+//               return;
+//             }
+
+//             lastEvent = event;
+//           }
+
+//           setSelectedEntry(lastEvent);
+//         }}
+//         height={200}
+//         width={400}
+//       />
+//       <div>Selected: {selectedEntry?.startTimestamp}</div>
+//     </>
+//   );
+// };

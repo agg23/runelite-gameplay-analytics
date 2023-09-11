@@ -1,15 +1,12 @@
 import { useEffect, useMemo } from "react";
-import { LoadingOverlay, createStyles } from "@mantine/core";
-import Chart from "react-apexcharts";
+import { createStyles } from "@mantine/core";
 
 import { useStore } from "../../store/store";
-import { FixedSeries } from "../../types/ApexCharts";
 import { ApexOptions } from "apexcharts";
-import { NoData } from "../error/NoData";
 import { Timeline } from "react-svg-timeline";
 import { LootEvent } from "../../api/internal/types";
 import { NPC } from "../osrs/npc/NPC";
-import { ItemGrid } from "../osrs/items/ItemGrid";
+import { LoadingErrorBoundary } from "../error/LoadingErrorBoundary";
 
 export const LootPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -54,55 +51,53 @@ export const LootPage: React.FC<{}> = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeAccount]);
 
-  const noData = lootApi.type === "data" && lootApi.data.length === 0;
-
   return (
-    <>
-      <LoadingOverlay visible={lootApi.type !== "data"} />
-      <NoData hasData={!noData}>
-        {/* <Chart
+    <LoadingErrorBoundary data={lootApi}>
+      {(data) => (
+        <>
+          {" "}
+          {/* <Chart
           height="200"
           series={chartData as ApexAxisChartSeries}
           options={options}
         /> */}
-        <Timeline
-          events={chartData}
-          lanes={[
-            {
-              laneId: "0" as string,
-              label: "",
-            },
-          ]}
-          dateFormat={(ms) => new Date(ms).toLocaleString()}
-          onCursorMove={(cursor) => {
-            if (!cursor) {
-              return;
-            }
-
-            const data = lootApi.type === "data" ? lootApi.data : [];
-
-            let lastEvent: LootEvent | undefined = undefined;
-            for (const event of data) {
-              if (event.timestamp > cursor) {
-                setSelectedEntry(lastEvent);
+          <Timeline
+            events={chartData}
+            lanes={[
+              {
+                laneId: "0" as string,
+                label: "",
+              },
+            ]}
+            dateFormat={(ms) => new Date(ms).toLocaleString()}
+            onCursorMove={(cursor) => {
+              if (!cursor) {
                 return;
               }
 
-              lastEvent = event;
-            }
+              let lastEvent: LootEvent | undefined = undefined;
+              for (const event of data) {
+                if (event.timestamp > cursor) {
+                  setSelectedEntry(lastEvent);
+                  return;
+                }
 
-            setSelectedEntry(lastEvent);
-          }}
-          height={200}
-          width={400}
-        />
-        <div>Selected: {selectedEntry?.timestamp}</div>
-        {!!selectedEntry && <NPC id={selectedEntry.npcId} />}
-        {/* <ItemGrid
+                lastEvent = event;
+              }
+
+              setSelectedEntry(lastEvent);
+            }}
+            height={200}
+            width={400}
+          />
+          <div>Selected: {selectedEntry?.timestamp}</div>
+          {!!selectedEntry && <NPC id={selectedEntry.npcId} />}
+          {/* <ItemGrid
           itemIds={selectedEntry?.entries.map((entry) => entry.itemId) ?? []}
         /> */}
-      </NoData>
-    </>
+        </>
+      )}
+    </LoadingErrorBoundary>
   );
 };
 

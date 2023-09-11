@@ -7,7 +7,7 @@ import { XPEvent } from "../../api/internal/types";
 import Chart from "react-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { FixedSeries } from "../../types/ApexCharts";
-import { NoData } from "../error/NoData";
+import { LoadingErrorBoundary } from "../error/LoadingErrorBoundary";
 
 export const XPPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -57,21 +57,21 @@ export const XPPage: React.FC<{}> = () => {
 
   const { classes } = useStyles();
 
-  const noData = xpApi.type === "data" && xpApi.data.length === 0;
-
   return (
-    <>
-      <LoadingOverlay visible={xpApi.type !== "data"} />
-      <NoData hasData={!noData}>
-        <div className={classes.chartSettings}>
-          <Checkbox
-            checked={displayDeltas}
-            onChange={(event) => setDisplayDeltas(event.currentTarget.checked)}
-            label="Display deltas"
-          />
-        </div>
-        <div className={classes.chartWrapper}>
-          {/* <ResponsiveLine
+    <LoadingErrorBoundary data={xpApi}>
+      {(_) => (
+        <>
+          <div className={classes.chartSettings}>
+            <Checkbox
+              checked={displayDeltas}
+              onChange={(event) =>
+                setDisplayDeltas(event.currentTarget.checked)
+              }
+              label="Display deltas"
+            />
+          </div>
+          <div className={classes.chartWrapper}>
+            {/* <ResponsiveLine
           data={linechartData}
           isInteractive
           useMesh
@@ -84,28 +84,29 @@ export const XPPage: React.FC<{}> = () => {
           }}
           margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
         /> */}
-          <Chart
-            series={linechartData as ApexAxisChartSeries}
-            options={options}
-            height="600"
-          />
-          <div className={classes.chartSettings}>
-            <div className={classes.chartManualSettings}>
-              <Checkbox
-                checked={selectedSkills.type === "all"}
-                onChange={(event) =>
-                  toggleSelectedSkills(event.currentTarget.checked)
-                }
-                label="Select all"
-              />
-            </div>
-            <div className={classes.allSkills}>
-              <AllSkills />
+            <Chart
+              series={linechartData as ApexAxisChartSeries}
+              options={options}
+              height="600"
+            />
+            <div className={classes.chartSettings}>
+              <div className={classes.chartManualSettings}>
+                <Checkbox
+                  checked={selectedSkills.type === "all"}
+                  onChange={(event) =>
+                    toggleSelectedSkills(event.currentTarget.checked)
+                  }
+                  label="Select all"
+                />
+              </div>
+              <div className={classes.allSkills}>
+                <AllSkills />
+              </div>
             </div>
           </div>
-        </div>
-      </NoData>
-    </>
+        </>
+      )}
+    </LoadingErrorBoundary>
   );
 };
 
