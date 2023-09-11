@@ -29,6 +29,10 @@ export const init = () => {
     .catch(() => {
       console.error("Failed to load settings");
       // TODO: Mark offline in store
+    })
+    .finally(() => {
+      // Make sure we've selected the correct active ID
+      useStore.getState().accounts.selectDefaultActiveAccount();
     });
 
   const saveSettings = (settings: SyncedSettings) => {
