@@ -67,11 +67,13 @@ public class GameplayAnalyticsPlugin extends Plugin {
     private final ActivityController activityController =
             new ActivityController();
     private final MapController mapController = new MapController();
+    private final MembershipController membershipController =
+            new MembershipController();
     private final StorageController storageController = new StorageController();
     private final XPController xpController = new XPController();
 
     private final Controller[] controllers = new Controller[]{
-            activityController, mapController, storageController, xpController};
+            activityController, mapController, membershipController, storageController, xpController};
 
     private Account account;
 

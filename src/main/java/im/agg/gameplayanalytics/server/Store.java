@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -101,6 +102,17 @@ public class Store {
                     quantity INTEGER NOT NULL,
                     ge_per_item INTEGER NOT NULL,
                     FOREIGN KEY (loot_id) REFERENCES loot_event (id)
+                )
+                """);
+
+        // Membership
+
+        this.sqlExecute("""
+                CREATE TABLE IF NOT EXISTS membership_status (
+                    account_id INTEGER NOT NULL,
+                    start_timestamp INTEGER NOT NULL,
+                    expiration_timestamp INTEGER NOT NULL,
+                    FOREIGN KEY (account_id) REFERENCES account (id)
                 )
                 """);
 
@@ -231,7 +243,7 @@ public class Store {
                 """, parameters);
     }
 
-    public void createNewActivityEvent(ActivitySession session) {
+    public void createNewActivityEvent(ActivityEvent session) {
         var parameters = new Object[]{
                 session.getAccountId(),
                 session.getTimestamp(),
@@ -246,7 +258,7 @@ public class Store {
                 """, parameters);
     }
 
-    public void updateLastActivityEvent(ActivitySession session) {
+    public void updateLastActivityEvent(ActivityEvent session) {
         var parameters = new Object[]{
                 session.getTimestamp(),
                 session.getAccountId()
@@ -331,6 +343,50 @@ public class Store {
                 """, entryParams);
     }
 
+    public void createOrUpdateLastMembershipStatus(
+            long accountId, Date startTimestamp, Date expirationTimestamp) {
+        var selectParameters = new Object[]{
+                accountId
+        };
+
+        // Yank is dumb and doesn't allow for nulls in scalar output
+        // IFNULL(MAX(start_timestamp), 0)
+        var maxStartTimestamp = Yank.queryBean("""
+                SELECT
+                    account_id, MAX(start_timestamp) as start_timestamp, expiration_timestamp
+                FROM membership_status WHERE account_id = ?
+                """, MembershipStatusDBEvent.class, selectParameters);
+
+        // TODO: Check if we're in range of the last membership
+        var isInRange = !maxStartTimestamp.isNull() &&
+                maxStartTimestamp.getExpirationTimestamp() >
+                        startTimestamp.getTime() &&
+                maxStartTimestamp.getStartTimestamp() <
+                        startTimestamp.getTime();
+
+
+        if (maxStartTimestamp.isNull() || !isInRange) {
+            // No entry, do insert
+            var insertParams =
+                    new Object[]{accountId, startTimestamp, expirationTimestamp};
+
+            Yank.execute("""
+                    INSERT INTO membership_status
+                        (account_id, start_timestamp, expiration_timestamp)
+                    VALUES (?, ?, ?)
+                    """, insertParams);
+        } else {
+            // Entry, do update
+            var updateParams =
+                    new Object[]{expirationTimestamp, maxStartTimestamp.getStartTimestamp()};
+
+            Yank.execute("""
+                    UPDATE membership_status SET expiration_timestamp = ?
+                    WHERE start_timestamp = ?
+                    """, updateParams);
+        }
+    }
+
     public void writeSettings(String blob) {
         Yank.execute("""
                 INSERT OR REPLACE INTO setting
@@ -353,10 +409,10 @@ public class Store {
                 """, Account.class, new Object[]{});
     }
 
-    public List<ActivityEvent> getActivity(long accountId) {
+    public List<ActivityDBEvent> getActivity(long accountId) {
         return Yank.queryBeanList("""
                 SELECT * FROM activity WHERE account_id = ?
-                """, ActivityEvent.class, new Object[]{accountId});
+                """, ActivityDBEvent.class, new Object[]{accountId});
     }
 
     public List<XPDBEvent> getXPEvents(long accountId) {

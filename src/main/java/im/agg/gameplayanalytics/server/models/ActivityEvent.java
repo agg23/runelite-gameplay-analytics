@@ -1,17 +1,16 @@
 package im.agg.gameplayanalytics.server.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.knowm.yank.annotations.Column;
+import lombok.Getter;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+import java.util.Date;
+
+@Getter
 public class ActivityEvent {
-    private long accountId;
+    private final long accountId;
+    private final Date timestamp;
 
-    private long startTimestamp;
-    @Column("last_update_timestamp")
-    private long endTimestamp;
+    public ActivityEvent(long accountId, Date timestamp) {
+        this.accountId = accountId;
+        this.timestamp = timestamp;
+    }
 }

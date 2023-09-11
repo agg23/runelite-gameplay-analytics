@@ -1,7 +1,7 @@
 package im.agg.gameplayanalytics.controller;
 
 import im.agg.gameplayanalytics.server.models.Account;
-import im.agg.gameplayanalytics.server.models.ActivitySession;
+import im.agg.gameplayanalytics.server.models.ActivityEvent;
 
 import java.util.Date;
 import java.util.Timer;
@@ -19,12 +19,12 @@ public class ActivityController extends Controller {
         if (this.timer != null) {
             this.timer.cancel();
         }
-        
+
         this.timer = new Timer();
 
         // Update activity one last time
         this.store.updateLastActivityEvent(
-                new ActivitySession(this.account.getId(), new Date()));
+                new ActivityEvent(this.account.getId(), new Date()));
     }
 
     @Override
@@ -35,12 +35,12 @@ public class ActivityController extends Controller {
             @Override
             public void run() {
                 store.updateLastActivityEvent(
-                        new ActivitySession(account.getId(), new Date()));
+                        new ActivityEvent(account.getId(), new Date()));
             }
             // Capture the map position instantly
         }, 0, UPDATE_PERIOD * 1000);
 
         this.store.createNewActivityEvent(
-                new ActivitySession(this.account.getId(), new Date()));
+                new ActivityEvent(this.account.getId(), new Date()));
     }
 }
