@@ -14,7 +14,8 @@ public class StorageController extends Controller {
     static final Integer UPDATE_PERIOD = 60;
     static final Long MIN_BANK_UPDATE_TIME = 60L;
 
-    private Timer timer = new Timer();
+    private Timer updateTimer = new Timer();
+    private Timer queueTimer = new Timer();
 
     private List<StorageEntryDBEvent> lastInventoryEntries = new ArrayList<>();
 
@@ -25,11 +26,11 @@ public class StorageController extends Controller {
     public void logout() {
         super.logout();
 
-        if (this.timer != null) {
-            this.timer.cancel();
+        if (this.updateTimer != null) {
+            this.updateTimer.cancel();
         }
 
-        this.timer = new Timer();
+        this.updateTimer = new Timer();
 
         this.updateInventory();
     }
@@ -38,7 +39,7 @@ public class StorageController extends Controller {
     public void startDataFlow(Account account) {
         super.startDataFlow(account);
 
-        this.timer.scheduleAtFixedRate(new TimerTask() {
+        this.updateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 clientThread.invoke(new Runnable() {
@@ -53,26 +54,45 @@ public class StorageController extends Controller {
     }
 
     public void bankOpen() {
-        // TODO: Log last seen bank change, and write it after 5 minutes if it differs from last write.
-        // This lets you open the bank (snapshot), add something, then get a new snapshot 5 minutes later
+        // Log last seen bank change, and write it after MIN_BANK_UPDATE_TIME if it differs from last write.
+        // This lets you open the bank (causes snapshot), add something, then get a new snapshot MIN_BANK_UPDATE_TIME later
+        // Create a bank entry
+        var wrapper = getInventory(InventoryID.BANK, 1, false);
+        var entry = wrapper.entries.get(0);
+
         if (this.lastBankUpdateTime == null ||
                 this.lastBankUpdateTime.getTime() +
                         MIN_BANK_UPDATE_TIME * 1000 <
                         new Date().getTime()) {
-            this.lastBankUpdateTime = new Date();
+            this.writeBankUpdate(wrapper);
+        } else if (entry.getGePerItem() != this.lastBankValue) {
+            // We have a change. Queue it for MIN_BANK_UPDATE_TIME from now
+            if (this.queueTimer != null) {
+                this.queueTimer.cancel();
+            }
+            this.queueTimer = new Timer();
 
-            // Create a bank entry
-            var wrapper = getInventory(InventoryID.BANK, 1, false);
-            var event = wrapper.event;
-            var entry = wrapper.entries.get(0);
-
-            this.lastBankValue = entry.getGePerItem();
-
-            log.info(String.format("Writing bank value %d, quantity %d",
-                    this.lastBankValue, entry.getQuantity()));
-
-            this.store.writeStorageEvent(event, wrapper.entries);
+            this.queueTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    // Write
+                    writeBankUpdate(wrapper);
+                }
+            }, MIN_BANK_UPDATE_TIME * 1000);
         }
+    }
+
+    private void writeBankUpdate(StorageEventWrapper wrapper) {
+        var entry = wrapper.entries.get(0);
+
+        this.lastBankUpdateTime = new Date();
+
+        this.lastBankValue = entry.getGePerItem();
+
+        log.info(String.format("Writing bank value %d, quantity %d",
+                this.lastBankValue, entry.getQuantity()));
+
+        this.store.writeStorageEvent(wrapper.event, wrapper.entries);
     }
 
     private void updateInventory() {
