@@ -1,6 +1,6 @@
 import { RootRoute, Route, Router } from "@tanstack/react-router";
 import { RootPage } from "./components/pages/RootPage";
-import { XPPage } from "./components/pages/XPPage";
+import { XPPage } from "./components/pages/xp/XPPage";
 import { LootPage } from "./components/pages/LootPage";
 import { InventoryPage } from "./components/pages/InventoryPage";
 import { ActivityPage } from "./components/pages/ActivityPage";

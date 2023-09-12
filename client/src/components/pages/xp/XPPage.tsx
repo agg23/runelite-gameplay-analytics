@@ -1,16 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox, LoadingOverlay, createStyles } from "@mantine/core";
 
-import { useStore } from "../../store/store";
-import { AllSkills } from "../osrs/skills/AllSkills";
-import { XPEvent } from "../../api/internal/types";
-import Chart from "react-apexcharts";
-import { ApexOptions } from "apexcharts";
-import { FixedSeries } from "../../types/ApexCharts";
-import { LoadingErrorBoundary } from "../error/LoadingErrorBoundary";
-import { ALL_SKILLS } from "../../osrs/types";
-import { ApexChart } from "../external/ApexChart";
-import { usePrevious } from "../../hooks/usePrevious";
+import { useStore } from "../../../store/store";
+import { AllSkills } from "../../osrs/skills/AllSkills";
+import { XPEvent } from "../../../api/internal/types";
+import { FixedSeries } from "../../../types/ApexCharts";
+import { LoadingErrorBoundary } from "../../error/LoadingErrorBoundary";
+import { ALL_SKILLS } from "../../../osrs/types";
+import { ApexChart } from "../../external/ApexChart";
+import { usePrevious } from "../../../hooks/usePrevious";
+import { usePrimaryChartOptions } from "./primaryChart";
+import { useZoomChartOptions } from "./zoomChart";
 
 export const XPPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
@@ -27,6 +27,7 @@ export const XPPage: React.FC<{}> = () => {
   );
 
   const primaryChartRef = useRef<ApexCharts | null>(null);
+  const zoomChartRef = useRef<ApexCharts | null>(null);
 
   const linechartData = useLinechartData();
 
@@ -64,10 +65,35 @@ export const XPPage: React.FC<{}> = () => {
         data: xpApi.data.map((item) => [item.timestamp, item[skill]]),
       }));
       primaryChartRef.current?.appendData(updatedSeries);
-      console.log("Sending", updatedSeries[0].data[0]);
+      zoomChartRef.current?.appendData(updatedSeries);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [xpApi, previousDataRef]);
+
+  const previousSelectedSkills = usePrevious(selectedSkills);
+
+  useEffect(() => {
+    // TODO: Handle all
+    if (
+      selectedSkills.type === "set" &&
+      !!previousSelectedSkills &&
+      previousSelectedSkills.type === "set"
+    ) {
+      const presentSkills = new Set<string>();
+
+      previousSelectedSkills.set.forEach((skill) => presentSkills.add(skill));
+
+      ALL_SKILLS.forEach((skill) => {
+        if (presentSkills.has(skill) && !selectedSkills.set.has(skill)) {
+          // Removed
+          primaryChartRef.current?.hideSeries(skill);
+        } else if (!presentSkills.has(skill) && selectedSkills.set.has(skill)) {
+          // Added
+          primaryChartRef.current?.showSeries(skill);
+        }
+      });
+    }
+  }, [selectedSkills]);
 
   const primaryChartOptions = usePrimaryChartOptions(
     startRangeTimestamp,
@@ -116,11 +142,16 @@ export const XPPage: React.FC<{}> = () => {
                 initialData={linechartData as ApexAxisChartSeries}
                 options={primaryChartOptions}
               />
-              <Chart
+              {/* <Chart
                 type="area"
                 series={linechartData as ApexAxisChartSeries}
                 options={zoomChartOptions}
                 height="130"
+              /> */}
+              <ApexChart
+                ref={zoomChartRef}
+                initialData={linechartData as ApexAxisChartSeries}
+                options={zoomChartOptions}
               />
             </div>
             <div className={classes.chartSettings}>
@@ -195,163 +226,4 @@ const useLinechartData = () => {
       };
     });
   }, [selectedSkills]);
-};
-
-const usePrimaryChartOptions = (
-  startRangeTimestamp: number,
-  endRangeTimestamp: number
-): ApexOptions => {
-  return useMemo(
-    () => ({
-      chart: {
-        id: "primary",
-        type: "line",
-        height: "600px",
-        toolbar: {
-          autoSelected: "pan",
-          show: false,
-        },
-        zoom: {
-          autoScaleYaxis: true,
-          // Zoom disabled until I can figure out what to do with it
-          enabled: false,
-        },
-      },
-      annotations: {
-        yaxis: [
-          {
-            y: 83,
-            label: {
-              text: "Level 2",
-            },
-          },
-          {
-            y: 174,
-            label: {
-              text: "Level 3",
-            },
-          },
-          {
-            y: 276,
-            label: {
-              text: "Level 4",
-            },
-          },
-          {
-            y: 388,
-            label: {
-              text: "Level 5",
-            },
-          },
-          {
-            y: 512,
-            label: {
-              text: "Level 6",
-            },
-          },
-          {
-            y: 650,
-            label: {
-              text: "Level 7",
-            },
-          },
-        ],
-      },
-      series: ALL_SKILLS.map((skill) => ({
-        name: skill,
-        data: [],
-      })),
-      xaxis: {
-        type: "datetime",
-        title: {
-          text: "Timestamp",
-        },
-        // min: startRangeTimestamp,
-        // max: endRangeTimestamp,
-      },
-      yaxis: {
-        title: {
-          text: "XP",
-        },
-      },
-    }),
-    []
-  );
-};
-
-const useZoomChartOptions = (
-  startRangeTimestamp: number,
-  endRangeTimestamp: number,
-  setChartRange: (start: number, end: number) => void
-): ApexOptions => {
-  return useMemo(
-    () => ({
-      chart: {
-        id: "zoom",
-        type: "area",
-        brush: {
-          target: "primary",
-          enabled: true,
-        },
-        offsetY: -40,
-        selection: {
-          enabled: true,
-          // xaxis: {
-          //   min: startRangeTimestamp,
-          //   max: endRangeTimestamp,
-          // },
-        },
-        events: {
-          selection: (_, { xaxis }) => {
-            const chart = ApexCharts.getChartByID("primary");
-
-            if (!chart) {
-              return;
-            }
-
-            chart.zoomX(xaxis.min, xaxis.max);
-          },
-          // brushScrolled: (_, { xaxis }) => {
-          //   // setChartRange(xaxis.min, xaxis.max);
-          //   const chart = ApexCharts.getChartByID("primary");
-
-          //   if (!chart) {
-          //     return;
-          //   }
-
-          //   chart.zoomX(xaxis.min, xaxis.max);
-          // },
-        },
-      },
-      colors: ["#008FFB"],
-      fill: {
-        type: "gradient",
-        gradient: {
-          type: "vertical",
-          opacityFrom: 0.7,
-          opacityTo: 0.9,
-          stops: [0, 90, 100],
-        },
-      },
-      grid: {
-        show: false,
-      },
-      legend: {
-        show: false,
-      },
-      xaxis: {
-        type: "datetime",
-        tooltip: {
-          enabled: false,
-        },
-      },
-      yaxis: {
-        labels: {
-          show: false,
-        },
-      },
-    }),
-    // [startRangeTimestamp, endRangeTimestamp]
-    []
-  );
 };
