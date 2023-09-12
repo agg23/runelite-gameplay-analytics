@@ -12,10 +12,14 @@ import java.util.*;
 @Slf4j
 public class StorageController extends Controller {
     static final Integer UPDATE_PERIOD = 60;
+    static final Long MIN_BANK_UPDATE_TIME = 60L;
 
     private Timer timer = new Timer();
 
     private List<StorageEntryDBEvent> lastInventoryEntries = new ArrayList<>();
+
+    private int lastBankValue = 0;
+    private Date lastBankUpdateTime;
 
     @Override
     public void logout() {
@@ -48,9 +52,30 @@ public class StorageController extends Controller {
         }, 0, UPDATE_PERIOD * 1000);
     }
 
+    public void bankOpen() {
+        if (this.lastBankUpdateTime == null ||
+                this.lastBankUpdateTime.getTime() +
+                        MIN_BANK_UPDATE_TIME * 1000 <
+                        new Date().getTime()) {
+            this.lastBankUpdateTime = new Date();
+
+            // Create a bank entry
+            var wrapper = getInventory(InventoryID.BANK, 1, false);
+            var event = wrapper.event;
+            var entry = wrapper.entries.get(0);
+
+            this.lastBankValue = entry.getGePerItem();
+
+            log.info(String.format("Writing bank value %d, quantity %d",
+                    this.lastBankValue, entry.getQuantity()));
+
+            this.store.writeStorageEvent(event, wrapper.entries);
+        }
+    }
+
     private void updateInventory() {
         // Inventory type
-        var wrapper = getInventory(InventoryID.INVENTORY, 0);
+        var wrapper = getInventory(InventoryID.INVENTORY, 0, true);
         var event = wrapper.event;
         var entries = wrapper.entries;
         if (!entries.equals(this.lastInventoryEntries)) {
@@ -69,11 +94,14 @@ public class StorageController extends Controller {
     }
 
     private StorageEventWrapper getInventory(InventoryID inventoryID,
-                                             int dbType) {
+                                             int dbType, boolean recordItems) {
         var container = this.client.getItemContainer(inventoryID);
 
         var timestamp = new Date().getTime();
         var event = new StorageDBEvent(dbType, timestamp, this.account.getId());
+
+        var totalPrice = 0;
+        var itemCount = 0;
 
         var entries = new ArrayList<StorageEntryDBEvent>();
 
@@ -82,11 +110,25 @@ public class StorageController extends Controller {
 
             if (item != null) {
                 var price = this.itemManager.getItemPrice(item.getId());
-                var entry = new StorageEntryDBEvent(item.getId(), i,
-                        item.getQuantity(), price);
 
-                entries.add(entry);
+                totalPrice += price * item.getQuantity();
+                itemCount += 1;
+
+                if (recordItems) {
+                    var entry = new StorageEntryDBEvent(item.getId(), i,
+                            item.getQuantity(), price);
+
+                    entries.add(entry);
+                }
             }
+        }
+
+        if (!recordItems) {
+            // Placeholder entry for container's price
+            var entry = new StorageEntryDBEvent(0, 0,
+                    itemCount, totalPrice);
+
+            entries.add(entry);
         }
 
         return new StorageEventWrapper(event, entries);

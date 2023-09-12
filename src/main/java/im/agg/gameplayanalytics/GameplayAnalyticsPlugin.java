@@ -15,12 +15,10 @@ import im.agg.gameplayanalytics.server.models.Account;
 import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Player;
-import net.runelite.api.events.ActorDeath;
+import net.runelite.api.ScriptID;
+import net.runelite.api.events.*;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.api.Client;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.StatChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
@@ -194,6 +192,13 @@ public class GameplayAnalyticsPlugin extends Plugin {
                                 location.getRegionID(), location.getX(),
                                 location.getY()));
             }
+        }
+    }
+
+    @Subscribe
+    public void onScriptPostFired(ScriptPostFired event) {
+        if (event.getScriptId() == ScriptID.BANKMAIN_BUILD) {
+            this.storageController.bankOpen();
         }
     }
 
