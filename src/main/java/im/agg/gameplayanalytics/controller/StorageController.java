@@ -53,6 +53,8 @@ public class StorageController extends Controller {
     }
 
     public void bankOpen() {
+        // TODO: Log last seen bank change, and write it after 5 minutes if it differs from last write.
+        // This lets you open the bank (snapshot), add something, then get a new snapshot 5 minutes later
         if (this.lastBankUpdateTime == null ||
                 this.lastBankUpdateTime.getTime() +
                         MIN_BANK_UPDATE_TIME * 1000 <

@@ -1,6 +1,7 @@
 package im.agg.gameplayanalytics.server;
 
 import im.agg.gameplayanalytics.server.dbmodels.*;
+import im.agg.gameplayanalytics.server.dbmodels.retrieval.*;
 import im.agg.gameplayanalytics.server.models.*;
 import lombok.extern.slf4j.Slf4j;
 import org.knowm.yank.Yank;
@@ -353,7 +354,7 @@ public class Store {
                 SELECT
                     account_id, MAX(start_timestamp) as start_timestamp, expiration_timestamp
                 FROM membership_status WHERE account_id = ?
-                """, MembershipStatusDBEvent.class, selectParameters);
+                """, MembershipStatusDBRetrieval.class, selectParameters);
 
         var isInRange = !maxStartTimestamp.isNull() &&
                 maxStartTimestamp.getExpirationTimestamp() >
@@ -406,41 +407,10 @@ public class Store {
                 """, Account.class, new Object[]{});
     }
 
-    public List<ActivityDBEvent> getActivity(long accountId) {
+    public List<ActivityDBRetrieval> getActivity(long accountId) {
         return Yank.queryBeanList("""
                 SELECT * FROM activity WHERE account_id = ?
-                """, ActivityDBEvent.class, new Object[]{accountId});
-    }
-
-    public List<XPDBEvent> getXPEvents(long accountId) {
-        return Yank.queryBeanList("""
-                SELECT * FROM xp_event WHERE account_id = ?
-                """, XPDBEvent.class, new Object[]{accountId});
-    }
-
-    public List<StorageEvent> getStorageEvents(long accountId, int type) {
-        var entries = Yank.queryBeanList("""
-                SELECT
-                    id, timestamp, account_id, type, item_id, slot, quantity, ge_per_item
-                FROM storage_event JOIN storage_entry
-                ON storage_event.id == storage_entry.event_id
-                WHERE account_id = ? AND type = ?
-                """, StorageDBRetrieval.class, new Object[]{accountId, type});
-
-        return groupSequentialList(entries, StorageDBRetrieval::getId).stream()
-                .map(group -> {
-                    var groupedEntries = group.stream()
-                            .map(entry -> new StorageEntryEvent(
-                                    entry.getItemId(), entry.getSlot(),
-                                    entry.getQuantity(), entry.getGePerItem()))
-                            .collect(Collectors.toList());
-
-                    var first = group.getFirst();
-
-                    return new StorageEvent(first.getId(), first.getTimestamp(),
-                            first.getAccountId(), first.getType(),
-                            groupedEntries);
-                }).collect(Collectors.toList());
+                """, ActivityDBRetrieval.class, new Object[]{accountId});
     }
 
     public List<LootEvent> getLootEvents(long accountId) {
@@ -469,5 +439,43 @@ public class Store {
                             first.getTileY(),
                             groupedEntries);
                 }).collect(Collectors.toList());
+    }
+
+    public List<MapDBRetrival> getMapEvents(long accountId) {
+        return Yank.queryBeanList("""
+                SELECT account_id, timestamp, region, tile_x, tile_y
+                FROM map_event WHERE account_id = ?
+                """, MapDBRetrival.class, new Object[]{accountId});
+    }
+
+    public List<StorageEvent> getStorageEvents(long accountId, int type) {
+        var entries = Yank.queryBeanList("""
+                SELECT
+                    id, timestamp, account_id, type, item_id, slot, quantity, ge_per_item
+                FROM storage_event JOIN storage_entry
+                ON storage_event.id == storage_entry.event_id
+                WHERE account_id = ? AND type = ?
+                """, StorageDBRetrieval.class, new Object[]{accountId, type});
+
+        return groupSequentialList(entries, StorageDBRetrieval::getId).stream()
+                .map(group -> {
+                    var groupedEntries = group.stream()
+                            .map(entry -> new StorageEntryEvent(
+                                    entry.getItemId(), entry.getSlot(),
+                                    entry.getQuantity(), entry.getGePerItem()))
+                            .collect(Collectors.toList());
+
+                    var first = group.getFirst();
+
+                    return new StorageEvent(first.getId(), first.getTimestamp(),
+                            first.getAccountId(), first.getType(),
+                            groupedEntries);
+                }).collect(Collectors.toList());
+    }
+
+    public List<XPDBEvent> getXPEvents(long accountId) {
+        return Yank.queryBeanList("""
+                SELECT * FROM xp_event WHERE account_id = ?
+                """, XPDBEvent.class, new Object[]{accountId});
     }
 }

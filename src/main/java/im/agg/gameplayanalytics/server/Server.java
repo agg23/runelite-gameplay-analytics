@@ -90,6 +90,11 @@ public class Server {
             ctx.json(new HTTPJSONWrapper(events));
         }));
 
+        this.createAccountRoute("/api/map/{accountId}", ((ctx, accountId) -> {
+            var events = this.store.getMapEvents(accountId);
+            ctx.json(new HTTPJSONWrapper(events));
+        }));
+
         this.createAccountRoute("/api/storage/{accountId}/{type}",
                 (ctx, accountId) -> {
                     var typeParam = ctx.pathParam("type");

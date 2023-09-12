@@ -45,8 +45,9 @@ public class MapController extends Controller {
     private void updateMap() {
         var worldPoint = this.client.getLocalPlayer().getWorldLocation();
 
-        var event = new MapEvent(worldPoint.getRegionID(), worldPoint.getX(),
-                worldPoint.getY(), this.account.getId(), new Date());
+        var event = new MapEvent(new Date(), this.account.getId(),
+                worldPoint.getRegionID(), worldPoint.getX(),
+                worldPoint.getY());
 
         if (event.changedEquals(this.lastMapEvent)) {
             return;

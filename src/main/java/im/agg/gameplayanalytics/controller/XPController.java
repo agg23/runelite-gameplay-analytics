@@ -58,7 +58,7 @@ public class XPController extends Controller {
 
         this.writePartialXPEventIfChanged();
     }
-    
+
     @Override
     public void startDataFlow(Account account) {
         super.startDataFlow(account);

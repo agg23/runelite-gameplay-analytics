@@ -3,6 +3,7 @@ import {
   ActivityEvent,
   InventoryEvent,
   LootEvent,
+  MapEvent,
   SyncedSettings,
   XPEvent,
 } from "./types";
@@ -22,6 +23,10 @@ interface GetRoutes {
   };
   loot: {
     http: LootEvent[];
+    ws: void;
+  };
+  map: {
+    http: MapEvent[];
     ws: void;
   };
   storage: {

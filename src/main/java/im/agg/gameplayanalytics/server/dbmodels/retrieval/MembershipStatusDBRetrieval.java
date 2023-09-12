@@ -1,13 +1,14 @@
-package im.agg.gameplayanalytics.server.dbmodels;
+package im.agg.gameplayanalytics.server.dbmodels.retrieval;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class MembershipStatusDBEvent {
+public class MembershipStatusDBRetrieval {
+    @JsonSerialize(using = ToStringSerializer.class)
     private long accountId;
 
     private long startTimestamp;

@@ -1,29 +1,26 @@
 package im.agg.gameplayanalytics.server.models;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
+import lombok.*;
 import org.jetbrains.annotations.NotNull;
 import org.knowm.yank.annotations.Column;
 
 import java.util.Date;
 
-@Getter
-public class MapEvent extends Event {
-    private final int region;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class MapEvent {
+    private Date timestamp;
+
+    private long accountId;
+
+    private int region;
 
     @Column("tile_x")
-    private final int x;
+    private int x;
 
     @Column("tile_y")
-    private final int y;
-
-    public MapEvent(int region, int x, int y, long accountId, Date timestamp) {
-        super(timestamp, accountId);
-
-        this.region = region;
-        this.x = x;
-        this.y = y;
-    }
+    private int y;
 
     /**
      * Compares two events by non-unique properties for equality

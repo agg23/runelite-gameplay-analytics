@@ -64,6 +64,18 @@ export interface LootEntry {
   gePerItem: number;
 }
 
+// Map
+
+export interface MapEvent {
+  accountId: number;
+
+  timestamp: number;
+
+  region: number;
+  x: number;
+  y: number;
+}
+
 // Storage
 
 export interface StorageEvent {
