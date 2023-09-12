@@ -11,6 +11,7 @@
     "apexcharts": "^3.42.0",
     "date-fns": "^2.30.0",
     "deep-equal": "^2.2.2",
+    "echarts": "^5.4.3",
     "immer": "^10.0.2",
     "leaflet": "^1.9.4",
     "leaflet.motion": "^0.3.2",
