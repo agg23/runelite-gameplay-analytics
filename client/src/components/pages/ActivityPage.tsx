@@ -1,73 +1,65 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useStore } from "../../store/store";
 import { Timeline } from "react-svg-timeline";
 import { ActivityEvent } from "../../api/internal/types";
-import { LoadingErrorBoundary } from "../error/LoadingErrorBoundary";
+import { useActivityQuery } from "../../api/hooks/useDatatypeQuery";
+import { ErrorBoundary } from "react-error-boundary";
+import { LoadingOverlay } from "@mantine/core";
 
 export const ActivityPage: React.FC<{}> = () => {
-  const activeAccount = useStore((state) => state.accounts.activeId);
-  const { api, selectedEntry, requestData, setSelectedEntry } = useStore(
+  const { selectedEntry, setSelectedEntry } = useStore(
     (state) => state.activity
   );
 
+  const query = useActivityQuery();
+
   const chartData = useMemo(() => {
-    if (api.type !== "data") {
+    if (!query.isSuccess) {
       return [];
     }
 
-    return api.data.map((event) => ({
+    return query.data.map((event) => ({
       laneId: "0",
       eventId: `${event.startTimestamp}`,
       startTimeMillis: event.startTimestamp,
       endTimeMillis: event.endTimestamp,
     }));
-  }, [api]);
-
-  useEffect(() => {
-    if (!activeAccount) {
-      return;
-    }
-
-    requestData(activeAccount);
-  }, [activeAccount, requestData]);
+  }, [query]);
 
   return (
-    <LoadingErrorBoundary data={api}>
-      {(data) => (
-        <>
-          <Timeline
-            events={chartData}
-            lanes={[
-              {
-                laneId: "0" as string,
-                label: "",
-              },
-            ]}
-            dateFormat={(ms) => new Date(ms).toLocaleString()}
-            onCursorMove={(cursor) => {
-              if (!cursor) {
-                return;
-              }
+    <ErrorBoundary fallback={<div>An error occured</div>}>
+      <LoadingOverlay visible={query.isLoading} />
+      <Timeline
+        events={chartData}
+        lanes={[
+          {
+            laneId: "0" as string,
+            label: "",
+          },
+        ]}
+        dateFormat={(ms) => new Date(ms).toLocaleString()}
+        onCursorMove={(cursor) => {
+          if (!cursor) {
+            return;
+          }
 
-              let lastEvent: ActivityEvent | undefined = undefined;
-              for (const event of data) {
-                if (event.startTimestamp > cursor) {
-                  setSelectedEntry(lastEvent);
-                  return;
-                }
-
-                lastEvent = event;
-              }
-
+          let lastEvent: ActivityEvent | undefined = undefined;
+          for (const event of query.data ?? []) {
+            if (event.startTimestamp > cursor) {
               setSelectedEntry(lastEvent);
-            }}
-            height={200}
-            width={400}
-          />
-          <div>Selected: {selectedEntry?.startTimestamp}</div>
-        </>
-      )}
-    </LoadingErrorBoundary>
+              return;
+            }
+
+            lastEvent = event;
+          }
+
+          setSelectedEntry(lastEvent);
+        }}
+        height={200}
+        width={400}
+      />
+      <div>Selected: {selectedEntry?.startTimestamp}</div>
+    </ErrorBoundary>
   );
 };
 

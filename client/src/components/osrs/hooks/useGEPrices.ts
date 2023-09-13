@@ -1,6 +1,5 @@
 import { useMemo } from "react";
-import { useStore } from "../../../store/store";
-import { FetchState } from "../../../api/types";
+import { useGEPricesQuery } from "../../../api/hooks/useDatatypeQuery";
 
 interface GEPriceTotal {
   total: number;
@@ -10,12 +9,13 @@ interface GEPriceTotal {
 }
 
 export const useGEPrices = (itemIds: number[]) => {
-  const prices = useStore((state) => state.geprices.api);
+  const prices = useGEPricesQuery();
 
-  return useMemo((): FetchState<GEPriceTotal> => {
-    if (prices.type !== "data") {
+  return useMemo((): GEPriceTotal => {
+    if (!prices.isSuccess) {
       return {
-        ...prices,
+        total: 0,
+        prices: {},
       };
     }
 
@@ -41,11 +41,8 @@ export const useGEPrices = (itemIds: number[]) => {
     }
 
     return {
-      type: "data",
-      data: {
-        total,
-        prices: priceMap,
-      },
+      total,
+      prices: priceMap,
     };
   }, [itemIds, prices]);
 };

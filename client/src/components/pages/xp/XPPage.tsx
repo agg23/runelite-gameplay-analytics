@@ -1,17 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox, LoadingOverlay, createStyles } from "@mantine/core";
 import * as echarts from "echarts";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { useStore } from "../../../store/store";
 import { AllSkills } from "../../osrs/skills/AllSkills";
 import { ALL_SKILLS } from "../../../osrs/types";
 import { usePrimaryChartOptions } from "./primaryChart";
 import { EChart } from "../../external/EChart";
-import { ErrorBoundary } from "react-error-boundary";
+import { fetchQueryData } from "../../../store/util";
+import { useQuery } from "../../../store/useQuery";
 
 export const XPPage: React.FC<{}> = () => {
   const activeAccount = useStore((state) => state.accounts.activeId);
-  const { api: xpApi, requestData } = useStore((state) => state.xp);
   const {
     displayDeltas,
     selectedSkills,
@@ -21,37 +22,36 @@ export const XPPage: React.FC<{}> = () => {
   } = useStore((state) => state.xp);
   const primaryChartOptions = usePrimaryChartOptions();
 
+  const query = useQuery(
+    ["xp", activeAccount],
+    () => fetchQueryData("xp", activeAccount),
+    {
+      enabled: !!activeAccount,
+    }
+  );
+
   const primaryChartRef = useRef<echarts.ECharts>(null);
 
   const seriesData = useMemo(() => {
-    if (xpApi.type !== "data" || xpApi.data.length < 1) {
+    if (!query.isSuccess || query.data.length < 1) {
       return [];
     }
 
-    const initialValue = xpApi.data[0];
+    const initialValue = query.data[0];
 
     return ALL_SKILLS.map((skill) => ({
-      data: xpApi.data.map((item) => [
+      data: query.data.map((item) => [
         item.timestamp,
         item[skill] - (displayDeltas ? initialValue[skill] : 0),
       ]),
     }));
-  }, [displayDeltas, xpApi]);
-
-  useEffect(() => {
-    if (!activeAccount) {
-      return;
-    }
-
-    requestData(activeAccount);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeAccount]);
+  }, [displayDeltas, query]);
 
   const { classes } = useStyles();
 
   return (
     <ErrorBoundary fallback={<div>An error occured</div>}>
-      <LoadingOverlay visible={xpApi.type !== "data"} />
+      <LoadingOverlay visible={query.isLoading} />
       <div className={classes.chartSettings}>
         <Checkbox
           checked={displayDeltas}

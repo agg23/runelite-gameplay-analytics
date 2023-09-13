@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useStore } from "./store";
+import { useAccountQuery } from "../api/hooks/useDatatypeQuery";
 
 interface UseAccount {
   id: string | undefined;
@@ -14,7 +15,8 @@ interface UseAccount {
 
 export const useAccount = (): UseAccount => {
   const { activeId, setActiveAccount } = useStore((state) => state.accounts);
-  const accounts = useStore((state) => state.accounts.api);
+
+  const query = useAccountQuery();
 
   return useMemo(() => {
     const output = {
@@ -22,8 +24,8 @@ export const useAccount = (): UseAccount => {
       setActiveAccount,
     };
 
-    if (accounts.type === "data") {
-      const matchedAccount = accounts.data.find(
+    if (query.isSuccess) {
+      const matchedAccount = query.data.find(
         (account) => account.id === activeId
       );
 
@@ -37,5 +39,5 @@ export const useAccount = (): UseAccount => {
         account: undefined,
       };
     }
-  }, [activeId, accounts, setActiveAccount]);
+  }, [activeId, query, setActiveAccount]);
 };

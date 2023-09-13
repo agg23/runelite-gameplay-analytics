@@ -3,15 +3,16 @@ import deepEqual from "deep-equal";
 
 import { ALL_SKILLS, Skill } from "../../osrs/types";
 import { useStore } from "../../store/store";
-import { SyncedSettings } from "./types";
-import { getRoute, postRoute } from "./rest";
+import { Account, SyncedSettings } from "./types";
+import { getInternalRoute, postRoute } from "./rest";
+import { queryClient } from "../query";
 
 let timer: NodeJS.Timeout | undefined;
 let savedSettings: SyncedSettings | undefined;
 
 export const init = () => {
   // Immediately begin settings fetch
-  getRoute("settings")
+  getInternalRoute("settings")
     .then((settings) => {
       if (settings.type === "error") {
         console.error(`Could not retrieve settings: ${settings.message}`);
@@ -32,7 +33,8 @@ export const init = () => {
     })
     .finally(() => {
       // Make sure we've selected the correct active ID
-      useStore.getState().accounts.selectDefaultActiveAccount();
+      const accounts = queryClient.getQueryData<Account[]>("accounts");
+      useStore.getState().accounts.selectDefaultActiveAccount(accounts);
     });
 
   const saveSettings = (settings: SyncedSettings) => {

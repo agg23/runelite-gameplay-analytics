@@ -1,32 +1,17 @@
-import { getRoute } from "../api/internal/rest";
+import { getInternalRoute } from "../api/internal/rest";
 import { GetRouteName, HTTPGetRoute } from "../api/internal/routes";
-import { FetchError, FetchState } from "../api/types";
 
-export const fetchAPIData = async <T extends GetRouteName>(
+export const fetchQueryData = async <T extends GetRouteName>(
   route: T,
   additionalPath?: string
-): Promise<FetchState<HTTPGetRoute<T>>> => {
-  try {
-    const data = await getRoute(route, additionalPath);
+): Promise<HTTPGetRoute<T>> => {
+  const data = await getInternalRoute(route, additionalPath);
 
-    if (data.type === "error") {
-      return {
-        type: "error",
-        variant: FetchError.Server,
-        message: data.message,
-      };
-    }
-
-    return {
-      type: "data",
-      data: data.data,
-    };
-  } catch (error) {
-    return {
-      type: "error",
-      variant: FetchError.Network,
-    };
+  if (data.type === "error") {
+    throw new Error(`Server error: ${data.message}`);
   }
+
+  return data.data;
 };
 
 // Taken from https://stackoverflow.com/a/21822316/2108817

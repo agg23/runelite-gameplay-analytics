@@ -1,8 +1,5 @@
-import { XPEvent } from "../api/internal/types";
-import { FetchState } from "../api/types";
 import { ALL_SKILLS, Skill } from "../osrs/types";
 import { LineChartState, StateSliceCreator } from "./types";
-import { fetchAPIData, sortedIndex } from "./util";
 
 export interface XPState {
   selectedSkills:
@@ -16,11 +13,6 @@ export interface XPState {
   displayDeltas: boolean;
 
   chart: LineChartState;
-
-  api: FetchState<Array<XPEvent>>;
-
-  requestData: (accountId: string) => Promise<void>;
-  insertUpdate: (data: XPEvent) => void;
 
   delayedSetChartRange: (
     startRangeTimestamp: number,
@@ -50,65 +42,6 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
     type: "data",
     data: [],
   },
-
-  requestData: async (accountId: string) => {
-    set((existing) => {
-      existing.xp.api = {
-        ...existing.xp.api,
-        type: "loading",
-      };
-    });
-
-    const event = await fetchAPIData("xp", accountId);
-
-    set((existing) => {
-      existing.xp.api = {
-        ...existing.xp.api,
-        ...event,
-      };
-
-      if (event.type === "data") {
-        const endRangeTimestamp =
-          event.data.length > 0
-            ? event.data[event.data.length - 1].timestamp
-            : Date.now() * 1000;
-
-        if (existing.xp.chart.zoomUpdateTimer) {
-          clearInterval(existing.xp.chart.zoomUpdateTimer);
-        }
-
-        existing.xp.chart = {
-          startRangeTimestamp: calculateStartRangeTimestamp(endRangeTimestamp),
-          endRangeTimestamp,
-          zoomUpdateTimer: undefined,
-        };
-      }
-    });
-  },
-  insertUpdate: (data: XPEvent) =>
-    set((existing) => {
-      if (existing.xp.api.type === "error") {
-        return;
-      }
-
-      const existingData =
-        existing.xp.api.type === "data" ? existing.xp.api.data : [];
-
-      // Make sure we insert this data into the correct location
-      const index = sortedIndex(
-        existingData,
-        data.timestamp,
-        (event) => event.timestamp
-      );
-
-      existingData.splice(index, 0, data);
-
-      existing.xp.api = {
-        ...existing.xp.api,
-        type: "data",
-        data: existingData,
-      };
-    }),
 
   delayedSetChartRange: (startRangeTimestamp, endRangeTimestamp) => {
     const oldZoomUpdateTimer = get().xp.chart.zoomUpdateTimer;

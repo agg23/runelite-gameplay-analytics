@@ -5,24 +5,14 @@ import { Position } from "../../map/external/Position";
 
 import MarkerSVG from "../../map/icons/marker.svg";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MapEvent } from "../../api/internal/types";
-import { fetchAPIData } from "../../store/util";
-import { useStore } from "../../store/store";
 import { usePrevious } from "../../hooks/usePrevious";
+import { useMapQuery } from "../../api/hooks/useDatatypeQuery";
 
 // TODO: All of this is very hacky just to see it working. It needs to be cleaned up
 export const MapPage: React.FC<{}> = () => {
-  const accountId = useStore((state) => state.accounts.activeId);
-  const [events, setEvents] = useState<MapEvent[] | undefined>();
   const [animate, setAnimate] = useState(false);
 
-  useEffect(() => {
-    fetchAPIData("map", accountId).then((data) => {
-      if (data.type === "data") {
-        setEvents(data.data);
-      }
-    });
-  }, [accountId]);
+  const query = useMapQuery();
 
   return (
     <div style={{ height: "100%" }}>
@@ -38,7 +28,7 @@ export const MapPage: React.FC<{}> = () => {
           noWrap
         />
         <SubComponent />
-        {events && <MapRoute events={events} play={animate} />}
+        {query.isSuccess && <MapRoute events={query.data} play={animate} />}
       </MapContainer>
     </div>
   );

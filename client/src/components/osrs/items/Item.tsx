@@ -1,7 +1,7 @@
 import { Loader, Popover, createStyles } from "@mantine/core";
 import { HOSTNAME } from "../../../api/internal/config";
-import { useItem } from "../hooks/useItem";
 import { useDisclosure } from "@mantine/hooks";
+import { useItemQuery } from "../../../api/hooks/useDatatypeQuery";
 
 interface ItemProps {
   id: number;
@@ -17,9 +17,9 @@ export const Item: React.FC<ItemProps> = ({
   empty,
 }) => {
   const [opened, { close, open }] = useDisclosure(false);
-  const item = useItem(id);
+  const query = useItemQuery(id);
 
-  const name = item.type === "data" ? item.data.name : "Loading";
+  const name = query.isSuccess ? query.data.name : "Loading";
 
   const { classes, cx } = useStyles();
 
@@ -33,8 +33,8 @@ export const Item: React.FC<ItemProps> = ({
           onMouseEnter={!empty ? open : undefined}
           onMouseLeave={close}
         >
-          {!empty && item.type === "data" && (
-            <a href={item.data.wiki_url} target="_blank" rel="noreferrer">
+          {!empty && query.isSuccess && (
+            <a href={query.data.wiki_url} target="_blank" rel="noreferrer">
               {quantity > 1 && (
                 <div className={classes.quantity}>{quantity}</div>
               )}
@@ -48,9 +48,9 @@ export const Item: React.FC<ItemProps> = ({
       </Popover.Target>
       <Popover.Dropdown>
         {!empty &&
-          (item.type === "data" ? (
+          (query.isSuccess ? (
             <div>
-              <div>{item.data.name}</div>
+              <div>{query.data.name}</div>
               {gePerItem && <div>GE Then: {gePerItem}</div>}
             </div>
           ) : (

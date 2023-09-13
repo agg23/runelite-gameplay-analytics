@@ -9,7 +9,6 @@ import { XPState, createXPSlice } from "./xp";
 import { SettingsState, createSettingsSlice } from "./settings";
 import { LootState, createLootSlice } from "./loot";
 import { InventoryState, createInventorySlice } from "./inventory";
-import { GEPricesState, createGEPricesSlice } from "./geprices";
 import { ActivityState, createActivitySlice } from "./activity";
 
 interface StateExtraActions {
@@ -19,7 +18,6 @@ interface StateExtraActions {
 export type Store = StateExtraActions & {
   accounts: AccountsState;
   activity: ActivityState;
-  geprices: GEPricesState;
   inventory: InventoryState;
   loot: LootState;
   xp: XPState;
@@ -37,7 +35,6 @@ export const useStore = create(
         // TODO: Add network status slice
         accounts: createAccountsSlice(...args),
         activity: createActivitySlice(...args),
-        geprices: createGEPricesSlice(...args),
         inventory: createInventorySlice(...args),
         loot: createLootSlice(...args),
         xp: createXPSlice(...args),

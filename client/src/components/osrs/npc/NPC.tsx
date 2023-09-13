@@ -1,16 +1,16 @@
-import { useNPC } from "../hooks/useNPC";
+import { useNPCQuery } from "../../../api/hooks/useDatatypeQuery";
 
 interface NPCProps {
   id: number;
 }
 
 export const NPC: React.FC<NPCProps> = ({ id }) => {
-  const npc = useNPC(id);
+  const query = useNPCQuery(id);
 
-  return npc.type === "data" ? (
+  return query.isSuccess ? (
     <div>
-      {npc.data.name}
-      {npc.data.examine}
+      {query.data.name}
+      {query.data.examine}
     </div>
   ) : (
     <></>

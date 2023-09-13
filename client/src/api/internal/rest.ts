@@ -9,7 +9,7 @@ import {
   alternateRoutePaths,
 } from "./routes";
 
-export const getRoute = async <T extends GetRouteName>(
+export const getInternalRoute = async <T extends GetRouteName>(
   route: T,
   additionalPath?: string
 ): Promise<HTTPGetRouteResponse<T>> => {
