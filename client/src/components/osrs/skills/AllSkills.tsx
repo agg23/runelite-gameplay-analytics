@@ -1,10 +1,8 @@
 import React from "react";
-import { capitalizeFirstLetter } from "../../../util/string";
 import { SimpleGrid, createStyles } from "@mantine/core";
 import { FancyCheckbox } from "./FancyCheckbox";
-import { ALL_SKILLS } from "../../../osrs/types";
 import { useStore } from "../../../store/store";
-import { HOSTNAME } from "../../../api/internal/config";
+import { SKILL_ENTRIES } from "./shared";
 
 export const AllSkills: React.FC<{}> = () => {
   const { selectedSkills, addSkill, removeSkill } = useStore(
@@ -15,7 +13,7 @@ export const AllSkills: React.FC<{}> = () => {
 
   return (
     <SimpleGrid cols={3}>
-      {skillEntries.map(({ title, image, skill }) => (
+      {SKILL_ENTRIES.map(({ title, image, skill }) => (
         <FancyCheckbox
           key={title}
           className={classes.checkbox}
@@ -27,7 +25,6 @@ export const AllSkills: React.FC<{}> = () => {
           title={title}
           image={image}
           description=""
-          pixelated
           onChange={(checked) => {
             if (checked) {
               addSkill(skill);
@@ -46,10 +43,3 @@ const useStyles = createStyles((theme) => ({
     height: "2.5rem",
   },
 }));
-
-const skillEntries = (() =>
-  ALL_SKILLS.map((skill) => ({
-    title: capitalizeFirstLetter(skill),
-    skill,
-    image: `http://${HOSTNAME}/assets/skillicons/${skill}.png`,
-  })))();

@@ -2,11 +2,11 @@ import React from "react";
 import {
   UnstyledButton,
   Text,
-  Image,
   Checkbox,
   createStyles,
   rem,
 } from "@mantine/core";
+import { PixelatedImage } from "../PixelatedImage";
 
 interface FancyCheckboxProps
   extends Omit<React.ComponentPropsWithoutRef<"button">, "onChange"> {
@@ -17,8 +17,6 @@ interface FancyCheckboxProps
   title: string;
   description: string;
   image: string;
-
-  pixelated?: boolean;
 }
 
 const noop = () => {};
@@ -32,8 +30,6 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
   title,
   description,
   image,
-
-  pixelated,
 }) => {
   const { classes, cx } = useStyles({ checked });
 
@@ -42,14 +38,7 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
       className={cx(classes.button, className)}
       onClick={() => onChange?.(!checked)}
     >
-      <Image
-        className={cx({
-          [classes.pixelatedImage]: pixelated,
-        })}
-        src={image}
-        alt={title}
-        width={imageWidth}
-      />
+      <PixelatedImage src={image} alt={title} width={imageWidth} />
       <div className={classes.body}>
         {!!description && (
           <Text color="dimmed" size="xs" sx={{ lineHeight: 1 }} mb={5}>
@@ -95,9 +84,6 @@ const useStyles = createStyles((theme, { checked }: { checked: boolean }) => ({
       : theme.colorScheme === "dark"
       ? theme.colors.dark[8]
       : theme.white,
-  },
-  pixelatedImage: {
-    imageRendering: "pixelated",
   },
 
   body: {

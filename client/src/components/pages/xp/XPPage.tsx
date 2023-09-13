@@ -25,6 +25,8 @@ import {
 import { ActivityEvent } from "../../../api/internal/types";
 import { ActivityNavigator } from "./ActivityNavigator";
 import { debounce } from "../../../util/util";
+import { StatCard } from "../../stats/StatCard";
+import { XPTopStats } from "./XPTopStats";
 
 export const XPPage: React.FC<{}> = () => {
   const { timespan, setSelectedTimespan } = useStore((state) => state.shared);
@@ -103,6 +105,7 @@ export const XPPage: React.FC<{}> = () => {
   return (
     <ErrorBoundary fallback={<div>An error occured</div>}>
       <LoadingOverlay visible={isXPLoading} />
+      <XPTopStats />
       <div className={classes.chartSettings}>
         <Checkbox
           checked={displayDeltas}
