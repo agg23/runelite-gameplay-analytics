@@ -59,6 +59,9 @@ export const XPPage: React.FC<{}> = () => {
           <EChart
             ref={primaryChartRef}
             data={seriesData}
+            activeSeries={
+              selectedSkills.type === "set" ? selectedSkills.set : new Set()
+            }
             options={primaryChartOptions}
             height={600}
           />

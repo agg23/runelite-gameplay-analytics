@@ -18,21 +18,16 @@ export const usePrimaryChartOptions = () =>
     (): EChartsOption => ({
       dataZoom: [
         {
-          type: "inside",
+          type: "slider",
           start: 0,
           end: 10,
           // Any filtering results in lines not drawing
           filterMode: "none",
         },
-        {
-          start: 0,
-          end: 10,
-        },
       ],
       animation: false,
       grid: {
         top: 0,
-        bottom: 0,
         left: 0,
         right: 0,
       },
@@ -47,9 +42,7 @@ export const usePrimaryChartOptions = () =>
           // We know this is an array because we have multiple series
           const arrayParams = params as DefaultLabelFormatterCallbackParams[];
 
-          console.log(arrayParams);
           const timestamp = (arrayParams[0].data as number[])[0];
-
           const formatedDate = formatDatetimeNice(new Date(timestamp));
 
           const items = arrayParams
