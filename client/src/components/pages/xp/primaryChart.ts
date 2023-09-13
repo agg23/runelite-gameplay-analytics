@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ALL_SKILLS } from "../../../osrs/types";
+import { ALL_SKILLS, SKILL_COLORS } from "../../../osrs/types";
 import type {
   DefaultLabelFormatterCallbackParams,
   EChartsOption,
@@ -39,6 +39,7 @@ export const usePrimaryChartOptions = () =>
       series: ALL_SKILLS.map((skill) => ({
         id: skill,
         type: "line",
+        color: `#${SKILL_COLORS[skill]}`,
       })),
       tooltip: {
         trigger: "axis",
