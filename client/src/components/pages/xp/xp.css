@@ -1,0 +1,11 @@
+.xpTooltipItems {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.xpTooltipItems hr {
+  height: 4px;
+  margin: 0;
+
+  border: none;
+ }
