@@ -43,6 +43,14 @@ export const useLootQuery = () => {
   );
 };
 
+export const useXPQuery = () => {
+  const account = useAccount();
+
+  return useQuery(["xp", account.id], () => fetchQueryData("xp", account.id), {
+    enabled: !!account.id,
+  });
+};
+
 interface GEPricesLocalStorage {
   fetchedTimestamp: number;
   prices: {

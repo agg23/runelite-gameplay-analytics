@@ -1,7 +1,16 @@
-import { MutableRefObject, forwardRef, useEffect, useRef } from "react";
+import {
+  MutableRefObject,
+  forwardRef,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import * as echarts from "echarts";
-import type { SeriesOption, EChartsOption } from "echarts";
-import { usePrevious } from "../../hooks/usePrevious";
+import type {
+  SeriesOption,
+  EChartsOption,
+  InsideDataZoomComponentOption,
+} from "echarts";
 
 interface EChartProps {
   options: EChartsOption;
@@ -10,13 +19,17 @@ interface EChartProps {
   activeSeries?: Set<string>;
 
   height?: number | string;
+
+  onZoom?: (startValue: number, endValue: number) => void;
 }
 
 export const EChart = forwardRef<echarts.ECharts, EChartProps>(
-  ({ options, data, activeSeries, height }, ref) => {
+  ({ options, data, activeSeries, height, onZoom }, ref) => {
     const elementRef = useRef<HTMLDivElement>(null);
 
     const typedRef = ref as MutableRefObject<echarts.ECharts | null>;
+    // Track when ref has the chart object
+    const [isChartSet, setIsChartSet] = useState(false);
 
     useEffect(() => {
       console.log(
@@ -57,6 +70,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
           }
         }
 
+        // Maybe should use echartsInstance.appendData (they say it's for millions of points though)
         typedRef.current.setOption({ series });
 
         // typedRef.current.setOption(
@@ -75,12 +89,38 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       }
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeSeries, data]);
+    }, [activeSeries, data, isChartSet]);
+
+    useEffect(() => {
+      const handle = () => {
+        const dataZoom: InsideDataZoomComponentOption = (
+          typedRef.current?.getOption().dataZoom as any
+        )[0];
+
+        if (
+          dataZoom.startValue === undefined ||
+          dataZoom.endValue === undefined
+        ) {
+          return;
+        }
+
+        onZoom?.(dataZoom.startValue as number, dataZoom.endValue as number);
+      };
+
+      typedRef.current?.on("dataZoom", handle);
+
+      return () => {
+        typedRef.current?.off("dataZoom", handle);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [onZoom, isChartSet]);
 
     useEffect(() => {
       const chart = echarts.init(elementRef.current);
       console.log("Created", chart.id);
       typedRef.current = chart;
+
+      setIsChartSet(true);
 
       chart.setOption(options);
 

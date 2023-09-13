@@ -10,18 +10,19 @@ import { SettingsState, createSettingsSlice } from "./settings";
 import { LootState, createLootSlice } from "./loot";
 import { InventoryState, createInventorySlice } from "./inventory";
 import { ActivityState, createActivitySlice } from "./activity";
+import { SharedState, createSharedSlice } from "./shared";
 
-interface StateExtraActions {
-  loadSettings: (settings: SyncedSettings) => void;
-}
-
-export type Store = StateExtraActions & {
+export type Store = {
   accounts: AccountsState;
   activity: ActivityState;
   inventory: InventoryState;
   loot: LootState;
   xp: XPState;
   settings: SettingsState;
+
+  shared: SharedState;
+
+  loadSettings: (settings: SyncedSettings) => void;
 };
 
 enableMapSet();
@@ -37,8 +38,9 @@ export const useStore = create(
         activity: createActivitySlice(...args),
         inventory: createInventorySlice(...args),
         loot: createLootSlice(...args),
-        xp: createXPSlice(...args),
         settings: createSettingsSlice(...args),
+        shared: createSharedSlice(...args),
+        xp: createXPSlice(...args),
 
         loadSettings: (settings) =>
           set((existing) => {
