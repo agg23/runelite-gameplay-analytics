@@ -19,7 +19,10 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
     const typedRef = ref as MutableRefObject<echarts.ECharts | null>;
 
     useEffect(() => {
-      console.log("Attempting data render with", data);
+      console.log(
+        "Attempting data render with",
+        Array.isArray(data) && data.length
+      );
       if (!typedRef.current || !data) {
         return;
       }

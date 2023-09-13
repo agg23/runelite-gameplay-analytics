@@ -24,14 +24,19 @@ export const XPPage: React.FC<{}> = () => {
   const primaryChartRef = useRef<echarts.ECharts>(null);
 
   const seriesData = useMemo(() => {
-    if (xpApi.type !== "data") {
+    if (xpApi.type !== "data" || xpApi.data.length < 1) {
       return [];
     }
 
+    const initialValue = xpApi.data[0];
+
     return ALL_SKILLS.map((skill) => ({
-      data: xpApi.data.map((item) => [item.timestamp, item[skill]]),
+      data: xpApi.data.map((item) => [
+        item.timestamp,
+        item[skill] - (displayDeltas ? initialValue[skill] : 0),
+      ]),
     }));
-  }, [xpApi]);
+  }, [displayDeltas, xpApi]);
 
   useEffect(() => {
     if (!activeAccount) {
