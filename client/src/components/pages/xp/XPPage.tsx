@@ -68,12 +68,30 @@ export const XPPage: React.FC<{}> = () => {
     }));
   }, [displayDeltas, xpData, activityData]);
 
-  const onZoom = useCallback(
-    (startValue: number, endValue: number) => {
-      setSelectedTimespan(Math.round(startValue), Math.round(endValue));
-    },
+  const onZoom = useMemo(
+    () =>
+      debounce((startValue: number, endValue: number) => {
+        setSelectedTimespan(Math.round(startValue), Math.round(endValue));
+      }, 250),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []
+  );
+
+  const onMarkAreaClick = useCallback(
+    (_: number, markIndex: number) => {
+      if (!activityData) {
+        return;
+      }
+
+      const activity = activityData[markIndex];
+
+      primaryChartRef.current?.dispatchAction({
+        type: "dataZoom",
+        startValue: activity.startTimestamp,
+        endValue: activity.endTimestamp,
+      });
+    },
+    [activityData]
   );
 
   useEffect(() => {
@@ -124,7 +142,8 @@ export const XPPage: React.FC<{}> = () => {
               }
               options={primaryChartOptions}
               height={600}
-              onZoom={debounce(onZoom, 250)}
+              onZoom={onZoom}
+              onMarkAreaClick={onMarkAreaClick}
             />
           </div>
           <ActivityNavigator

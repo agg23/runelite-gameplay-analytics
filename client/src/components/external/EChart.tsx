@@ -10,6 +10,7 @@ import type {
   SeriesOption,
   EChartsOption,
   InsideDataZoomComponentOption,
+  ECElementEvent,
 } from "echarts";
 
 interface EChartProps {
@@ -21,10 +22,11 @@ interface EChartProps {
   height?: number | string;
 
   onZoom?: (startValue: number, endValue: number) => void;
+  onMarkAreaClick?: (xAxis: number, markIndex: number) => void;
 }
 
 export const EChart = forwardRef<echarts.ECharts, EChartProps>(
-  ({ options, data, activeSeries, height, onZoom }, ref) => {
+  ({ options, data, activeSeries, height, onMarkAreaClick, onZoom }, ref) => {
     const elementRef = useRef<HTMLDivElement>(null);
 
     const typedRef = ref as MutableRefObject<echarts.ECharts | null>;
@@ -107,13 +109,32 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         onZoom?.(dataZoom.startValue as number, dataZoom.endValue as number);
       };
 
-      typedRef.current?.on("dataZoom", handle);
+      if (onZoom) {
+        typedRef.current?.on("dataZoom", handle);
+      }
 
       return () => {
         typedRef.current?.off("dataZoom", handle);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onZoom, isChartSet]);
+
+    useEffect(() => {
+      const handler = (event: ECElementEvent) => {
+        if (event.componentType === "markArea") {
+          onMarkAreaClick?.((event.data as any).xAxis, event.dataIndex);
+        }
+      };
+
+      if (onMarkAreaClick) {
+        typedRef.current?.on("click", handler);
+      }
+
+      return () => {
+        typedRef.current?.off("click", handler);
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [onMarkAreaClick, isChartSet]);
 
     useEffect(() => {
       const chart = echarts.init(elementRef.current);
