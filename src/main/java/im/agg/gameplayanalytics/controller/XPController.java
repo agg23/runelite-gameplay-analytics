@@ -1,9 +1,14 @@
 package im.agg.gameplayanalytics.controller;
 
+import im.agg.gameplayanalytics.server.Server;
+import im.agg.gameplayanalytics.server.Store;
 import im.agg.gameplayanalytics.server.dbmodels.XPDBEvent;
 import im.agg.gameplayanalytics.server.models.Account;
 import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.Client;
+import net.runelite.client.callback.ClientThread;
+import net.runelite.client.game.ItemManager;
 
 import java.util.Date;
 import java.util.Timer;
@@ -57,6 +62,56 @@ public class XPController extends Controller {
         this.timer = new Timer();
 
         this.writePartialXPEventIfChanged();
+    }
+
+    Long startDate = new Date().getTime();
+
+    @Override
+    public void init(Client client, ClientThread clientThread,
+                     ItemManager itemManager, Store store, Server server) {
+        super.init(client, clientThread, itemManager, store, server);
+
+
+        this.timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                attack += 10;
+
+                startDate += 60 * 1000;
+
+                var event = new XPDBEvent(startDate,
+                        1327996603691643471L,
+                        1,
+                        0,
+                        attack,
+                        strength,
+                        defence,
+                        ranged,
+                        prayer,
+                        magic,
+                        runecraft,
+                        hitpoints,
+                        crafting,
+                        mining,
+                        smithing,
+                        fishing,
+                        cooking,
+                        firemaking,
+                        woodcutting,
+
+                        // Members
+                        agility,
+                        herblore,
+                        thieving,
+                        fletching,
+                        slayer,
+                        farming,
+                        construction,
+                        hunter);
+
+                server.updatedXPData(event);
+            }
+        }, 1000, 1000);
     }
 
     @Override

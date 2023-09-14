@@ -106,9 +106,10 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
               : undefined
             : (series?.data as any);
 
-        if (!singleSeriesData) {
+        if (!singleSeriesData || singleSeriesData.length < 1) {
           return undefined;
         }
+
         const startTimestamp = singleSeriesData[0][0];
         const endTimestamp = singleSeriesData[singleSeriesData.length - 1][0];
 

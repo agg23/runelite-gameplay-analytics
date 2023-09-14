@@ -52,19 +52,23 @@ export const XPPage: React.FC<{}> = () => {
 
     const initialValue = xpData[0];
 
-    return ALL_SKILLS.map((skill) => ({
+    return ALL_SKILLS.map((skill, i) => ({
       data: xpData.map((item) => [
         item.timestamp,
         item[skill] - (displayDeltas ? initialValue[skill] : 0),
       ]),
-      markArea: {
-        data: activityData.map((activity) => [
-          {
-            xAxis: activity.startTimestamp,
-          },
-          { xAxis: activity.endTimestamp },
-        ]),
-      } as MarkAreaComponentOption,
+      // Only render markArea on a single timeseries (no need to repeat it 20 times)
+      markArea:
+        i === 0
+          ? ({
+              data: activityData.map((activity) => [
+                {
+                  xAxis: activity.startTimestamp,
+                },
+                { xAxis: activity.endTimestamp },
+              ]),
+            } as MarkAreaComponentOption)
+          : undefined,
     }));
   }, [displayDeltas, xpData, activityData]);
 

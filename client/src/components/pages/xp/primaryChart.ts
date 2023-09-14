@@ -71,6 +71,7 @@ export const usePrimaryChartOptions = () =>
         nameGap: 50,
 
         min: ({ min, max }) => {
+          // Instead of always having 0 in focus, focus around the current level
           const difference = max - min;
           const percentageDistance = difference * 0.1;
           const actualDistance =
