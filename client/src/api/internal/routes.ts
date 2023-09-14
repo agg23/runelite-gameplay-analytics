@@ -1,9 +1,9 @@
 import {
   Account,
   ActivityEvent,
-  InventoryEvent,
   LootEvent,
   MapEvent,
+  StorageAPIEvent,
   SyncedSettings,
   XPEvent,
 } from "./types";
@@ -17,10 +17,10 @@ interface GetRoutes {
     http: ActivityEvent[];
     ws: void;
   };
-  inventory: {
-    http: InventoryEvent[];
-    ws: void;
-  };
+  // inventory: {
+  //   http: InventoryEvent[];
+  //   ws: void;
+  // };
   loot: {
     http: LootEvent[];
     ws: void;
@@ -30,7 +30,7 @@ interface GetRoutes {
     ws: void;
   };
   storage: {
-    http: StorageEvent[];
+    http: StorageAPIEvent[];
     ws: void;
   };
   xp: {
@@ -43,11 +43,11 @@ interface GetRoutes {
   };
 }
 
-export const alternateRoutePaths: {
-  [key in keyof GetRoutes]?: string;
-} = {
-  inventory: "storage",
-};
+// export const alternateRoutePaths: {
+//   [key in keyof GetRoutes]?: string;
+// } = {
+//   inventory: "storage",
+// };
 
 interface PostRoutes {
   settings: {

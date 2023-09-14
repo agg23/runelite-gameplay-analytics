@@ -4,10 +4,10 @@ import { LoadingOverlay } from "@mantine/core";
 import { Timeline } from "react-svg-timeline";
 
 import { useStore } from "../../store/store";
-import { InventoryEvent } from "../../api/internal/types";
 import { InventoryGrid } from "../osrs/items/InventoryGrid";
 import { useGEPrices } from "../osrs/hooks/useGEPrices";
 import { useInventoryQuery } from "../../api/hooks/useDatatypeQuery";
+import { StorageAPIEvent } from "../../api/internal/types";
 
 export const InventoryPage: React.FC<{}> = () => {
   const { selectedEntry, setSelectedEntry } = useStore(
@@ -36,7 +36,7 @@ export const InventoryPage: React.FC<{}> = () => {
 
     return query.data.map((event) => ({
       laneId: "0",
-      eventId: `${event.timestamp}`,
+      eventId: `${event}`,
       startTimeMillis: event.timestamp,
     }));
   }, [query]);
@@ -73,7 +73,7 @@ export const InventoryPage: React.FC<{}> = () => {
             return;
           }
 
-          let lastEvent: InventoryEvent | undefined = undefined;
+          let lastEvent: StorageAPIEvent | undefined = undefined;
           for (const event of query.data ?? []) {
             if (event.timestamp > cursor) {
               setSelectedEntry(lastEvent);

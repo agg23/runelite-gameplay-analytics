@@ -2,6 +2,7 @@
 import React from "react";
 import { Nav } from "./Nav";
 import { createStyles } from "@mantine/core";
+import { ErrorBoundary } from "react-error-boundary";
 
 export const Page: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   const { classes } = useStyles();
@@ -9,7 +10,11 @@ export const Page: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   return (
     <div className={classes.page}>
       <Nav />
-      <div className={classes.content}>{children}</div>
+      <div className={classes.content}>
+        <ErrorBoundary fallback={<div>An error occured</div>}>
+          {children}
+        </ErrorBoundary>
+      </div>
     </div>
   );
 };

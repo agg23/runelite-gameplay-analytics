@@ -1,5 +1,5 @@
 import { ALL_SKILLS, Skill } from "../osrs/types";
-import { LineChartState, StateSliceCreator } from "./types";
+import { StateSliceCreator } from "./types";
 
 export interface XPState {
   selectedSkills:
@@ -13,13 +13,6 @@ export interface XPState {
         set: Set<Skill>;
       };
   displayDeltas: boolean;
-
-  chart: LineChartState;
-
-  delayedSetChartRange: (
-    startRangeTimestamp: number,
-    endRangeTimestamp: number
-  ) => void;
 
   addSkill: (skill: Skill) => void;
   removeSkill: (skill: Skill) => void;
@@ -47,22 +40,6 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
   api: {
     type: "data",
     data: [],
-  },
-
-  delayedSetChartRange: (startRangeTimestamp, endRangeTimestamp) => {
-    const oldZoomUpdateTimer = get().xp.chart.zoomUpdateTimer;
-
-    if (oldZoomUpdateTimer) {
-      clearInterval(oldZoomUpdateTimer);
-    }
-
-    set((existing) => {
-      existing.xp.chart = {
-        startRangeTimestamp,
-        endRangeTimestamp,
-        zoomUpdateTimer: undefined,
-      };
-    });
   },
 
   addSkill: (skill) =>

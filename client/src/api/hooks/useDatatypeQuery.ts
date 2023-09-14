@@ -23,8 +23,20 @@ export const useInventoryQuery = () => {
   const account = useAccount();
 
   return useQuery(
-    ["inventory", account.id, "0"],
-    () => fetchQueryData("inventory", `${account.id}/0`),
+    ["storage", account.id, "0"],
+    () => fetchQueryData("storage", `${account.id}/0`),
+    {
+      enabled: !!account.id,
+    }
+  );
+};
+
+export const useBankQuery = () => {
+  const account = useAccount();
+
+  return useQuery(
+    ["storage", account.id, "1"],
+    () => fetchQueryData("storage", `${account.id}/1`),
     {
       enabled: !!account.id,
     }

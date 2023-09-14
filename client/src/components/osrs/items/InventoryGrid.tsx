@@ -1,23 +1,23 @@
 import { SimpleGrid, createStyles } from "@mantine/core";
 import { Item } from "./Item";
-import { InventoryEntry } from "../../../api/internal/types";
+import { StorageEntry } from "../../../api/internal/types";
 import { useMemo } from "react";
 
 interface InventoryGridProps {
-  entries: InventoryEntry[];
+  entries: StorageEntry[];
 }
 
 export const InventoryGrid: React.FC<InventoryGridProps> = ({ entries }) => {
   const orderedSlots = useMemo(() => {
     const map: {
-      [key: number]: InventoryEntry;
+      [key: number]: StorageEntry;
     } = {};
 
     for (const entry of entries) {
       map[entry.slot] = entry;
     }
 
-    const array = new Array<InventoryEntry | undefined>(28);
+    const array = new Array<StorageEntry | undefined>(28);
 
     for (let i = 0; i < 28; i++) {
       array[i] = map[i];

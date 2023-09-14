@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 public class StorageDBRetrieval {
     private int id;
 
-    private int timestamp;
+    private long timestamp;
 
     @JsonSerialize(using = ToStringSerializer.class)
-    private int accountId;
+    private long accountId;
 
     private int type;
 

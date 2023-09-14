@@ -36,7 +36,10 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
   ) => {
     const elementRef = useRef<HTMLDivElement>(null);
 
-    const typedRef = ref as MutableRefObject<echarts.ECharts | null>;
+    const internalRef = useRef<echarts.ECharts>(
+      null
+    ) as MutableRefObject<echarts.ECharts | null>;
+    const typedRef = ref as MutableRefObject<echarts.ECharts | null> | null;
     // Track when ref has the chart object
     const [isChartSet, setIsChartSet] = useState(false);
 
@@ -98,10 +101,10 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
 
       // Calculate zoom position
       const oldDataZoom: InsideDataZoomComponentOption | undefined = (
-        typedRef.current?.getOption().dataZoom as any
+        internalRef.current?.getOption().dataZoom as any
       )?.[0];
 
-      const oldSeries = typedRef.current?.getOption().series as
+      const oldSeries = internalRef.current?.getOption().series as
         | SeriesOption
         | SeriesOption[]
         | undefined;
@@ -166,7 +169,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       }
 
       // Maybe should use echartsInstance.appendData (they say it's for millions of points though)
-      typedRef.current?.setOption({
+      internalRef.current?.setOption({
         series,
         dataZoom,
       });
@@ -177,7 +180,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
     useEffect(() => {
       const handle = () => {
         const dataZoom: InsideDataZoomComponentOption | undefined = (
-          typedRef.current?.getOption().dataZoom as any
+          internalRef.current?.getOption().dataZoom as any
         )?.[0];
 
         if (
@@ -191,11 +194,11 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       };
 
       if (onZoom) {
-        typedRef.current?.on("dataZoom", handle);
+        internalRef.current?.on("dataZoom", handle);
       }
 
       return () => {
-        typedRef.current?.off("dataZoom", handle);
+        internalRef.current?.off("dataZoom", handle);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onZoom, isChartSet]);
@@ -208,11 +211,11 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       };
 
       if (onMarkAreaClick) {
-        typedRef.current?.on("click", handler);
+        internalRef.current?.on("click", handler);
       }
 
       return () => {
-        typedRef.current?.off("click", handler);
+        internalRef.current?.off("click", handler);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onMarkAreaClick, isChartSet]);
@@ -220,7 +223,11 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
     useEffect(() => {
       const chart = echarts.init(elementRef.current);
       console.log("Created", chart.id);
-      typedRef.current = chart;
+      internalRef.current = chart;
+
+      if (typedRef) {
+        typedRef.current = chart;
+      }
 
       setIsChartSet(true);
 
@@ -229,7 +236,11 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       return () => {
         console.log("Disposing", chart.id);
         chart.dispose();
-        typedRef.current = null;
+        internalRef.current = null;
+
+        if (typedRef) {
+          typedRef.current = null;
+        }
       };
       // Don't react to changed options
       // eslint-disable-next-line react-hooks/exhaustive-deps

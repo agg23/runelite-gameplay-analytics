@@ -1,22 +1,14 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Checkbox, LoadingOverlay, createStyles } from "@mantine/core";
 import type {
   EChartsType,
   MarkAreaComponentOption,
   SeriesOption,
 } from "echarts";
-import { ErrorBoundary } from "react-error-boundary";
 
 import { useStore } from "../../../store/store";
 import { AllSkills } from "../../osrs/skills/AllSkills";
 import { ALL_SKILLS } from "../../../osrs/types";
-import { usePrimaryChartOptions } from "./primaryChart";
 import { EChart } from "../../external/EChart";
 import {
   useActivityQuery,
@@ -25,10 +17,10 @@ import {
 import { ActivityEvent } from "../../../api/internal/types";
 import { ActivityNavigator } from "./ActivityNavigator";
 import { debounce } from "../../../util/util";
-import { StatCard } from "../../stats/StatCard";
 import { XPTopStats } from "./XPTopStats";
-import { FancyCheckbox } from "../../osrs/skills/FancyCheckbox";
 import { SkillFancyCheckbox } from "../../osrs/skills/SkillFancyCheckbox";
+import { ChartPage } from "../../layout/ChartPage";
+import { primaryChartOptions } from "./primaryChart";
 
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
@@ -40,9 +32,7 @@ export const XPPage: React.FC<{}> = () => {
     setDisplayDeltas,
     toggleSelectAllSkills,
     toggleSelectedTotalSkills,
-    delayedSetChartRange,
   } = useStore((state) => state.xp);
-  const primaryChartOptions = usePrimaryChartOptions();
 
   const { data: xpData, isLoading: isXPLoading } = useXPQuery();
   const { data: activityData, isSuccess: activitySuccess } = useActivityQuery();
@@ -57,7 +47,7 @@ export const XPPage: React.FC<{}> = () => {
 
     const initialValue = xpData[0];
 
-    return [...ALL_SKILLS, "xpTotal" as const].map((skill, i) => ({
+    return [...ALL_SKILLS, "xpTotal" as const].map((skill) => ({
       data: xpData.map((item) => [
         item.timestamp,
         item[skill] - (displayDeltas ? initialValue[skill] : 0),
@@ -133,7 +123,7 @@ export const XPPage: React.FC<{}> = () => {
   const { classes } = useStyles();
 
   return (
-    <ErrorBoundary fallback={<div>An error occured</div>}>
+    <>
       <LoadingOverlay visible={isXPLoading} />
       <XPTopStats />
       <div className={classes.chartSettings}>
@@ -143,83 +133,80 @@ export const XPPage: React.FC<{}> = () => {
           label="Display deltas"
         />
       </div>
-      <div className={classes.chartWrapper}>
-        <div>
-          <div>
-            <EChart
-              ref={primaryChartRef}
-              data={seriesData}
-              activeSeries={
-                selectedSkills.type === "set"
-                  ? selectedSkills.set
-                  : totalSelectedSkillSet
-              }
-              options={primaryChartOptions}
-              markArea={markArea}
-              height={600}
-              onZoom={onZoom}
-              onMarkAreaClick={onMarkAreaClick}
-            />
-          </div>
-          <ActivityNavigator
-            activityCount={activityData?.length ?? 0}
-            onChange={(newActivityIndex) => {
-              if (!activitySuccess) {
-                return;
-              }
+      <ChartPage
+        chart={
+          <>
+            <div>
+              <EChart
+                ref={primaryChartRef}
+                data={seriesData}
+                activeSeries={
+                  selectedSkills.type === "set"
+                    ? selectedSkills.set
+                    : totalSelectedSkillSet
+                }
+                options={primaryChartOptions}
+                markArea={markArea}
+                height={600}
+                onZoom={onZoom}
+                onMarkAreaClick={onMarkAreaClick}
+              />
+            </div>
+            <ActivityNavigator
+              activityCount={activityData?.length ?? 0}
+              onChange={(newActivityIndex) => {
+                if (!activitySuccess) {
+                  return;
+                }
 
-              selectActivitySpan(
-                activityData[newActivityIndex],
-                primaryChartRef.current
-              );
-            }}
-          />
-        </div>
-        <div className={classes.chartSettings}>
-          <div className={classes.chartManualSettings}>
-            <Checkbox
-              checked={selectedSkills.set.size === ALL_SKILLS.length}
-              onChange={(event) =>
-                toggleSelectAllSkills(event.currentTarget.checked)
-              }
-              label="Select all"
+                selectActivitySpan(
+                  activityData[newActivityIndex],
+                  primaryChartRef.current
+                );
+              }}
             />
-          </div>
-          <div className={classes.allSkills}>
-            <SkillFancyCheckbox
-              title="Total XP"
-              skill="overall"
-              checked={selectedSkills.type === "totals"}
-              onChange={toggleSelectedTotalSkills}
-            />
-            <AllSkills disable={selectedSkills.type === "totals"} />
-          </div>
-        </div>
-      </div>
-    </ErrorBoundary>
+          </>
+        }
+        chartSettings={
+          <>
+            <div className={classes.chartManualSettings}>
+              <Checkbox
+                checked={selectedSkills.set.size === ALL_SKILLS.length}
+                onChange={(event) =>
+                  toggleSelectAllSkills(event.currentTarget.checked)
+                }
+                label="Select all"
+              />
+            </div>
+            <div className={classes.allSkills}>
+              <SkillFancyCheckbox
+                title="Total XP"
+                skill="overall"
+                checked={selectedSkills.type === "totals"}
+                onChange={toggleSelectedTotalSkills}
+              />
+              <AllSkills disable={selectedSkills.type === "totals"} />
+            </div>
+          </>
+        }
+      />
+    </>
   );
 };
 
 const useStyles = createStyles((theme) => ({
-  allSkills: {
-    width: 550,
-
-    "& > div": {
-      marginTop: theme.spacing.md,
-    },
-  },
   chartSettings: {
     margin: theme.spacing.md,
   },
   chartManualSettings: {
     marginBottom: theme.spacing.md,
   },
-  chartWrapper: {
-    display: "grid",
-    gridTemplateColumns: "1fr 550px",
-    columnGap: theme.spacing.md,
-    height: 600,
-    padding: theme.spacing.md,
+  allSkills: {
+    width: 550,
+
+    "& > div": {
+      marginTop: theme.spacing.md,
+    },
   },
 }));
 

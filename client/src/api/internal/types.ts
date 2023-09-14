@@ -31,26 +31,6 @@ export interface ActivityEvent {
   endTimestamp: number;
 }
 
-// Inventory
-
-export interface InventoryEvent {
-  id: number;
-  accountId: string;
-
-  timestamp: number;
-
-  type: number;
-
-  entries: InventoryEntry[];
-}
-
-export interface InventoryEntry {
-  itemId: number;
-  slot: number;
-  quantity: number;
-  gePerItem: number;
-}
-
 // Loot
 
 export interface LootEvent {
@@ -86,7 +66,9 @@ export interface MapEvent {
 
 // Storage
 
-export interface StorageEvent {
+// Renamed because it conflicts with DOM API type and TS keeps overriding it
+export interface StorageAPIEvent {
+  id: number;
   accountId: string;
 
   timestamp: number;

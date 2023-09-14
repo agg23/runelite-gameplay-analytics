@@ -16,7 +16,7 @@ export const NavLinks: React.FC<{}> = () => {
       },
       {
         label: "Wealth",
-        link: "/",
+        link: "/wealth",
       },
       {
         label: "Kills",

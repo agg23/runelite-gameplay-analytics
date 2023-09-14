@@ -1,10 +1,10 @@
-import { InventoryEvent } from "../api/internal/types";
+import { StorageAPIEvent } from "../api/internal/types";
 import { StateSliceCreator } from "./types";
 
 export interface InventoryState {
-  selectedEntry: InventoryEvent | undefined;
+  selectedEntry: StorageAPIEvent | undefined;
 
-  setSelectedEntry: (event: InventoryEvent | undefined) => void;
+  setSelectedEntry: (event: StorageAPIEvent | undefined) => void;
 }
 
 export const createInventorySlice: StateSliceCreator<InventoryState> = (
