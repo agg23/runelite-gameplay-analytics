@@ -5,10 +5,11 @@ import {
   Checkbox,
   createStyles,
   rem,
+  getStylesRef,
 } from "@mantine/core";
 import { PixelatedImage } from "../PixelatedImage";
 
-interface FancyCheckboxProps
+export interface FancyCheckboxProps
   extends Omit<React.ComponentPropsWithoutRef<"button">, "onChange"> {
   imageWidth?: number;
 
@@ -26,6 +27,7 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
   imageWidth,
 
   checked,
+  disabled,
   onChange,
   title,
   description,
@@ -37,6 +39,7 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
     <UnstyledButton
       className={cx(classes.button, className)}
       onClick={() => onChange?.(!checked)}
+      disabled={disabled}
     >
       <PixelatedImage src={image} alt={title} width={imageWidth} />
       <div className={classes.body}>
@@ -52,6 +55,7 @@ export const FancyCheckbox: React.FC<FancyCheckboxProps> = ({
 
       <Checkbox
         checked={checked}
+        disabled={disabled}
         tabIndex={-1}
         transitionDuration={100}
         styles={{ input: { cursor: "pointer" } }}
@@ -70,8 +74,10 @@ const useStyles = createStyles((theme, { checked }: { checked: boolean }) => ({
     transition: "background-color 50ms ease, border-color 50ms ease",
     border: `${rem(1)} solid ${
       checked
-        ? theme.fn.variant({ variant: "outline", color: theme.primaryColor })
-            .border
+        ? theme.fn.variant({
+            variant: "outline",
+            color: theme.primaryColor,
+          }).border
         : theme.colorScheme === "dark"
         ? theme.colors.dark[8]
         : theme.colors.gray[3]
@@ -84,6 +90,35 @@ const useStyles = createStyles((theme, { checked }: { checked: boolean }) => ({
       : theme.colorScheme === "dark"
       ? theme.colors.dark[8]
       : theme.white,
+
+    "&:disabled": {
+      backgroundColor:
+        theme.colorScheme === "dark"
+          ? theme.colors.dark[8]
+          : theme.colors.gray[2],
+      borderColor:
+        theme.colorScheme === "dark"
+          ? theme.colors.dark[9]
+          : theme.colors.gray[3],
+      cursor: "not-allowed",
+      pointerEvents: "none",
+
+      [`& + .${getStylesRef("icon")}`]: {
+        color:
+          theme.colorScheme === "dark"
+            ? theme.colors.dark[6]
+            : theme.colors.gray[5],
+      },
+      "& .mantine-Text-root": {
+        color:
+          theme.colorScheme === "dark"
+            ? theme.colors.dark[4]
+            : theme.colors.gray[5],
+      },
+      "& .mantine-Image-root img": {
+        filter: "brightness(50%)",
+      },
+    },
   },
 
   body: {

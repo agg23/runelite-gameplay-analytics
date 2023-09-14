@@ -50,8 +50,8 @@ export const useStore = create(
 
             existing.xp.displayDeltas = settings.xp.displayDeltas;
             existing.xp.selectedSkills = {
-              type: "set",
-              set: new Set(settings.xp.selectedSkills),
+              ...settings.xp.selectedSkills,
+              set: new Set(settings.xp.selectedSkills.set),
             };
           }),
       };

@@ -4,7 +4,9 @@ import { LineChartState, StateSliceCreator } from "./types";
 export interface XPState {
   selectedSkills:
     | {
-        type: "all";
+        type: "totals";
+        // Inactive skills
+        set: Set<Skill>;
       }
     | {
         type: "set";
@@ -21,13 +23,17 @@ export interface XPState {
 
   addSkill: (skill: Skill) => void;
   removeSkill: (skill: Skill) => void;
-  toggleSelectedSkills: (selectAll: boolean) => void;
+  toggleSelectedTotalSkills: (selectTotal: boolean) => void;
+  toggleSelectAllSkills: (selectall: boolean) => void;
   setDisplayDeltas: (value: boolean) => void;
 }
 
+const allSkillsSet = new Set(ALL_SKILLS);
+
 export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
   selectedSkills: {
-    type: "all",
+    type: "set",
+    set: allSkillsSet,
   },
   displayDeltas: true,
 
@@ -50,7 +56,6 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
       clearInterval(oldZoomUpdateTimer);
     }
 
-    // const zoomUpdateTimer = setTimeout(() => {
     set((existing) => {
       existing.xp.chart = {
         startRangeTimestamp,
@@ -58,45 +63,37 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
         zoomUpdateTimer: undefined,
       };
     });
-    // }, 1000);
-
-    // set((existing) => {
-    //   existing.xp.chart.zoomUpdateTimer = zoomUpdateTimer;
-    // });
   },
 
   addSkill: (skill) =>
     set((existing) => {
-      if (existing.xp.selectedSkills.type === "all") {
+      if (existing.xp.selectedSkills.type === "totals") {
         return;
       }
 
       existing.xp.selectedSkills.set.add(skill);
-
-      if (existing.xp.selectedSkills.set.size === ALL_SKILLS.length) {
-        // We just expanded to the full set, so reset to all
-        existing.xp.selectedSkills = {
-          type: "all",
-        };
-      }
     }),
   removeSkill: (skill) =>
     set((existing) => {
-      if (existing.xp.selectedSkills.type === "all") {
-        // Downgrade to all separate items
-        existing.xp.selectedSkills = {
-          type: "set",
-          set: new Set(ALL_SKILLS),
-        };
+      if (existing.xp.selectedSkills.type === "totals") {
+        return;
       }
 
       existing.xp.selectedSkills.set.delete(skill);
     }),
-  toggleSelectedSkills: (selectAll: boolean) =>
+  toggleSelectedTotalSkills: (selectTotal: boolean) =>
+    set((existing) => {
+      existing.xp.selectedSkills = {
+        type: selectTotal ? "totals" : "set",
+        set: existing.xp.selectedSkills.set,
+      };
+    }),
+  toggleSelectAllSkills: (selectAll: boolean) =>
     set((existing) => {
       existing.xp.selectedSkills = selectAll
         ? {
-            type: "all",
+            type: "set",
+            set: allSkillsSet,
           }
         : {
             type: "set",

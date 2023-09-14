@@ -4,7 +4,15 @@ export interface SyncedSettings {
   activeAccountId: string | undefined;
   darkTheme: boolean;
   xp: {
-    selectedSkills: Skill[];
+    selectedSkills:
+      | {
+          type: "totals";
+          set: Skill[];
+        }
+      | {
+          type: "set";
+          set: Skill[];
+        };
     displayDeltas: boolean;
   };
 }

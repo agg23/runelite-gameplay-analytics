@@ -32,11 +32,17 @@ export const usePrimaryChartOptions = () =>
         // For some reason without this padding the right edge is cut off
         right: 10,
       },
-      series: ALL_SKILLS.map((skill) => ({
-        id: skill,
-        type: "line",
-        color: `#${SKILL_COLORS[skill]}`,
-      })),
+      series: [
+        ...ALL_SKILLS.map((skill) => ({
+          id: skill as string,
+          type: "line" as const,
+          color: `#${SKILL_COLORS[skill]}`,
+        })),
+        {
+          id: "xpTotal",
+          type: "line",
+        },
+      ],
       tooltip: {
         trigger: "axis",
         formatter: (params) => {

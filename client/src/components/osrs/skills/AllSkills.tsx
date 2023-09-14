@@ -1,30 +1,27 @@
 import React from "react";
-import { SimpleGrid, createStyles } from "@mantine/core";
-import { FancyCheckbox } from "./FancyCheckbox";
+import { SimpleGrid } from "@mantine/core";
 import { useStore } from "../../../store/store";
 import { SKILL_ENTRIES } from "./shared";
+import { SkillFancyCheckbox } from "./SkillFancyCheckbox";
 
-export const AllSkills: React.FC<{}> = () => {
+interface AllSkillsProps {
+  disable?: boolean;
+}
+
+export const AllSkills: React.FC<AllSkillsProps> = ({ disable }) => {
   const { selectedSkills, addSkill, removeSkill } = useStore(
     (state) => state.xp
   );
 
-  const { classes } = useStyles();
-
   return (
     <SimpleGrid cols={3}>
-      {SKILL_ENTRIES.map(({ title, image, skill }) => (
-        <FancyCheckbox
-          key={title}
-          className={classes.checkbox}
-          // Use integer scaling on images
-          imageWidth={23}
-          checked={
-            selectedSkills.type === "all" || selectedSkills.set.has(skill)
-          }
+      {SKILL_ENTRIES.map(({ title, skill }) => (
+        <SkillFancyCheckbox
+          key={skill}
           title={title}
-          image={image}
-          description=""
+          skill={skill}
+          checked={selectedSkills.set.has(skill)}
+          disabled={disable}
           onChange={(checked) => {
             if (checked) {
               addSkill(skill);
@@ -37,9 +34,3 @@ export const AllSkills: React.FC<{}> = () => {
     </SimpleGrid>
   );
 };
-
-const useStyles = createStyles((theme) => ({
-  checkbox: {
-    height: "2.5rem",
-  },
-}));

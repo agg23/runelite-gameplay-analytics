@@ -27,6 +27,10 @@ import { ActivityNavigator } from "./ActivityNavigator";
 import { debounce } from "../../../util/util";
 import { StatCard } from "../../stats/StatCard";
 import { XPTopStats } from "./XPTopStats";
+import { FancyCheckbox } from "../../osrs/skills/FancyCheckbox";
+import { SkillFancyCheckbox } from "../../osrs/skills/SkillFancyCheckbox";
+
+const totalSelectedSkillSet = new Set(["xpTotal"]);
 
 export const XPPage: React.FC<{}> = () => {
   const { timespan, setSelectedTimespan } = useStore((state) => state.shared);
@@ -34,7 +38,8 @@ export const XPPage: React.FC<{}> = () => {
     displayDeltas,
     selectedSkills,
     setDisplayDeltas,
-    toggleSelectedSkills,
+    toggleSelectAllSkills,
+    toggleSelectedTotalSkills,
     delayedSetChartRange,
   } = useStore((state) => state.xp);
   const primaryChartOptions = usePrimaryChartOptions();
@@ -52,7 +57,7 @@ export const XPPage: React.FC<{}> = () => {
 
     const initialValue = xpData[0];
 
-    return ALL_SKILLS.map((skill, i) => ({
+    return [...ALL_SKILLS, "xpTotal" as const].map((skill, i) => ({
       data: xpData.map((item) => [
         item.timestamp,
         item[skill] - (displayDeltas ? initialValue[skill] : 0),
@@ -142,7 +147,9 @@ export const XPPage: React.FC<{}> = () => {
               ref={primaryChartRef}
               data={seriesData}
               activeSeries={
-                selectedSkills.type === "set" ? selectedSkills.set : new Set()
+                selectedSkills.type === "set"
+                  ? selectedSkills.set
+                  : totalSelectedSkillSet
               }
               options={primaryChartOptions}
               height={600}
@@ -167,15 +174,21 @@ export const XPPage: React.FC<{}> = () => {
         <div className={classes.chartSettings}>
           <div className={classes.chartManualSettings}>
             <Checkbox
-              checked={selectedSkills.type === "all"}
+              checked={selectedSkills.set.size === ALL_SKILLS.length}
               onChange={(event) =>
-                toggleSelectedSkills(event.currentTarget.checked)
+                toggleSelectAllSkills(event.currentTarget.checked)
               }
               label="Select all"
             />
           </div>
           <div className={classes.allSkills}>
-            <AllSkills />
+            <SkillFancyCheckbox
+              title="Total XP"
+              skill="overall"
+              checked={selectedSkills.type === "totals"}
+              onChange={toggleSelectedTotalSkills}
+            />
+            <AllSkills disable={selectedSkills.type === "totals"} />
           </div>
         </div>
       </div>
@@ -186,6 +199,10 @@ export const XPPage: React.FC<{}> = () => {
 const useStyles = createStyles((theme) => ({
   allSkills: {
     width: 550,
+
+    "& > div": {
+      marginTop: theme.spacing.md,
+    },
   },
   chartSettings: {
     margin: theme.spacing.md,

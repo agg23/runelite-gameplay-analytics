@@ -1,7 +1,6 @@
 import { shallow } from "zustand/shallow";
 import deepEqual from "deep-equal";
 
-import { ALL_SKILLS, Skill } from "../../osrs/types";
 import { useStore } from "../../store/store";
 import { Account, SyncedSettings } from "./types";
 import { getInternalRoute, postRoute } from "./rest";
@@ -52,17 +51,16 @@ export const init = () => {
 
   useStore.subscribe(
     (state): SyncedSettings => {
-      const selectedSkills =
-        state.xp.selectedSkills.type === "all"
-          ? // Hack to remove readonly
-            (ALL_SKILLS as unknown as Skill[])
-          : [...state.xp.selectedSkills.set];
+      const selectedSkillsSet = [...state.xp.selectedSkills.set];
 
       return {
         activeAccountId: state.accounts.activeId,
         darkTheme: state.settings.darkTheme,
         xp: {
-          selectedSkills,
+          selectedSkills: {
+            type: state.xp.selectedSkills.type,
+            set: selectedSkillsSet,
+          },
           displayDeltas: state.xp.displayDeltas,
         },
       };
