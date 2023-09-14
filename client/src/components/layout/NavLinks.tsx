@@ -42,39 +42,50 @@ export const NavLinks: React.FC<{}> = () => {
     <>
       {links.map(({ label, link }) => (
         <Link key={label} className={classes.link} to={link}>
-          <NavLink label={label} />
+          {({ isActive }) => <NavLink label={label} active={isActive} />}
         </Link>
       ))}
     </>
   );
 };
 
-const useStyles = createStyles(() => ({
+const useStyles = createStyles((theme) => ({
   link: {
     textDecoration: "none",
+  },
+  button: {
+    display: "block",
+    width: "100%",
+    padding: theme.spacing.xs,
+    borderRadius: theme.radius.sm,
+    color: theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
+
+    "&:hover": {
+      backgroundColor:
+        theme.colorScheme === "dark"
+          ? theme.colors.dark[4]
+          : theme.colors.gray[3],
+    },
+  },
+  active: {
+    backgroundColor:
+      theme.colorScheme === "dark"
+        ? theme.colors.dark[5]
+        : theme.colors.gray[2],
   },
 }));
 
 const NavLink: React.FC<{
   label: string;
+  active?: boolean;
   onClick?: () => void;
-}> = ({ label, onClick }) => {
+}> = ({ label, active, onClick }) => {
+  const { classes, cx } = useStyles();
+
   return (
     <UnstyledButton
-      sx={(theme) => ({
-        display: "block",
-        width: "100%",
-        padding: theme.spacing.xs,
-        borderRadius: theme.radius.sm,
-        color:
-          theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
-
-        "&:hover": {
-          backgroundColor:
-            theme.colorScheme === "dark"
-              ? theme.colors.dark[6]
-              : theme.colors.gray[0],
-        },
+      className={cx(classes.button, {
+        [classes.active]: active,
       })}
       onClick={onClick}
     >
