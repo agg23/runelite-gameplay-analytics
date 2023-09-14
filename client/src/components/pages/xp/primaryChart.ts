@@ -27,9 +27,10 @@ export const usePrimaryChartOptions = () =>
       ],
       animation: false,
       grid: {
-        top: 0,
-        left: 0,
-        right: 0,
+        top: 10,
+        left: 70,
+        // For some reason without this padding the right edge is cut off
+        right: 10,
       },
       series: ALL_SKILLS.map((skill) => ({
         id: skill,
@@ -64,6 +65,20 @@ export const usePrimaryChartOptions = () =>
       },
       yAxis: {
         type: "value",
+
+        name: "Current XP",
+        nameLocation: "middle",
+        nameGap: 50,
+
+        min: ({ min, max }) => {
+          const difference = max - min;
+          const percentageDistance = difference * 0.1;
+          const actualDistance =
+            percentageDistance < 10 ? 10 : percentageDistance;
+
+          const bottom = Math.round(min - actualDistance);
+          return bottom > 0 ? bottom : 0;
+        },
       },
     }),
     []
