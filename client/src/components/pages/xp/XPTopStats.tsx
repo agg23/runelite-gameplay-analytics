@@ -10,7 +10,7 @@ export const XPTopStats: React.FC<{}> = () => {
   return (
     <SimpleGrid cols={3}>
       <StatCard
-        title="Total XP"
+        title="Total XP over Period"
         value={`${formatNumber(totalGain)} XP`}
         secondaryStat={
           maxSkill && (
@@ -24,8 +24,8 @@ export const XPTopStats: React.FC<{}> = () => {
         }
       />
       <StatCard
-        title="Average Gain"
-        value={`${formatNumber(averageGainPerMinute)} per minute`}
+        title="Average Gain over Period"
+        value={`${formatNumber(averageGainPerMinute)} XP per minute`}
       />
     </SimpleGrid>
   );

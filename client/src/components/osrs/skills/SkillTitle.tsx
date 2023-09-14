@@ -12,7 +12,7 @@ export const SkillTitle: React.FC<SkillTitleProps> = ({ skill }) => {
 
   return (
     <Group>
-      <PixelatedImage src={skillEntry.image} width={23} />
+      <PixelatedImage src={skillEntry.image} width={23} height={23} />
       <Text weight={500} size="sm" sx={{ lineHeight: 1 }}>
         {skillEntry.title}
       </Text>
