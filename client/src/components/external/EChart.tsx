@@ -13,6 +13,7 @@ import type {
   InsideDataZoomComponentOption,
   ECElementEvent,
   DataZoomComponentOption,
+  MarkAreaComponentOption,
 } from "echarts";
 
 interface EChartProps {
@@ -20,6 +21,7 @@ interface EChartProps {
 
   data?: SeriesOption | SeriesOption[];
   activeSeries?: Set<string>;
+  markArea?: MarkAreaComponentOption | undefined;
 
   height?: number | string;
 
@@ -28,7 +30,10 @@ interface EChartProps {
 }
 
 export const EChart = forwardRef<echarts.ECharts, EChartProps>(
-  ({ options, data, activeSeries, height, onMarkAreaClick, onZoom }, ref) => {
+  (
+    { options, data, activeSeries, markArea, height, onMarkAreaClick, onZoom },
+    ref
+  ) => {
     const elementRef = useRef<HTMLDivElement>(null);
 
     const typedRef = ref as MutableRefObject<echarts.ECharts | null>;
@@ -57,11 +62,16 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
           const datum = data[i];
           const existingSeries = options.series[i];
 
+          // First entry, apply markArea as we only want to render on a single timeseries (no need to repeat it 20 times)
+          const currentMarkArea =
+            series.length === 0 && markArea ? markArea : undefined;
+
           if (activeSeries.has(existingSeries.id as string)) {
-            series.push(datum);
+            series.push({ ...datum, markArea: currentMarkArea });
           } else {
             series.push({
               data: [],
+              markArea: currentMarkArea,
             });
           }
         }
@@ -74,7 +84,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       }
       // We purposefully don't update options.series, just using the initial value
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeSeries, data]);
+    }, [activeSeries, markArea, data]);
 
     useEffect(() => {
       console.log(

@@ -33,7 +33,7 @@ import { SkillFancyCheckbox } from "../../osrs/skills/SkillFancyCheckbox";
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
 export const XPPage: React.FC<{}> = () => {
-  const { timespan, setSelectedTimespan } = useStore((state) => state.shared);
+  const { setSelectedTimespan } = useStore((state) => state.shared);
   const {
     displayDeltas,
     selectedSkills,
@@ -62,20 +62,23 @@ export const XPPage: React.FC<{}> = () => {
         item.timestamp,
         item[skill] - (displayDeltas ? initialValue[skill] : 0),
       ]),
-      // Only render markArea on a single timeseries (no need to repeat it 20 times)
-      markArea:
-        i === 0
-          ? ({
-              data: activityData.map((activity) => [
-                {
-                  xAxis: activity.startTimestamp,
-                },
-                { xAxis: activity.endTimestamp },
-              ]),
-            } as MarkAreaComponentOption)
-          : undefined,
     }));
   }, [displayDeltas, xpData, activityData]);
+
+  const markArea = useMemo(
+    (): MarkAreaComponentOption | undefined =>
+      activityData
+        ? {
+            data: activityData.map((activity) => [
+              {
+                xAxis: activity.startTimestamp,
+              },
+              { xAxis: activity.endTimestamp },
+            ]),
+          }
+        : undefined,
+    [activityData]
+  );
 
   const onZoom = useMemo(
     () =>
@@ -152,6 +155,7 @@ export const XPPage: React.FC<{}> = () => {
                   : totalSelectedSkillSet
               }
               options={primaryChartOptions}
+              markArea={markArea}
               height={600}
               onZoom={onZoom}
               onMarkAreaClick={onMarkAreaClick}
