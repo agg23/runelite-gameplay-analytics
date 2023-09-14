@@ -1,10 +1,21 @@
-import { useStore } from "../../store/store";
+import { queryClient } from "../query";
 import { HOSTNAME } from "./config";
 import { ValidWSRouteName, WSRouteHandlers, WSSuccess } from "./routes";
+import { XPEvent } from "./types";
 
-// const connections: WSRouteHandlers = {
-//   xp: useStore.getState().xp.insertUpdate,
-// };
+const connections: WSRouteHandlers = {
+  xp: (datum) =>
+    queryClient.setQueryData(
+      ["xp", datum.accountId],
+      (data: XPEvent[] | undefined) => {
+        if (!data) {
+          return [datum];
+        }
+
+        return [...data, datum];
+      }
+    ),
+};
 
 export const open = () => {
   const websocket = new WebSocket(`ws://${HOSTNAME}/api/ws`);
@@ -12,14 +23,14 @@ export const open = () => {
   websocket.addEventListener("message", (event: MessageEvent<string>) => {
     const data: WSSuccess<ValidWSRouteName> = JSON.parse(event.data);
 
-    // const handler = connections[data.route];
+    const handler = connections[data.route];
 
-    // if (!handler) {
-    //   console.error(`Received unknown message of route ${data.route}`);
-    //   return;
-    // }
+    if (!handler) {
+      console.error(`Received unknown message of route ${data.route}`);
+      return;
+    }
 
-    // handler(data.data);
+    handler(data.data);
   });
 
   websocket.addEventListener("open", () => {
