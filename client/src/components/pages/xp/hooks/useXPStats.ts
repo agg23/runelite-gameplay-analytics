@@ -106,7 +106,7 @@ export const useXPStats = () => {
       ) / 1000;
     // const duration = data[data.length - 1].timestamp - data[0].timestamp;
 
-    const averageGainPerMinute = totalGain / durationSec / 60;
+    const averageGainPerMinute = totalGain / (durationSec / 60);
 
     let maxSkill: Skill | undefined = undefined;
     let maxSkillAmount = 0;
