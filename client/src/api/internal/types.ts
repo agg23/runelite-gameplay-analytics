@@ -73,7 +73,7 @@ export interface StorageAPIEvent {
 
   timestamp: number;
 
-  type: 0;
+  type: 0 | 1;
 
   entries: StorageEntry[];
 }

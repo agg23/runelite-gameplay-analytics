@@ -26,10 +26,13 @@ export const WealthPage: React.FC<{}> = () => {
     }
 
     const calculateEntrySum = (event: StorageAPIEvent) =>
-      event.entries.reduce(
-        (acc, entry) => acc + entry.gePerItem * entry.quantity,
-        0
-      );
+      event.type === 0
+        ? event.entries.reduce(
+            (acc, entry) => acc + entry.gePerItem * entry.quantity,
+            0
+          )
+        : // Bank
+          event.entries[0].gePerItem;
 
     const totalData = sumDataArrays(
       bankData ?? [],
@@ -41,14 +44,14 @@ export const WealthPage: React.FC<{}> = () => {
     return [
       {
         data:
-          bankData?.map((datum) => [
+          inventoryData?.map((datum) => [
             datum.timestamp,
             calculateEntrySum(datum),
           ]) ?? [],
       },
       {
         data:
-          inventoryData?.map((datum) => [
+          bankData?.map((datum) => [
             datum.timestamp,
             calculateEntrySum(datum),
           ]) ?? [],
