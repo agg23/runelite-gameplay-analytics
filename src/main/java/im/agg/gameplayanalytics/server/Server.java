@@ -43,6 +43,11 @@ public class Server {
             config.enableCorsForAllOrigins();
 
             config.registerPlugin(new RedirectToLowercasePathPlugin());
+
+            config.wsFactoryConfig(wsFactory -> {
+                // Thirty day timeout
+                wsFactory.getPolicy().setIdleTimeout(30L * 24 * 60 * 60 * 1000);
+            });
         });
     }
 
