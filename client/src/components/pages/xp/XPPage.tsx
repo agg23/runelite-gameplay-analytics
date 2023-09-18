@@ -8,13 +8,13 @@ import type {
 
 import { useStore } from "../../../store/store";
 import { AllSkills } from "../../osrs/skills/AllSkills";
-import { ALL_SKILLS } from "../../../osrs/types";
+import { ALL_SKILLS, Skill } from "../../../osrs/types";
 import { EChart } from "../../external/EChart";
 import {
   useActivityQuery,
   useXPQuery,
 } from "../../../api/hooks/useDatatypeQuery";
-import { ActivityEvent } from "../../../api/internal/types";
+import { ActivityEvent, XPEvent } from "../../../api/internal/types";
 import { ActivityNavigator } from "./ActivityNavigator";
 import { debounce } from "../../../util/util";
 import { XPTopStats } from "./XPTopStats";
@@ -46,13 +46,31 @@ export const XPPage: React.FC<{}> = () => {
     }
 
     const initialValue = xpData[0];
+    const lastValue = xpData[xpData.length - 1];
 
-    return [...ALL_SKILLS, "xpTotal" as const].map((skill) => ({
-      data: xpData.map((item) => [
+    const currentTime = Date.now();
+
+    // Only insert this datapoint if there has been no data for 5 minutes
+    const insertBlankDatapoint =
+      currentTime - lastValue.timestamp > 5 * 60 * 1000;
+
+    const calculateValue = (
+      datapoint: XPEvent,
+      skill: Skill | "xpTotal"
+    ): number => datapoint[skill] - (displayDeltas ? initialValue[skill] : 0);
+
+    return [...ALL_SKILLS, "xpTotal" as const].map((skill) => {
+      const data = xpData.map((item) => [
         item.timestamp,
-        item[skill] - (displayDeltas ? initialValue[skill] : 0),
-      ]),
-    }));
+        calculateValue(item, skill),
+      ]);
+
+      return {
+        data: insertBlankDatapoint
+          ? [...data, [currentTime, calculateValue(lastValue, skill)]]
+          : data,
+      };
+    });
   }, [displayDeltas, xpData, activityData]);
 
   const markArea = useMemo(

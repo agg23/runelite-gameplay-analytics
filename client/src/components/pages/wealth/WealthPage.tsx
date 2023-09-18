@@ -41,20 +41,46 @@ export const WealthPage: React.FC<{}> = () => {
       calculateEntrySum
     );
 
+    const currentTime = Date.now();
+
+    const inventorySeriesData = inventoryData?.map((datum) => [
+      datum.timestamp,
+      calculateEntrySum(datum),
+    ]);
+
+    const lastInventoryDatum = inventoryData?.[inventoryData.length - 1];
+
+    const bankSeriesData = bankData?.map((datum) => [
+      datum.timestamp,
+      calculateEntrySum(datum),
+    ]);
+
+    const lastBankDatum = bankData?.[bankData.length - 1];
+
     return [
       {
-        data:
-          inventoryData?.map((datum) => [
-            datum.timestamp,
-            calculateEntrySum(datum),
-          ]) ?? [],
+        data: inventorySeriesData
+          ? [
+              ...inventorySeriesData,
+              [
+                currentTime,
+                lastInventoryDatum
+                  ? calculateEntrySum(lastInventoryDatum)
+                  : null,
+              ],
+            ]
+          : [],
       },
       {
-        data:
-          bankData?.map((datum) => [
-            datum.timestamp,
-            calculateEntrySum(datum),
-          ]) ?? [],
+        data: bankSeriesData
+          ? [
+              ...bankSeriesData,
+              [
+                currentTime,
+                lastBankDatum ? calculateEntrySum(lastBankDatum) : null,
+              ],
+            ]
+          : [],
       },
       { data: totalData },
     ];
