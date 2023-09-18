@@ -13,12 +13,14 @@ export interface XPState {
         set: Set<Skill>;
       };
   displayDeltas: boolean;
+  showOnlyPlaytime: boolean;
 
   addSkill: (skill: Skill) => void;
   removeSkill: (skill: Skill) => void;
   toggleSelectedTotalSkills: (selectTotal: boolean) => void;
   toggleSelectAllSkills: (selectall: boolean) => void;
   setDisplayDeltas: (value: boolean) => void;
+  setShowOnlyPlaytime: (value: boolean) => void;
 }
 
 const allSkillsSet = new Set(ALL_SKILLS);
@@ -29,6 +31,7 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
     set: allSkillsSet,
   },
   displayDeltas: true,
+  showOnlyPlaytime: false,
 
   chart: {
     // Default to now, but will reset when data arrives
@@ -80,6 +83,10 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
   setDisplayDeltas: (value) =>
     set((existing) => {
       existing.xp.displayDeltas = value;
+    }),
+  setShowOnlyPlaytime: (value) =>
+    set((existing) => {
+      existing.xp.showOnlyPlaytime = value;
     }),
 });
 

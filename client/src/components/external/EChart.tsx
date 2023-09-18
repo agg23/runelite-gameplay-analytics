@@ -15,6 +15,7 @@ import type {
   DataZoomComponentOption,
   MarkAreaComponentOption,
 } from "echarts";
+import "echarts/lib/component/markLine";
 
 interface EChartProps {
   options: EChartsOption;
@@ -219,6 +220,10 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [onMarkAreaClick, isChartSet]);
+
+    useEffect(() => {
+      internalRef.current?.setOption(options);
+    }, [options]);
 
     useEffect(() => {
       const chart = echarts.init(elementRef.current);

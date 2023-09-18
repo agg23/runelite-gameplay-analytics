@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { Checkbox, LoadingOverlay, createStyles } from "@mantine/core";
 import type {
+  EChartsOption,
   EChartsType,
   MarkAreaComponentOption,
+  MarkLineComponentOption,
   SeriesOption,
 } from "echarts";
 
@@ -28,8 +30,10 @@ export const XPPage: React.FC<{}> = () => {
   const { setSelectedTimespan } = useStore((state) => state.shared);
   const {
     displayDeltas,
+    showOnlyPlaytime,
     selectedSkills,
     setDisplayDeltas,
+    setShowOnlyPlaytime,
     toggleSelectAllSkills,
     toggleSelectedTotalSkills,
   } = useStore((state) => state.xp);
@@ -39,9 +43,20 @@ export const XPPage: React.FC<{}> = () => {
 
   const primaryChartRef = useRef<echarts.ECharts>(null);
 
+  const options = useMemo((): EChartsOption => {
+    return showOnlyPlaytime
+      ? {
+          ...primaryChartOptions,
+          xAxis: {
+            type: "category",
+          },
+        }
+      : primaryChartOptions;
+  }, [showOnlyPlaytime]);
+
   const seriesData = useMemo((): SeriesOption[] => {
     console.log("reload series");
-    if (!xpData || !activityData || xpData.length < 1) {
+    if (!xpData || xpData.length < 1) {
       return [];
     }
 
@@ -66,12 +81,20 @@ export const XPPage: React.FC<{}> = () => {
       ]);
 
       return {
+        // The category markLines don't work without this type
+        type: "line",
         data: insertBlankDatapoint
           ? [...data, [currentTime, calculateValue(lastValue, skill)]]
           : data,
+        markLine: {
+          data: [
+            // TODO: Add break lines
+            { xAxis: 200 },
+          ],
+        },
       };
     });
-  }, [displayDeltas, xpData, activityData]);
+  }, [displayDeltas, xpData]);
 
   const markArea = useMemo(
     (): MarkAreaComponentOption | undefined =>
@@ -150,6 +173,11 @@ export const XPPage: React.FC<{}> = () => {
           onChange={(event) => setDisplayDeltas(event.currentTarget.checked)}
           label="Display deltas"
         />
+        <Checkbox
+          checked={showOnlyPlaytime}
+          onChange={(event) => setShowOnlyPlaytime(event.currentTarget.checked)}
+          label="Show only playtime"
+        />
       </div>
       <ChartPage
         chart={
@@ -163,7 +191,7 @@ export const XPPage: React.FC<{}> = () => {
                     ? selectedSkills.set
                     : totalSelectedSkillSet
                 }
-                options={primaryChartOptions}
+                options={options}
                 markArea={markArea}
                 height={600}
                 onZoom={onZoom}
