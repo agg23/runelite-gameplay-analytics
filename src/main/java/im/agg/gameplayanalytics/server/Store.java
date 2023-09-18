@@ -41,22 +41,6 @@ public class Store {
                 )
                 """);
 
-        // XP
-
-        this.createEventsTable("xp_event", false, String.format("""
-                    type INTEGER NOT NULL,
-                    %s
-                    changed_skills INTEGER NOT NULL,
-                """, skillColumns.toString()));
-
-        // Map
-
-        this.createEventsTable("map_event", false, """
-                    region INTEGER NOT NULL,
-                    tile_x INTEGER NOT NULL,
-                    tile_y INTEGER NOT NULL,
-                """);
-
         // Activity
 
         this.sqlExecute("""
@@ -68,20 +52,36 @@ public class Store {
                 )
                 """);
 
-        // Storage (Inventory, Bank)
+        // Grand Exchange
 
-        this.createEventsTable("storage_event", true, """
-                    type INTEGER NOT NULL,
+        this.createEventsTable("ge_event", false, """
+                    item_id INTEGER NOT NULL,
+                    completed_quantity INTEGER NOT NULL,
+                    total_quantity INTEGER NOT NULL,
+                    price_per_item INTEGER NOT NULL,
+                    transferred_gp INTEGER NOT NULL,
+                    is_buy INTEGER NOT NULL,
+                    is_cancelled INTEGER NOT NULL,
+                    slot INTEGER NOT NULL,
+                    world_type INTEGER NOT NULL,
                 """);
 
+        // Map
+
+        this.createEventsTable("map_event", false, """
+                    region INTEGER NOT NULL,
+                    tile_x INTEGER NOT NULL,
+                    tile_y INTEGER NOT NULL,
+                """);
+
+        // Membership
+
         this.sqlExecute("""
-                CREATE TABLE IF NOT EXISTS storage_entry (
-                    event_id INTEGER NOT NULL,
-                    item_id INTEGER NOT NULL,
-                    slot INTEGER NOT NULL,
-                    quantity INTEGER NOT NULL,
-                    ge_per_item INTEGER NOT NULL,
-                    FOREIGN KEY (event_id) REFERENCES storage_event (id)
+                CREATE TABLE IF NOT EXISTS membership_status (
+                    account_id INTEGER NOT NULL,
+                    start_timestamp INTEGER NOT NULL,
+                    expiration_timestamp INTEGER NOT NULL,
+                    FOREIGN KEY (account_id) REFERENCES account (id)
                 )
                 """);
 
@@ -106,16 +106,30 @@ public class Store {
                 )
                 """);
 
-        // Membership
+        // Storage (Inventory, Bank)
+
+        this.createEventsTable("storage_event", true, """
+                    type INTEGER NOT NULL,
+                """);
 
         this.sqlExecute("""
-                CREATE TABLE IF NOT EXISTS membership_status (
-                    account_id INTEGER NOT NULL,
-                    start_timestamp INTEGER NOT NULL,
-                    expiration_timestamp INTEGER NOT NULL,
-                    FOREIGN KEY (account_id) REFERENCES account (id)
+                CREATE TABLE IF NOT EXISTS storage_entry (
+                    event_id INTEGER NOT NULL,
+                    item_id INTEGER NOT NULL,
+                    slot INTEGER NOT NULL,
+                    quantity INTEGER NOT NULL,
+                    ge_per_item INTEGER NOT NULL,
+                    FOREIGN KEY (event_id) REFERENCES storage_event (id)
                 )
                 """);
+
+        // XP
+
+        this.createEventsTable("xp_event", false, String.format("""
+                    type INTEGER NOT NULL,
+                    %s
+                    changed_skills INTEGER NOT NULL,
+                """, skillColumns.toString()));
 
         // Settings
 
@@ -183,6 +197,187 @@ public class Store {
                 """, new Object[]{account.getId(), account.getUsername()});
     }
 
+    public void createNewActivityEvent(ActivityEvent session) {
+        var parameters = new Object[]{
+                session.getAccountId(),
+                session.getTimestamp(),
+                // Start timestamp is used for the end of the duration as well
+                session.getTimestamp()
+        };
+
+        Yank.execute("""
+                INSERT INTO activity
+                    (account_id, start_timestamp, last_update_timestamp)
+                VALUES (?, ?, ?)
+                """, parameters);
+    }
+
+    public void writeGEEvent(GEEvent event) {
+        var parameters = new Object[]{
+                event.getAccountId(),
+                event.getTimestamp(),
+                event.getItemId(),
+                event.getCompletedQuantity(),
+                event.getTotalQuantity(),
+                event.getPricePerItem(),
+                event.getTransferredGp(),
+                event.isBuy(),
+                event.isCancelled(),
+                event.getSlot(),
+                event.getWorldType()
+        };
+        
+        Yank.execute("""
+                INSERT INTO ge_event
+                    (account_id, timestamp, item_id, completed_quantity,
+                    total_quantity, price_per_item, transferred_gp, is_buy,
+                    is_cancelled, slot, world_type)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, parameters);
+    }
+
+    public void updateLastActivityEvent(ActivityEvent session) {
+        var parameters = new Object[]{
+                session.getTimestamp(),
+                session.getAccountId()
+        };
+
+        // Update the last activity row for this account
+        Yank.execute("""
+                UPDATE activity SET last_update_timestamp = ?
+                WHERE start_timestamp = (SELECT MAX(start_timestamp) FROM activity WHERE account_id = ?)
+                """, parameters);
+    }
+
+    public void writeLootEvent(LootDBEvent event,
+                               List<LootEntryDBEvent> entries) {
+        var eventParams = new Object[]{
+                event.getTimestamp(),
+                event.getAccountId(),
+                event.getType(),
+                event.getNpcId(),
+                event.getCombatLevel(),
+                event.getRegion(),
+                event.getTileX(),
+                event.getTileY()
+        };
+
+        var id = Yank.insert("""
+                INSERT INTO loot_event
+                    (timestamp, account_id, type, npc_id, combat_level, region, tile_x, tile_y)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, eventParams);
+
+        var entryParams = new Object[entries.size()][];
+
+        for (var i = 0; i < entries.size(); i++) {
+            var entry = entries.get(i);
+            entryParams[i] = new Object[]{
+                    id,
+                    entry.getItemId(),
+                    entry.getQuantity(),
+                    entry.getGePerItem()
+            };
+        }
+
+        Yank.executeBatch("""
+                INSERT INTO loot_entry
+                    (loot_id, item_id, quantity, ge_per_item)
+                VALUES (?, ?, ?, ?)
+                """, entryParams);
+    }
+
+    public void writeMapEvent(MapEvent event) {
+        var parameters = new Object[]{
+                event.getTimestamp(),
+                event.getAccountId(),
+                event.getRegion(),
+                event.getX(),
+                event.getY()
+        };
+
+        Yank.execute("""
+                INSERT INTO map_event
+                    (timestamp, account_id, region, tile_x, tile_y)
+                VALUES (?, ?, ?, ?, ?)
+                """, parameters);
+    }
+
+    public void createOrUpdateLastMembershipStatus(
+            long accountId, Date startTimestamp, Date expirationTimestamp) {
+        var selectParameters = new Object[]{
+                accountId
+        };
+
+        var maxStartTimestamp = Yank.queryBean("""
+                SELECT
+                    account_id, MAX(start_timestamp) as start_timestamp, expiration_timestamp
+                FROM membership_status WHERE account_id = ?
+                """, MembershipStatusDBRetrieval.class, selectParameters);
+
+        var isInRange = !maxStartTimestamp.isNull() &&
+                maxStartTimestamp.getExpirationTimestamp() >
+                        startTimestamp.getTime() &&
+                maxStartTimestamp.getStartTimestamp() <
+                        startTimestamp.getTime();
+
+
+        if (maxStartTimestamp.isNull() || !isInRange) {
+            // No entry, do insert
+            var insertParams =
+                    new Object[]{accountId, startTimestamp, expirationTimestamp};
+
+            Yank.execute("""
+                    INSERT INTO membership_status
+                        (account_id, start_timestamp, expiration_timestamp)
+                    VALUES (?, ?, ?)
+                    """, insertParams);
+        } else {
+            // Entry, do update
+            var updateParams =
+                    new Object[]{expirationTimestamp, maxStartTimestamp.getStartTimestamp()};
+
+            Yank.execute("""
+                    UPDATE membership_status SET expiration_timestamp = ?
+                    WHERE start_timestamp = ?
+                    """, updateParams);
+        }
+    }
+
+    public void writeStorageEvent(StorageDBEvent event,
+                                  List<StorageEntryDBEvent> entries) {
+        var eventParams = new Object[]{
+                event.getTimestamp(),
+                event.getAccountId(),
+                event.getType()
+        };
+
+        var id = Yank.insert("""
+                INSERT INTO storage_event
+                    (timestamp, account_id, type)
+                VALUES (?, ?, ?)
+                """, eventParams);
+
+        var entryParams = new Object[entries.size()][];
+
+        for (var i = 0; i < entries.size(); i++) {
+            var entry = entries.get(i);
+            entryParams[i] = new Object[]{
+                    id,
+                    entry.getItemId(),
+                    entry.getSlot(),
+                    entry.getQuantity(),
+                    entry.getGePerItem()
+            };
+        }
+
+        Yank.executeBatch("""
+                INSERT INTO storage_entry
+                    (event_id, item_id, slot, quantity, ge_per_item)
+                VALUES (?, ?, ?, ?, ?)
+                """, entryParams);
+    }
+
     public void writeXPEvent(XPDBEvent event) {
         var parameters = new Object[]{
                 event.getTimestamp(),
@@ -226,163 +421,6 @@ public class Store {
                 VALUES (?, ?, ?,
                     ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                 ?)""", parameters);
-    }
-
-    public void writeMapEvent(MapEvent event) {
-        var parameters = new Object[]{
-                event.getTimestamp(),
-                event.getAccountId(),
-                event.getRegion(),
-                event.getX(),
-                event.getY()
-        };
-
-        Yank.execute("""
-                INSERT INTO map_event
-                    (timestamp, account_id, region, tile_x, tile_y)
-                VALUES (?, ?, ?, ?, ?)
-                """, parameters);
-    }
-
-    public void createNewActivityEvent(ActivityEvent session) {
-        var parameters = new Object[]{
-                session.getAccountId(),
-                session.getTimestamp(),
-                // Start timestamp is used for the end of the duration as well
-                session.getTimestamp()
-        };
-
-        Yank.execute("""
-                INSERT INTO activity
-                    (account_id, start_timestamp, last_update_timestamp)
-                VALUES (?, ?, ?)
-                """, parameters);
-    }
-
-    public void updateLastActivityEvent(ActivityEvent session) {
-        var parameters = new Object[]{
-                session.getTimestamp(),
-                session.getAccountId()
-        };
-
-        // Update the last activity row for this account
-        Yank.execute("""
-                UPDATE activity SET last_update_timestamp = ?
-                WHERE start_timestamp = (SELECT MAX(start_timestamp) FROM activity WHERE account_id = ?)
-                """, parameters);
-    }
-
-    public void writeStorageEvent(StorageDBEvent event,
-                                  List<StorageEntryDBEvent> entries) {
-        var eventParams = new Object[]{
-                event.getTimestamp(),
-                event.getAccountId(),
-                event.getType()
-        };
-
-        var id = Yank.insert("""
-                INSERT INTO storage_event
-                    (timestamp, account_id, type)
-                VALUES (?, ?, ?)
-                """, eventParams);
-
-        var entryParams = new Object[entries.size()][];
-
-        for (var i = 0; i < entries.size(); i++) {
-            var entry = entries.get(i);
-            entryParams[i] = new Object[]{
-                    id,
-                    entry.getItemId(),
-                    entry.getSlot(),
-                    entry.getQuantity(),
-                    entry.getGePerItem()
-            };
-        }
-
-        Yank.executeBatch("""
-                INSERT INTO storage_entry
-                    (event_id, item_id, slot, quantity, ge_per_item)
-                VALUES (?, ?, ?, ?, ?)
-                """, entryParams);
-    }
-
-    public void writeLootEvent(LootDBEvent event,
-                               List<LootEntryDBEvent> entries) {
-        var eventParams = new Object[]{
-                event.getTimestamp(),
-                event.getAccountId(),
-                event.getType(),
-                event.getNpcId(),
-                event.getCombatLevel(),
-                event.getRegion(),
-                event.getTileX(),
-                event.getTileY()
-        };
-
-        var id = Yank.insert("""
-                INSERT INTO loot_event
-                    (timestamp, account_id, type, npc_id, combat_level, region, tile_x, tile_y)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """, eventParams);
-
-        var entryParams = new Object[entries.size()][];
-
-        for (var i = 0; i < entries.size(); i++) {
-            var entry = entries.get(i);
-            entryParams[i] = new Object[]{
-                    id,
-                    entry.getItemId(),
-                    entry.getQuantity(),
-                    entry.getGePerItem()
-            };
-        }
-
-        Yank.executeBatch("""
-                INSERT INTO loot_entry
-                    (loot_id, item_id, quantity, ge_per_item)
-                VALUES (?, ?, ?, ?)
-                """, entryParams);
-    }
-
-    public void createOrUpdateLastMembershipStatus(
-            long accountId, Date startTimestamp, Date expirationTimestamp) {
-        var selectParameters = new Object[]{
-                accountId
-        };
-
-        var maxStartTimestamp = Yank.queryBean("""
-                SELECT
-                    account_id, MAX(start_timestamp) as start_timestamp, expiration_timestamp
-                FROM membership_status WHERE account_id = ?
-                """, MembershipStatusDBRetrieval.class, selectParameters);
-
-        var isInRange = !maxStartTimestamp.isNull() &&
-                maxStartTimestamp.getExpirationTimestamp() >
-                        startTimestamp.getTime() &&
-                maxStartTimestamp.getStartTimestamp() <
-                        startTimestamp.getTime();
-
-
-        if (maxStartTimestamp.isNull() || !isInRange) {
-            // No entry, do insert
-            var insertParams =
-                    new Object[]{accountId, startTimestamp, expirationTimestamp};
-
-            Yank.execute("""
-                    INSERT INTO membership_status
-                        (account_id, start_timestamp, expiration_timestamp)
-                    VALUES (?, ?, ?)
-                    """, insertParams);
-        } else {
-            // Entry, do update
-            var updateParams =
-                    new Object[]{expirationTimestamp, maxStartTimestamp.getStartTimestamp()};
-
-            Yank.execute("""
-                    UPDATE membership_status SET expiration_timestamp = ?
-                    WHERE start_timestamp = ?
-                    """, updateParams);
-        }
     }
 
     public void writeSettings(String blob) {

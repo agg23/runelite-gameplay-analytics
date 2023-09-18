@@ -64,21 +64,6 @@ public class Server {
             ctx.result("Hello world");
         });
 
-//        this.app.ws("/api/", ws -> {
-//            ws.onConnect(ctx -> {
-//                log.info("Connected client");
-//
-//                activeContexts.add(ctx);
-//            });
-//
-//            ws.onClose(ctx -> {
-//                log.info("Disconnected client");
-//
-//                var didRemove = activeContexts.remove(ctx);
-//
-//                assert didRemove;
-//            });
-//        });
         this.app.get("/api/accounts", ctx -> {
             var accounts = this.store.getAccounts();
             ctx.json(new HTTPJSONWrapper(accounts));

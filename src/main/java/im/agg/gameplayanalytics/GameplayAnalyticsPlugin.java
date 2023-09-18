@@ -12,13 +12,12 @@ import im.agg.gameplayanalytics.server.Store;
 import im.agg.gameplayanalytics.server.dbmodels.LootDBEvent;
 import im.agg.gameplayanalytics.server.dbmodels.LootEntryDBEvent;
 import im.agg.gameplayanalytics.server.models.Account;
+import im.agg.gameplayanalytics.server.models.GEEvent;
 import im.agg.gameplayanalytics.server.models.Skill;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.Player;
-import net.runelite.api.ScriptID;
+import net.runelite.api.*;
 import net.runelite.api.events.*;
 import net.runelite.client.callback.ClientThread;
-import net.runelite.api.Client;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.NpcLootReceived;
@@ -64,6 +63,7 @@ public class GameplayAnalyticsPlugin extends Plugin {
 
     private final ActivityController activityController =
             new ActivityController();
+    private final GEController geController = new GEController();
     private final MapController mapController = new MapController();
     private final MembershipController membershipController =
             new MembershipController();
@@ -71,7 +71,8 @@ public class GameplayAnalyticsPlugin extends Plugin {
     private final XPController xpController = new XPController();
 
     private final Controller[] controllers = new Controller[]{
-            activityController, mapController, membershipController, storageController, xpController};
+            activityController, geController, mapController,
+            membershipController, storageController, xpController};
 
     private Account account;
 
@@ -202,6 +203,11 @@ public class GameplayAnalyticsPlugin extends Plugin {
         }
     }
 
+    @Subscribe
+    public void onGrandExchangeOfferChanged(
+            GrandExchangeOfferChanged event) {
+        this.geController.onGrandExchangeOfferChanged(event);
+    }
 
     @Provides
     GameplayAnalyticsConfig provideConfig(ConfigManager configManager) {
