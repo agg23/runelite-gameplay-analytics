@@ -75,6 +75,12 @@ public class Server {
                     ctx.json(new HTTPJSONWrapper(events));
                 });
 
+        this.createAccountRoute("/api/ge/{accountId}",
+                (ctx, accountId) -> {
+                    var events = this.store.getGEEvents(accountId);
+                    ctx.json(new HTTPJSONWrapper(events));
+                });
+
         this.createAccountRoute("/api/loot/{accountId}", ((ctx, accountId) -> {
             var events = this.store.getLootEvents(accountId);
             ctx.json(new HTTPJSONWrapper(events));

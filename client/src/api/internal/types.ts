@@ -31,6 +31,39 @@ export interface ActivityEvent {
   endTimestamp: number;
 }
 
+// Grand Exchange
+
+export interface GEEvent {
+  accountId: string;
+
+  firstSeenTimestamp: number;
+  completedTimestamp: number | null;
+
+  itemId: number;
+  totalQuantity: number;
+
+  pricePerItem: number;
+
+  slot: number;
+
+  buy: boolean;
+  cancelled: boolean;
+
+  worldType: 0 | 1 | 2 | 3 | 4;
+
+  entries: GEEventEntry[];
+}
+
+export interface GEEventEntry {
+  timestamp: number;
+
+  completedQuantity: number;
+
+  transferredGp: number;
+
+  isCancelled: boolean;
+}
+
 // Loot
 
 export interface LootEvent {

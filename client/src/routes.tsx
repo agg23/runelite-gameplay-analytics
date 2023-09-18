@@ -6,6 +6,7 @@ import { InventoryPage } from "./components/pages/InventoryPage";
 import { ActivityPage } from "./components/pages/ActivityPage";
 import { MapPage } from "./components/pages/MapPage";
 import { WealthPage } from "./components/pages/wealth/WealthPage";
+import { GEPage } from "./components/pages/GEPage";
 
 const rootRoute = new RootRoute({
   component: () => <RootPage />,
@@ -21,6 +22,12 @@ const activityRoute = new Route({
   getParentRoute: () => rootRoute,
   component: () => <ActivityPage />,
   path: "/activity",
+});
+
+const geRoute = new Route({
+  getParentRoute: () => rootRoute,
+  component: () => <GEPage />,
+  path: "/ge",
 });
 
 const inventoryRoute = new Route({
@@ -50,6 +57,7 @@ const wealthRoute = new Route({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   activityRoute,
+  geRoute,
   inventoryRoute,
   lootRoute,
   mapRoute,

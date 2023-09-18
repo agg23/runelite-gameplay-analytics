@@ -1,6 +1,7 @@
 import {
   Account,
   ActivityEvent,
+  GEEvent,
   LootEvent,
   MapEvent,
   StorageAPIEvent,
@@ -21,6 +22,10 @@ interface GetRoutes {
   //   http: InventoryEvent[];
   //   ws: void;
   // };
+  ge: {
+    http: GEEvent[];
+    ws: void;
+  };
   loot: {
     http: LootEvent[];
     ws: void;

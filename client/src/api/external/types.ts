@@ -1,8 +1,7 @@
-import { ObjectMap } from "../../types/util";
-
 export interface Item {
   id: string;
   name: string;
+  buy_limit: number;
   // TODO: Many more properties
   wiki_url: string;
 }

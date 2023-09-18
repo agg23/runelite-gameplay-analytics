@@ -19,24 +19,36 @@ export const useActivityQuery = () => {
   );
 };
 
-export const useInventoryQuery = () => {
-  const account = useAccount();
-
-  return useQuery(
-    ["storage", account.id, "0"],
-    () => fetchQueryData("storage", `${account.id}/0`),
-    {
-      enabled: !!account.id,
-    }
-  );
-};
-
 export const useBankQuery = () => {
   const account = useAccount();
 
   return useQuery(
     ["storage", account.id, "1"],
     () => fetchQueryData("storage", `${account.id}/1`),
+    {
+      enabled: !!account.id,
+    }
+  );
+};
+
+export const useGEQuery = () => {
+  const account = useAccount();
+
+  return useQuery(
+    ["ge", account.id],
+    () => fetchQueryData("ge", `${account.id}`),
+    {
+      enabled: !!account.id,
+    }
+  );
+};
+
+export const useInventoryQuery = () => {
+  const account = useAccount();
+
+  return useQuery(
+    ["storage", account.id, "0"],
+    () => fetchQueryData("storage", `${account.id}/0`),
     {
       enabled: !!account.id,
     }
@@ -55,6 +67,14 @@ export const useLootQuery = () => {
   );
 };
 
+export const useMapQuery = () => {
+  const account = useAccount();
+
+  return useQuery("map", () => fetchQueryData("map", account.id), {
+    enabled: !!account.id,
+  });
+};
+
 export const useXPQuery = () => {
   const account = useAccount();
 
@@ -62,6 +82,14 @@ export const useXPQuery = () => {
     enabled: !!account.id,
   });
 };
+
+// External
+
+export const useItemQuery = (id: number) =>
+  useQuery(["item", id], () => getExternalRoute("item", `/${id}.json`));
+
+export const useNPCQuery = (id: number) =>
+  useQuery(["npc", id], () => getExternalRoute("npc", `/${id}.json`));
 
 interface GEPricesLocalStorage {
   fetchedTimestamp: number;
@@ -109,17 +137,3 @@ export const useGEPricesQuery = () => {
 
   return useQuery("ge_prices", fetch);
 };
-
-export const useMapQuery = () => {
-  const account = useAccount();
-
-  return useQuery("map", () => fetchQueryData("map", account.id), {
-    enabled: !!account.id,
-  });
-};
-
-export const useItemQuery = (id: number) =>
-  useQuery(["item", id], () => getExternalRoute("item", `/${id}.json`));
-
-export const useNPCQuery = (id: number) =>
-  useQuery(["npc", id], () => getExternalRoute("npc", `/${id}.json`));

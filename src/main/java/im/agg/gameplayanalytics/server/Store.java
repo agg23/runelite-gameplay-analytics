@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.knowm.yank.Yank;
 import org.knowm.yank.exceptions.YankSQLException;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -226,7 +227,7 @@ public class Store {
                 event.getSlot(),
                 event.getWorldType()
         };
-        
+
         Yank.execute("""
                 INSERT INTO ge_event
                     (account_id, timestamp, item_id, completed_quantity,
@@ -449,6 +450,101 @@ public class Store {
         return Yank.queryBeanList("""
                 SELECT * FROM activity WHERE account_id = ?
                 """, ActivityDBRetrieval.class, new Object[]{accountId});
+    }
+
+    public List<CombinedGEEvent> getGEEvents(long accountId) {
+        var events = Yank.queryBeanList("""
+                SELECT
+                    timestamp, account_id, item_id, completed_quantity, total_quantity,
+                    price_per_item, transferred_gp, is_buy, is_cancelled, slot, world_type
+                FROM ge_event WHERE account_id = ?
+                """, GEDBRetrieval.class, new Object[]{accountId});
+
+        var slots = new CombinedGEEvent[8];
+
+        var outputEvents = new ArrayList<CombinedGEEvent>();
+
+        for (var dbEvent : events) {
+            var slot = dbEvent.getSlot();
+
+            var existingEvent = slots[slot];
+
+            if (dbEvent.isEmpty()) {
+                // Keep slot empty
+                if (existingEvent != null &&
+                        existingEvent.getCompletedTimestamp() == null) {
+                    // Mark this item completed, though we missed the removal event
+                    existingEvent.setCompletedTimestamp(dbEvent.getTimestamp());
+                }
+
+                slots[slot] = null;
+                continue;
+            }
+
+            if (existingEvent == null) {
+                var newEvent = createGEEventObject(dbEvent);
+                slots[slot] = newEvent;
+                outputEvents.add(newEvent);
+                continue;
+            }
+
+            if (existingEvent.equalsDBEvent(dbEvent)) {
+                // Add to entries list if it's not a dupe
+                if (dbEvent.getCompletedQuantity() == 0 &&
+                        !dbEvent.getIsCancelled()) {
+                    // This entry can't have new data
+                    continue;
+                }
+
+                var length = existingEvent.getEntries().size();
+
+                var possibleEntry = new CombinedGEEntry(dbEvent.getTimestamp(),
+                        dbEvent.getCompletedQuantity(),
+                        dbEvent.getTransferredGp(), dbEvent.getIsCancelled());
+
+                CombinedGEEntry newEntry = null;
+
+                if (length == 0) {
+                    // No entries
+                    newEntry = possibleEntry;
+                } else {
+                    var lastEntry = existingEvent.getEntries().get(length - 1);
+
+                    if (!lastEntry.equals(possibleEntry)) {
+                        newEntry = possibleEntry;
+                    }
+                }
+
+                if (newEntry != null) {
+                    // Insert
+                    // Update event state to include any new information
+                    if (newEntry.isCancelled() ||
+                            newEntry.getCompletedQuantity() ==
+                                    existingEvent.getTotalQuantity()) {
+                        existingEvent.setCompletedTimestamp(
+                                newEntry.getTimestamp());
+                        existingEvent.setCancelled(newEntry.isCancelled());
+                    }
+
+                    existingEvent.addEntry(newEntry);
+                }
+            } else {
+                // This represents a whole new transaction. Evict the existing slot event
+                var newEvent = createGEEventObject(dbEvent);
+                slots[slot] = newEvent;
+                outputEvents.add(newEvent);
+            }
+        }
+
+        return outputEvents;
+    }
+
+    private CombinedGEEvent createGEEventObject(GEDBRetrieval event) {
+        return new CombinedGEEvent(event.getAccountId(), event.getTimestamp(),
+                null, event.getItemId(), event.getTotalQuantity(),
+                event.getPricePerItem(), event.getSlot(), event.getIsBuy(),
+                event.getIsCancelled(),
+                event.getWorldType(), new ArrayList<>());
     }
 
     public List<LootEvent> getLootEvents(long accountId) {
