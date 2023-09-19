@@ -60,7 +60,6 @@ export const XPPage: React.FC<{}> = () => {
       return [];
     }
 
-    const initialValue = xpData[0];
     const lastValue = xpData[xpData.length - 1];
 
     const currentTime = Date.now();
@@ -70,21 +69,41 @@ export const XPPage: React.FC<{}> = () => {
       currentTime - lastValue.timestamp > 5 * 60 * 1000;
 
     const calculateValue = (
-      datapoint: XPEvent,
+      currentDatapoint: XPEvent,
+      lastDatapoint: XPEvent | undefined,
       skill: Skill | "xpTotal"
-    ): number => datapoint[skill] - (displayDeltas ? initialValue[skill] : 0);
+    ): number =>
+      currentDatapoint[skill] -
+      (displayDeltas ? lastDatapoint?.[skill] ?? currentDatapoint[skill] : 0);
 
     return [...ALL_SKILLS, "xpTotal" as const].map((skill) => {
-      const data = xpData.map((item) => [
-        item.timestamp,
-        calculateValue(item, skill),
-      ]);
+      const data: [number, number][] = [];
+
+      let lastItem: XPEvent | undefined = undefined;
+      for (const item of xpData) {
+        if (
+          displayDeltas &&
+          !!lastItem &&
+          item.timestamp - (lastItem.timestamp ?? item.timestamp) >
+            7 * 60 * 1000 &&
+          item[skill] !== 0
+        ) {
+          // If there's greater than a 7 minute gap, insert a synthetic 0 event
+          data.push([lastItem.timestamp + 5 * 60 * 1000, 0]);
+        }
+
+        data.push([item.timestamp, calculateValue(item, lastItem, skill)]);
+        lastItem = item;
+      }
 
       return {
         // The category markLines don't work without this type
         type: "line",
         data: insertBlankDatapoint
-          ? [...data, [currentTime, calculateValue(lastValue, skill)]]
+          ? [
+              ...data,
+              [currentTime, calculateValue(lastValue, lastValue, skill)],
+            ]
           : data,
         markLine: {
           data: [
@@ -171,12 +190,12 @@ export const XPPage: React.FC<{}> = () => {
         <Checkbox
           checked={displayDeltas}
           onChange={(event) => setDisplayDeltas(event.currentTarget.checked)}
-          label="Display deltas"
+          label="Display gain rates"
         />
         <Checkbox
           checked={showOnlyPlaytime}
           onChange={(event) => setShowOnlyPlaytime(event.currentTarget.checked)}
-          label="Show only playtime"
+          label="Display only playtime"
         />
       </div>
       <ChartPage
