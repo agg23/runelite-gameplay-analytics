@@ -284,6 +284,41 @@ export const XPPage: React.FC<{}> = () => {
     [activityData]
   );
 
+  const onMarkLineClick = useCallback(
+    (xIndex: number) => {
+      for (let i = 0; i < data.length; i++) {
+        const { eventStartIndex } = data[i];
+
+        if (eventStartIndex === xIndex) {
+          const nextEvent = i + 1 < data.length ? data[i + 1] : undefined;
+
+          if (!nextEvent) {
+            return;
+          }
+
+          primaryChartRef.current?.dispatchAction({
+            type: "dataZoom",
+            startValue: eventStartIndex,
+            endValue: nextEvent.eventStartIndex,
+          });
+          return;
+        }
+      }
+
+      for (const { activity, eventStartIndex } of data) {
+        if (eventStartIndex === xIndex) {
+          primaryChartRef.current?.dispatchAction({
+            type: "dataZoom",
+            startValue: activity.startTimestamp,
+            endValue: activity.endTimestamp,
+          });
+          return;
+        }
+      }
+    },
+    [data]
+  );
+
   useEffect(() => {
     if (!activityData || activityData.length < 1) {
       return;
@@ -341,6 +376,7 @@ export const XPPage: React.FC<{}> = () => {
                 height={600}
                 onZoom={onZoom}
                 onMarkAreaClick={onMarkAreaClick}
+                onMarkLineClick={onMarkLineClick}
               />
             </div>
             <ActivityNavigator

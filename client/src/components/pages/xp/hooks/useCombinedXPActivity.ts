@@ -11,6 +11,7 @@ import {
 
 interface ActivityWithXP {
   activity: ActivityEvent;
+  eventStartIndex: number;
   xpData: XPEvent[];
 }
 
@@ -29,6 +30,7 @@ export const useCombinedXPActivity = () => {
     let lastEvent: XPEvent | undefined = undefined;
 
     let i = 0;
+    let totalEventCount = 0;
     for (const activity of activityData) {
       while (xpData[i].timestamp < activity.startTimestamp) {
         // Reject datapoints
@@ -57,8 +59,11 @@ export const useCombinedXPActivity = () => {
       if (events.length !== 0) {
         activities.push({
           activity,
+          eventStartIndex: totalEventCount,
           xpData: events,
         });
+
+        totalEventCount += events.length;
       }
     }
 

@@ -28,11 +28,21 @@ interface EChartProps {
 
   onZoom?: (startValue: number, endValue: number) => void;
   onMarkAreaClick?: (xAxis: number, markIndex: number) => void;
+  onMarkLineClick?: (xIndex: number) => void;
 }
 
 export const EChart = forwardRef<echarts.ECharts, EChartProps>(
   (
-    { options, data, activeSeries, markArea, height, onMarkAreaClick, onZoom },
+    {
+      options,
+      data,
+      activeSeries,
+      markArea,
+      height,
+      onMarkAreaClick,
+      onMarkLineClick,
+      onZoom,
+    },
     ref
   ) => {
     const elementRef = useRef<HTMLDivElement>(null);
@@ -184,6 +194,8 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
           internalRef.current?.getOption().dataZoom as any
         )?.[0];
 
+        console.log(dataZoom);
+
         if (
           dataZoom?.startValue === undefined ||
           dataZoom?.endValue === undefined
@@ -208,6 +220,9 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       const handler = (event: ECElementEvent) => {
         if (event.componentType === "markArea") {
           onMarkAreaClick?.((event.data as any).xAxis, event.dataIndex);
+        } else if (event.componentType === "markLine") {
+          console.log(event);
+          onMarkLineClick?.(event.value as number);
         }
       };
 
@@ -219,7 +234,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         internalRef.current?.off("click", handler);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [onMarkAreaClick, isChartSet]);
+    }, [onMarkAreaClick, onMarkLineClick, isChartSet]);
 
     useEffect(() => {
       internalRef.current?.setOption(options);
