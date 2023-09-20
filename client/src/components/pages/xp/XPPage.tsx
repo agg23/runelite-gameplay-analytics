@@ -118,6 +118,7 @@ export const XPPage: React.FC<{}> = () => {
         return {
           // The category markLines don't work without this type
           type: "line",
+          name: skill,
           data: insertBlankDatapoint
             ? [
                 ...seriesData,
@@ -170,6 +171,7 @@ export const XPPage: React.FC<{}> = () => {
                 textBorderColor: textColor,
               },
             })),
+            symbol: ["none", "none"],
           }
         : undefined,
     [seriesData, markerIndexes, textColor]

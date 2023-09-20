@@ -57,62 +57,48 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
     // Track when ref has the chart object
     const [isChartSet, setIsChartSet] = useState(false);
 
-    const series = useMemo(() => {
+    const { series, seriesNames } = useMemo(() => {
       if (!data) {
-        return [];
+        return { series: [], seriesNames: [] };
       }
 
-      if (Array.isArray(data) && activeSeries) {
-        // Limit based on activeSeries
-        if (
-          !Array.isArray(options.series) ||
-          data.length !== options.series.length
-        ) {
-          console.error(
-            "Either your series options or your data doesn't match"
-          );
-          return;
+      const seriesArray = Array.isArray(data)
+        ? data
+        : data !== undefined
+        ? [data]
+        : [];
+
+      const series: SeriesOption[] = [];
+      const seriesNames: Array<string | undefined> = [];
+      let isFirst = true;
+
+      for (const seriesItem of seriesArray) {
+        const active = seriesItem.name
+          ? activeSeries?.has(seriesItem.name as string)
+          : false;
+
+        series.push(
+          isFirst && active
+            ? {
+                ...seriesItem,
+                markLine,
+                markArea,
+              }
+            : seriesItem
+        );
+
+        seriesNames.push(seriesItem.name as string);
+
+        if (active) {
+          isFirst = false;
         }
-
-        let series: SeriesOption[] = [];
-        let firstVisibleSeries = true;
-        for (let i = 0; i < data.length; i++) {
-          const datum = data[i];
-          const existingSeries = options.series[i];
-
-          // First entry, apply markArea as we only want to render on a single timeseries (no need to repeat it 20 times)
-          const currentMarkArea =
-            firstVisibleSeries && !!markArea ? markArea : undefined;
-
-          const currentMarkLine =
-            firstVisibleSeries && !!markLine ? markLine : undefined;
-
-          if (activeSeries.has(existingSeries.id as string)) {
-            series.push(
-              firstVisibleSeries
-                ? {
-                    ...datum,
-                    markArea: currentMarkArea,
-                    markLine: currentMarkLine,
-                  }
-                : datum
-            );
-
-            firstVisibleSeries = false;
-          } else {
-            series.push({
-              data: [],
-              markArea: currentMarkArea,
-            });
-          }
-        }
-
-        // Maybe should use echartsInstance.appendData (they say it's for millions of points though)
-        return series;
-      } else {
-        // Just set the data, nothing to do
-        return data;
       }
+
+      return {
+        series,
+        seriesNames,
+      };
+
       // We purposefully don't update options.series, just using the initial value
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSeries, markArea, markLine, data]);
@@ -196,14 +182,32 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         }
       }
 
+      const legendMap: {
+        [name: string]: boolean;
+      } = {};
+
+      if (!!activeSeries) {
+        // Build legend visible map
+        for (const name of seriesNames) {
+          if (!name) {
+            continue;
+          }
+
+          legendMap[name] = activeSeries.has(name as string);
+        }
+      }
+
       // Maybe should use echartsInstance.appendData (they say it's for millions of points though)
       internalRef.current?.setOption({
         series,
         dataZoom,
+        legend: {
+          selected: legendMap,
+        },
       });
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [series, isChartSet]);
+    }, [series, seriesNames, activeSeries, isChartSet]);
 
     useEffect(() => {
       const handle = () => {
@@ -236,7 +240,6 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         if (event.componentType === "markArea") {
           onMarkAreaClick?.((event.data as any).xAxis, event.dataIndex);
         } else if (event.componentType === "markLine") {
-          console.log(event);
           onMarkLineClick?.(event.value as number);
         }
       };

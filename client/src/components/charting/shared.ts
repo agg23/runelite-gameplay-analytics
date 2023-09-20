@@ -2,6 +2,7 @@ import { EChartsOption } from "echarts";
 import { yAxisMinSelector } from "./util";
 
 export const sharedChartOptions: EChartsOption = {
+  animation: false,
   dataZoom: [
     {
       type: "slider",
@@ -11,12 +12,14 @@ export const sharedChartOptions: EChartsOption = {
       filterMode: "none",
     },
   ],
-  animation: false,
   grid: {
     top: 30,
     left: 70,
     // For some reason without this padding the right edge is cut off
     right: 10,
+  },
+  legend: {
+    show: false,
   },
   tooltip: {
     trigger: "axis",

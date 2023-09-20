@@ -17,7 +17,8 @@ export const primaryChartOptions: EChartsOption = {
   ...sharedChartOptions,
   series: [
     ...ALL_SKILLS.map((skill) => ({
-      id: skill as string,
+      id: skill,
+      name: skill,
       type: "line" as const,
       color: `#${SKILL_COLORS[skill]}`,
     })),
@@ -46,7 +47,7 @@ export const primaryChartOptions: EChartsOption = {
         })
         .join("");
 
-      return `<div class="xpTooltip"><div>${formatedDate}</div><div class="xpTooltipItems">${items}</div></div>`;
+      return `<div class="xpTooltip"><div>${timestamp}</div><div>${formatedDate}</div><div class="xpTooltipItems">${items}</div></div>`;
     },
   },
   yAxis: {
