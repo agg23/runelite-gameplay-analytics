@@ -3,7 +3,11 @@ import {
   useActivityQuery,
   useXPQuery,
 } from "../../../../api/hooks/useDatatypeQuery";
-import { ActivityEvent, XPEvent } from "../../../../api/internal/types";
+import {
+  ActivityEvent,
+  XPEvent,
+  eventEquals,
+} from "../../../../api/internal/types";
 
 interface ActivityWithXP {
   activity: ActivityEvent;
@@ -22,6 +26,8 @@ export const useCombinedXPActivity = () => {
 
     const activities: ActivityWithXP[] = [];
 
+    let lastEvent: XPEvent | undefined = undefined;
+
     let i = 0;
     for (const activity of activityData) {
       while (xpData[i].timestamp < activity.startTimestamp) {
@@ -36,16 +42,24 @@ export const useCombinedXPActivity = () => {
         xpData[i].timestamp <= activity.endTimestamp
       ) {
         // Consume datapoints
-        events.push(xpData[i]);
+        const event = xpData[i];
+
+        if (!!lastEvent && !eventEquals(event, lastEvent)) {
+          // Only use this value if it has some sort of new data
+          events.push(event);
+        }
+        lastEvent = event;
 
         i += 1;
       }
 
       // We're done, following activity will start from here
-      activities.push({
-        activity,
-        xpData: events,
-      });
+      if (events.length !== 0) {
+        activities.push({
+          activity,
+          xpData: events,
+        });
+      }
     }
 
     return activities;

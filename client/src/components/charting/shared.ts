@@ -13,7 +13,7 @@ export const sharedChartOptions: EChartsOption = {
   ],
   animation: false,
   grid: {
-    top: 10,
+    top: 30,
     left: 70,
     // For some reason without this padding the right edge is cut off
     right: 10,

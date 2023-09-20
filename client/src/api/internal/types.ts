@@ -197,3 +197,29 @@ export const newXPEvent = (
   construction: fromEvent?.construction ?? 0,
   hunter: fromEvent?.hunter ?? 0,
 });
+
+export const eventEquals = (a: XPEvent, b: XPEvent): boolean =>
+  a.attack === b.attack &&
+  a.strength === b.strength &&
+  a.defence === b.defence &&
+  a.ranged === b.ranged &&
+  a.prayer === b.prayer &&
+  a.magic === b.magic &&
+  a.runecraft === b.runecraft &&
+  a.hitpoints === b.hitpoints &&
+  a.crafting === b.crafting &&
+  a.mining === b.mining &&
+  a.smithing === b.smithing &&
+  a.fishing === b.fishing &&
+  a.cooking === b.cooking &&
+  a.firemaking === b.firemaking &&
+  a.woodcutting === b.woodcutting &&
+  // Members
+  a.agility === b.agility &&
+  a.herblore === b.herblore &&
+  a.thieving === b.thieving &&
+  a.fletching === b.fletching &&
+  a.slayer === b.slayer &&
+  a.farming === b.farming &&
+  a.construction === b.construction &&
+  a.hunter === b.hunter;

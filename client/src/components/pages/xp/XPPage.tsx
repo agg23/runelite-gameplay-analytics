@@ -20,6 +20,7 @@ import { SkillFancyCheckbox } from "../../osrs/skills/SkillFancyCheckbox";
 import { ChartPage } from "../../layout/ChartPage";
 import { primaryChartOptions } from "./primaryChart";
 import { useCombinedXPActivity } from "./hooks/useCombinedXPActivity";
+import { formatDatetimeNice } from "../../../util/string";
 
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
@@ -41,6 +42,9 @@ export const XPPage: React.FC<{}> = () => {
   const { data, isLoading: isOverallLoading } = useCombinedXPActivity();
 
   const primaryChartRef = useRef<echarts.ECharts>(null);
+
+  const { classes, theme } = useStyles();
+  const textColor = theme.colorScheme === "dark" ? theme.white : theme.black;
 
   const options = useMemo((): EChartsOption => {
     return showOnlyPlaytime
@@ -186,7 +190,7 @@ export const XPPage: React.FC<{}> = () => {
       );
     };
 
-    return [...ALL_SKILLS, "xpTotal" as const].map((skill) => {
+    return [...ALL_SKILLS, "xpTotal" as const].map((skill): SeriesOption => {
       const seriesData: Array<[number, number]> = [];
 
       let lastItem: XPEvent | undefined = undefined;
@@ -218,13 +222,26 @@ export const XPPage: React.FC<{}> = () => {
             ]
           : seriesData,
         markLine: {
-          data: markerIndexes.map((xAxis) => ({ xAxis })),
+          data: markerIndexes.map((xAxis) => ({
+            xAxis,
+            label: {
+              color: textColor,
+              formatter: (params) => {
+                const index: number = (params.data as any).coord[0];
+
+                const item = seriesData[index][0];
+
+                return `Session\n${formatDatetimeNice(new Date(item))}`;
+              },
+              textBorderColor: textColor,
+            },
+          })),
           // TODO: Add break lines
           // { xAxis: 200 },
         },
       };
     });
-  }, [displayDeltas, data]);
+  }, [displayDeltas, data, textColor]);
 
   const markArea = useMemo(
     (): MarkAreaComponentOption | undefined =>
@@ -290,8 +307,6 @@ export const XPPage: React.FC<{}> = () => {
 
     selectActivitySpan(lastActivity, primaryChartRef.current);
   }, [activityData]);
-
-  const { classes } = useStyles();
 
   return (
     <>
