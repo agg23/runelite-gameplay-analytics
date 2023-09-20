@@ -14,6 +14,7 @@ import type {
   ECElementEvent,
   DataZoomComponentOption,
   MarkAreaComponentOption,
+  MarkLineComponentOption,
 } from "echarts";
 import "echarts/lib/component/markLine";
 
@@ -23,6 +24,7 @@ interface EChartProps {
   data?: SeriesOption | SeriesOption[];
   activeSeries?: Set<string>;
   markArea?: MarkAreaComponentOption | undefined;
+  markLine?: MarkLineComponentOption | undefined;
 
   height?: number | string;
 
@@ -38,6 +40,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       data,
       activeSeries,
       markArea,
+      markLine,
       height,
       onMarkAreaClick,
       onMarkLineClick,
@@ -72,16 +75,30 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         }
 
         let series: SeriesOption[] = [];
+        let firstVisibleSeries = true;
         for (let i = 0; i < data.length; i++) {
           const datum = data[i];
           const existingSeries = options.series[i];
 
           // First entry, apply markArea as we only want to render on a single timeseries (no need to repeat it 20 times)
           const currentMarkArea =
-            series.length === 0 && markArea ? markArea : undefined;
+            firstVisibleSeries && !!markArea ? markArea : undefined;
+
+          const currentMarkLine =
+            firstVisibleSeries && !!markLine ? markLine : undefined;
 
           if (activeSeries.has(existingSeries.id as string)) {
-            series.push({ ...datum, markArea: currentMarkArea });
+            series.push(
+              firstVisibleSeries
+                ? {
+                    ...datum,
+                    markArea: currentMarkArea,
+                    markLine: currentMarkLine,
+                  }
+                : datum
+            );
+
+            firstVisibleSeries = false;
           } else {
             series.push({
               data: [],
@@ -98,7 +115,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       }
       // We purposefully don't update options.series, just using the initial value
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeSeries, markArea, data]);
+    }, [activeSeries, markArea, markLine, data]);
 
     useEffect(() => {
       console.log(
@@ -193,8 +210,6 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         const dataZoom: InsideDataZoomComponentOption | undefined = (
           internalRef.current?.getOption().dataZoom as any
         )?.[0];
-
-        console.log(dataZoom);
 
         if (
           dataZoom?.startValue === undefined ||

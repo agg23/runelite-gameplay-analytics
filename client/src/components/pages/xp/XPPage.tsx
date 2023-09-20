@@ -4,6 +4,7 @@ import type {
   EChartsOption,
   EChartsType,
   MarkAreaComponentOption,
+  MarkLineComponentOption,
   SeriesOption,
 } from "echarts";
 
@@ -57,106 +58,14 @@ export const XPPage: React.FC<{}> = () => {
       : primaryChartOptions;
   }, [showOnlyPlaytime]);
 
-  const seriesData = useMemo((): SeriesOption[] => {
+  const { series: seriesData, markerIndexes } = useMemo(() => {
     console.log("reload series");
     if (data.length < 1) {
-      return [];
+      return {
+        series: [],
+        markerIndexes: [],
+      };
     }
-
-    // const firstValue = xpData[0];
-    // const lastValue = xpData[xpData.length - 1];
-
-    // let recentActivity: ActivityEvent | undefined = undefined;
-    // let recentActivityIndex = 0;
-    // let isInsideActivity = false;
-
-    // // Find first activity that interacts with our data
-    // if (!!activityData) {
-    //   for (let i = 0; i < activityData.length; i++) {
-    //     const activity = activityData[i];
-
-    //     if (activity.endTimestamp >= firstValue.timestamp) {
-    //       // Find first activity that exists within the range of datapoints
-    //       recentActivity = activity;
-    //       recentActivityIndex = i;
-    //       break;
-    //     }
-    //   }
-    // }
-
-    // const data: XPEvent[] = [];
-
-    // let lastItem: XPEvent | undefined = undefined;
-    // // TODO: Only run this on first skill
-    // for (let i = 0; i < xpData.length; i++) {
-    //   const item = xpData[i];
-
-    //   if (
-    //     displayDeltas &&
-    //     !!lastItem &&
-    //     item.timestamp - (lastItem.timestamp ?? item.timestamp) > 7 * 60 * 1000
-    //   ) {
-    //     // If there's greater than a 7 minute gap, insert a synthetic 0 event
-    //     data.push(
-    //       newXPEvent(
-    //         lastItem.timestamp + 5 * 60 * 1000,
-    //         lastItem.accountId,
-    //         item
-    //       )
-    //     );
-    //   }
-
-    //   data.push(item);
-    //   lastItem = item;
-    // }
-
-    // const newData: XPEvent[] = [];
-    // const markerIndexes: number[] = [];
-
-    // for (let i = 0; i < data.length; i++) {
-    //   const item = data[i];
-
-    //   if (!!recentActivity && !!activityData) {
-    //     if (recentActivity.endTimestamp <= item.timestamp) {
-    //       // We've passed the end of this activity. Add marker
-    //       isInsideActivity = false;
-    //       markerIndexes.push(i);
-
-    //       console.log(
-    //         `End at ${item.timestamp} (${formatDatetimeNice(
-    //           new Date(item.timestamp)
-    //         )}). Activity End ${
-    //           recentActivity.endTimestamp
-    //         } (${formatDatetimeNice(new Date(recentActivity.endTimestamp))})`
-    //       );
-
-    //       // This relies on JS not throwing an exception for out of bounds; it will simply be undefined
-    //       recentActivity = activityData[recentActivityIndex + 1];
-    //       recentActivityIndex += 1;
-    //     } else if (
-    //       !isInsideActivity &&
-    //       recentActivity.startTimestamp <= item.timestamp
-    //     ) {
-    //       // We've passed the start of this activity. Enter it
-    //       // We specifically check startTimestamp after end, as we want to close
-    //       // any starting activities wrapping our first datapoint
-    //       isInsideActivity = true;
-    //       markerIndexes.push(i);
-
-    //       console.log(
-    //         `Start at ${item.timestamp} (${formatDatetimeNice(
-    //           new Date(item.timestamp)
-    //         )}). Activity start ${
-    //           recentActivity.startTimestamp
-    //         } (${formatDatetimeNice(new Date(recentActivity.startTimestamp))})`
-    //       );
-    //     }
-    //   }
-
-    //   if (isInsideActivity) {
-    //     newData.push(item);
-    //   }
-    // }
 
     const trimmedXPEvents: XPEvent[] = [];
 
@@ -190,58 +99,40 @@ export const XPPage: React.FC<{}> = () => {
       );
     };
 
-    return [...ALL_SKILLS, "xpTotal" as const].map((skill): SeriesOption => {
-      const seriesData: Array<[number, number]> = [];
+    const series = [...ALL_SKILLS, "xpTotal" as const].map(
+      (skill): SeriesOption => {
+        const seriesData: Array<[number, number]> = [];
 
-      let lastItem: XPEvent | undefined = undefined;
-      // for (let i = 0; i < data.length; i++) {
-      //   const item = data[i];
+        let lastItem: XPEvent | undefined = undefined;
 
-      //   const value = calculateValue(item, lastItem, skill);
-      //   seriesData.push([item.timestamp, value]);
-      //   lastItem = item;
-      // }
+        for (const item of trimmedXPEvents) {
+          const value = calculateValue(item, lastItem, skill);
+          seriesData.push([item.timestamp, value]);
+          lastItem = item;
+        }
 
-      for (const item of trimmedXPEvents) {
-        const value = calculateValue(item, lastItem, skill);
-        seriesData.push([item.timestamp, value]);
-        lastItem = item;
+        // Only insert this datapoint if there has been no data for 5 minutes
+        const insertBlankDatapoint =
+          currentTime - lastValue.timestamp > 5 * 60 * 1000;
+
+        return {
+          // The category markLines don't work without this type
+          type: "line",
+          data: insertBlankDatapoint
+            ? [
+                ...seriesData,
+                [currentTime, calculateValue(lastValue, lastValue, skill)],
+              ]
+            : seriesData,
+        };
       }
+    );
 
-      // Only insert this datapoint if there has been no data for 5 minutes
-      const insertBlankDatapoint =
-        currentTime - lastValue.timestamp > 5 * 60 * 1000;
-
-      return {
-        // The category markLines don't work without this type
-        type: "line",
-        data: insertBlankDatapoint
-          ? [
-              ...seriesData,
-              [currentTime, calculateValue(lastValue, lastValue, skill)],
-            ]
-          : seriesData,
-        markLine: {
-          data: markerIndexes.map((xAxis) => ({
-            xAxis,
-            label: {
-              color: textColor,
-              formatter: (params) => {
-                const index: number = (params.data as any).coord[0];
-
-                const item = seriesData[index][0];
-
-                return `Session\n${formatDatetimeNice(new Date(item))}`;
-              },
-              textBorderColor: textColor,
-            },
-          })),
-          // TODO: Add break lines
-          // { xAxis: 200 },
-        },
-      };
-    });
-  }, [displayDeltas, data, textColor]);
+    return {
+      series,
+      markerIndexes,
+    };
+  }, [displayDeltas, data]);
 
   const markArea = useMemo(
     (): MarkAreaComponentOption | undefined =>
@@ -256,6 +147,32 @@ export const XPPage: React.FC<{}> = () => {
           }
         : undefined,
     [activityData]
+  );
+
+  const markLine = useMemo(
+    (): MarkLineComponentOption | undefined =>
+      markerIndexes.length > 0
+        ? {
+            data: markerIndexes.map((xAxis) => ({
+              xAxis,
+              label: {
+                color: textColor,
+                formatter: (params) => {
+                  const index: number = (params.data as any).coord[0];
+
+                  const firstSeries = seriesData[0].data as Array<
+                    [number, number]
+                  >;
+
+                  const timestamp = firstSeries[index][0];
+                  return `Session\n${formatDatetimeNice(new Date(timestamp))}`;
+                },
+                textBorderColor: textColor,
+              },
+            })),
+          }
+        : undefined,
+    [seriesData, markerIndexes, textColor]
   );
 
   const onZoom = useMemo(
@@ -373,6 +290,7 @@ export const XPPage: React.FC<{}> = () => {
                 }
                 options={options}
                 markArea={markArea}
+                markLine={markLine}
                 height={600}
                 onZoom={onZoom}
                 onMarkAreaClick={onMarkAreaClick}
