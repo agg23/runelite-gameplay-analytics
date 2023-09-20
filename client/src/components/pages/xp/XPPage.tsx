@@ -21,7 +21,7 @@ import { SkillFancyCheckbox } from "../../osrs/skills/SkillFancyCheckbox";
 import { ChartPage } from "../../layout/ChartPage";
 import { primaryChartOptions } from "./primaryChart";
 import { useCombinedXPActivity } from "./hooks/useCombinedXPActivity";
-import { formatDatetimeNice } from "../../../util/string";
+import { formatDateToParts, formatDatetimeNice } from "../../../util/string";
 
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
@@ -52,6 +52,7 @@ export const XPPage: React.FC<{}> = () => {
       ? {
           ...primaryChartOptions,
           xAxis: {
+            ...primaryChartOptions.xAxis,
             type: "category",
           },
         }

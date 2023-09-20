@@ -12,7 +12,7 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   hour12: true,
 });
 
-export const formatDatetimeNice = (date: Date): string => {
+export const formatDateToParts = (date: Date) => {
   const parts = dateFormatter.formatToParts(date);
 
   let inHour = false;
@@ -27,6 +27,15 @@ export const formatDatetimeNice = (date: Date): string => {
       dateString += part.value;
     }
   }
+
+  return {
+    hourString,
+    dateString,
+  };
+};
+
+export const formatDatetimeNice = (date: Date): string => {
+  const { hourString, dateString } = formatDateToParts(date);
 
   return `${hourString} on ${dateString}`;
 };
