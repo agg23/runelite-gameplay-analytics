@@ -157,3 +157,43 @@ export interface XPEvent {
   construction: number;
   hunter: number;
 }
+
+export const newXPEvent = (
+  timestamp: number,
+  accountId: string,
+  fromEvent: XPEvent | undefined = undefined
+): XPEvent => ({
+  timestamp,
+  accountId,
+  type: 0,
+
+  changedSkills: 0,
+
+  xpTotal: fromEvent?.xpTotal ?? 0,
+
+  attack: fromEvent?.attack ?? 0,
+  strength: fromEvent?.strength ?? 0,
+  defence: fromEvent?.defence ?? 0,
+  ranged: fromEvent?.ranged ?? 0,
+  prayer: fromEvent?.prayer ?? 0,
+  magic: fromEvent?.magic ?? 0,
+  runecraft: fromEvent?.runecraft ?? 0,
+  hitpoints: fromEvent?.hitpoints ?? 0,
+  crafting: fromEvent?.crafting ?? 0,
+  mining: fromEvent?.mining ?? 0,
+  smithing: fromEvent?.smithing ?? 0,
+  fishing: fromEvent?.fishing ?? 0,
+  cooking: fromEvent?.cooking ?? 0,
+  firemaking: fromEvent?.firemaking ?? 0,
+  woodcutting: fromEvent?.woodcutting ?? 0,
+
+  // Members
+  agility: fromEvent?.agility ?? 0,
+  herblore: fromEvent?.herblore ?? 0,
+  thieving: fromEvent?.thieving ?? 0,
+  fletching: fromEvent?.fletching ?? 0,
+  slayer: fromEvent?.slayer ?? 0,
+  farming: fromEvent?.farming ?? 0,
+  construction: fromEvent?.construction ?? 0,
+  hunter: fromEvent?.hunter ?? 0,
+});

@@ -4,7 +4,6 @@ import type {
   EChartsOption,
   EChartsType,
   MarkAreaComponentOption,
-  MarkLineComponentOption,
   SeriesOption,
 } from "echarts";
 
@@ -12,10 +11,7 @@ import { useStore } from "../../../store/store";
 import { AllSkills } from "../../osrs/skills/AllSkills";
 import { ALL_SKILLS, Skill } from "../../../osrs/types";
 import { EChart } from "../../external/EChart";
-import {
-  useActivityQuery,
-  useXPQuery,
-} from "../../../api/hooks/useDatatypeQuery";
+import { useActivityQuery } from "../../../api/hooks/useDatatypeQuery";
 import { ActivityEvent, XPEvent } from "../../../api/internal/types";
 import { ActivityNavigator } from "./ActivityNavigator";
 import { debounce } from "../../../util/util";
@@ -23,6 +19,7 @@ import { XPTopStats } from "./XPTopStats";
 import { SkillFancyCheckbox } from "../../osrs/skills/SkillFancyCheckbox";
 import { ChartPage } from "../../layout/ChartPage";
 import { primaryChartOptions } from "./primaryChart";
+import { useCombinedXPActivity } from "./hooks/useCombinedXPActivity";
 
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
@@ -38,8 +35,10 @@ export const XPPage: React.FC<{}> = () => {
     toggleSelectedTotalSkills,
   } = useStore((state) => state.xp);
 
-  const { data: xpData, isLoading: isXPLoading } = useXPQuery();
+  // const { data: xpData, isLoading: isXPLoading } = useXPQuery();
   const { data: activityData, isSuccess: activitySuccess } = useActivityQuery();
+
+  const { data, isLoading: isOverallLoading } = useCombinedXPActivity();
 
   const primaryChartRef = useRef<echarts.ECharts>(null);
 
@@ -56,64 +55,176 @@ export const XPPage: React.FC<{}> = () => {
 
   const seriesData = useMemo((): SeriesOption[] => {
     console.log("reload series");
-    if (!xpData || xpData.length < 1) {
+    if (data.length < 1) {
       return [];
     }
 
-    const lastValue = xpData[xpData.length - 1];
+    // const firstValue = xpData[0];
+    // const lastValue = xpData[xpData.length - 1];
+
+    // let recentActivity: ActivityEvent | undefined = undefined;
+    // let recentActivityIndex = 0;
+    // let isInsideActivity = false;
+
+    // // Find first activity that interacts with our data
+    // if (!!activityData) {
+    //   for (let i = 0; i < activityData.length; i++) {
+    //     const activity = activityData[i];
+
+    //     if (activity.endTimestamp >= firstValue.timestamp) {
+    //       // Find first activity that exists within the range of datapoints
+    //       recentActivity = activity;
+    //       recentActivityIndex = i;
+    //       break;
+    //     }
+    //   }
+    // }
+
+    // const data: XPEvent[] = [];
+
+    // let lastItem: XPEvent | undefined = undefined;
+    // // TODO: Only run this on first skill
+    // for (let i = 0; i < xpData.length; i++) {
+    //   const item = xpData[i];
+
+    //   if (
+    //     displayDeltas &&
+    //     !!lastItem &&
+    //     item.timestamp - (lastItem.timestamp ?? item.timestamp) > 7 * 60 * 1000
+    //   ) {
+    //     // If there's greater than a 7 minute gap, insert a synthetic 0 event
+    //     data.push(
+    //       newXPEvent(
+    //         lastItem.timestamp + 5 * 60 * 1000,
+    //         lastItem.accountId,
+    //         item
+    //       )
+    //     );
+    //   }
+
+    //   data.push(item);
+    //   lastItem = item;
+    // }
+
+    // const newData: XPEvent[] = [];
+    // const markerIndexes: number[] = [];
+
+    // for (let i = 0; i < data.length; i++) {
+    //   const item = data[i];
+
+    //   if (!!recentActivity && !!activityData) {
+    //     if (recentActivity.endTimestamp <= item.timestamp) {
+    //       // We've passed the end of this activity. Add marker
+    //       isInsideActivity = false;
+    //       markerIndexes.push(i);
+
+    //       console.log(
+    //         `End at ${item.timestamp} (${formatDatetimeNice(
+    //           new Date(item.timestamp)
+    //         )}). Activity End ${
+    //           recentActivity.endTimestamp
+    //         } (${formatDatetimeNice(new Date(recentActivity.endTimestamp))})`
+    //       );
+
+    //       // This relies on JS not throwing an exception for out of bounds; it will simply be undefined
+    //       recentActivity = activityData[recentActivityIndex + 1];
+    //       recentActivityIndex += 1;
+    //     } else if (
+    //       !isInsideActivity &&
+    //       recentActivity.startTimestamp <= item.timestamp
+    //     ) {
+    //       // We've passed the start of this activity. Enter it
+    //       // We specifically check startTimestamp after end, as we want to close
+    //       // any starting activities wrapping our first datapoint
+    //       isInsideActivity = true;
+    //       markerIndexes.push(i);
+
+    //       console.log(
+    //         `Start at ${item.timestamp} (${formatDatetimeNice(
+    //           new Date(item.timestamp)
+    //         )}). Activity start ${
+    //           recentActivity.startTimestamp
+    //         } (${formatDatetimeNice(new Date(recentActivity.startTimestamp))})`
+    //       );
+    //     }
+    //   }
+
+    //   if (isInsideActivity) {
+    //     newData.push(item);
+    //   }
+    // }
+
+    const trimmedXPEvents: XPEvent[] = [];
+
+    const markerIndexes: number[] = [];
+
+    for (const entry of data) {
+      markerIndexes.push(trimmedXPEvents.length);
+
+      trimmedXPEvents.push(...entry.xpData);
+    }
+
+    const lastValue = trimmedXPEvents[trimmedXPEvents.length - 1];
 
     const currentTime = Date.now();
-
-    // Only insert this datapoint if there has been no data for 5 minutes
-    const insertBlankDatapoint =
-      currentTime - lastValue.timestamp > 5 * 60 * 1000;
 
     const calculateValue = (
       currentDatapoint: XPEvent,
       lastDatapoint: XPEvent | undefined,
       skill: Skill | "xpTotal"
-    ): number =>
-      currentDatapoint[skill] -
-      (displayDeltas ? lastDatapoint?.[skill] ?? currentDatapoint[skill] : 0);
+    ): number => {
+      const currentValue = currentDatapoint[skill];
+
+      if (currentValue === 0) {
+        // No matter what, return 0
+        return 0;
+      }
+
+      return (
+        currentValue -
+        (displayDeltas ? lastDatapoint?.[skill] ?? currentValue : 0)
+      );
+    };
 
     return [...ALL_SKILLS, "xpTotal" as const].map((skill) => {
-      const data: [number, number][] = [];
+      const seriesData: Array<[number, number]> = [];
 
       let lastItem: XPEvent | undefined = undefined;
-      for (const item of xpData) {
-        if (
-          displayDeltas &&
-          !!lastItem &&
-          item.timestamp - (lastItem.timestamp ?? item.timestamp) >
-            7 * 60 * 1000 &&
-          item[skill] !== 0
-        ) {
-          // If there's greater than a 7 minute gap, insert a synthetic 0 event
-          data.push([lastItem.timestamp + 5 * 60 * 1000, 0]);
-        }
+      // for (let i = 0; i < data.length; i++) {
+      //   const item = data[i];
 
-        data.push([item.timestamp, calculateValue(item, lastItem, skill)]);
+      //   const value = calculateValue(item, lastItem, skill);
+      //   seriesData.push([item.timestamp, value]);
+      //   lastItem = item;
+      // }
+
+      for (const item of trimmedXPEvents) {
+        const value = calculateValue(item, lastItem, skill);
+        seriesData.push([item.timestamp, value]);
         lastItem = item;
       }
+
+      // Only insert this datapoint if there has been no data for 5 minutes
+      const insertBlankDatapoint =
+        currentTime - lastValue.timestamp > 5 * 60 * 1000;
 
       return {
         // The category markLines don't work without this type
         type: "line",
         data: insertBlankDatapoint
           ? [
-              ...data,
+              ...seriesData,
               [currentTime, calculateValue(lastValue, lastValue, skill)],
             ]
-          : data,
+          : seriesData,
         markLine: {
-          data: [
-            // TODO: Add break lines
-            { xAxis: 200 },
-          ],
+          data: markerIndexes.map((xAxis) => ({ xAxis })),
+          // TODO: Add break lines
+          // { xAxis: 200 },
         },
       };
     });
-  }, [displayDeltas, xpData]);
+  }, [displayDeltas, data]);
 
   const markArea = useMemo(
     (): MarkAreaComponentOption | undefined =>
@@ -184,7 +295,7 @@ export const XPPage: React.FC<{}> = () => {
 
   return (
     <>
-      <LoadingOverlay visible={isXPLoading} />
+      <LoadingOverlay visible={isOverallLoading} />
       <XPTopStats />
       <div className={classes.chartSettings}>
         <Checkbox
