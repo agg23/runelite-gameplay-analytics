@@ -209,16 +209,17 @@ export const XPPage: React.FC<{}> = () => {
         const { eventStartIndex } = data[i];
 
         if (eventStartIndex === xIndex) {
-          const nextEvent = i + 1 < data.length ? data[i + 1] : undefined;
-
-          if (!nextEvent) {
-            return;
+          let endIndex = 0;
+          if (i + 1 >= data.length) {
+            endIndex = data[i].eventStartIndex + data[i].xpData.length - 1;
+          } else {
+            endIndex = data[i + 1].eventStartIndex;
           }
 
           primaryChartRef.current?.dispatchAction({
             type: "dataZoom",
             startValue: eventStartIndex,
-            endValue: nextEvent.eventStartIndex,
+            endValue: endIndex,
           });
           return;
         }
