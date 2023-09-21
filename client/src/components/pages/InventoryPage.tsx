@@ -54,11 +54,6 @@ export const InventoryPage: React.FC<{}> = () => {
   return (
     <ErrorBoundary fallback={<div>An error occured</div>}>
       <LoadingOverlay visible={query.isLoading} />
-      {/* <Chart
-          height="200"
-          series={chartData as ApexAxisChartSeries}
-          options={options}
-        /> */}
       <Timeline
         events={chartData}
         lanes={[

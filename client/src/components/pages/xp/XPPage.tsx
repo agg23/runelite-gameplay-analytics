@@ -11,7 +11,7 @@ import type {
 import { useStore } from "../../../store/store";
 import { AllSkills } from "../../osrs/skills/AllSkills";
 import { ALL_SKILLS, Skill } from "../../../osrs/types";
-import { EChart } from "../../external/EChart";
+import { EChart } from "../../charting/EChart";
 import { useActivityQuery } from "../../../api/hooks/useDatatypeQuery";
 import { ActivityEvent, XPEvent } from "../../../api/internal/types";
 import { ActivityNavigator } from "./ActivityNavigator";
@@ -295,6 +295,7 @@ export const XPPage: React.FC<{}> = () => {
                 options={options}
                 markArea={markArea}
                 markLine={markLine}
+                showZoomOnlyAll={showOnlyPlaytime}
                 height={600}
                 onZoom={onZoom}
                 onMarkAreaClick={onMarkAreaClick}

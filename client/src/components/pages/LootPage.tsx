@@ -3,7 +3,6 @@ import { LoadingOverlay, createStyles } from "@mantine/core";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useStore } from "../../store/store";
-import { ApexOptions } from "apexcharts";
 import { Timeline } from "react-svg-timeline";
 import { LootEvent } from "../../api/internal/types";
 import { NPC } from "../osrs/npc/NPC";
@@ -42,11 +41,6 @@ export const LootPage: React.FC<{}> = () => {
   return (
     <ErrorBoundary fallback={<div>An error occured</div>}>
       <LoadingOverlay visible={query.isLoading} />
-      {/* <Chart
-          height="200"
-          series={chartData as ApexAxisChartSeries}
-          options={options}
-        /> */}
       <Timeline
         events={chartData}
         lanes={[
@@ -86,15 +80,3 @@ export const LootPage: React.FC<{}> = () => {
 };
 
 const useStyles = createStyles((theme) => ({}));
-
-const options: ApexOptions = {
-  chart: {
-    height: "200px",
-  },
-  xaxis: {
-    type: "datetime",
-    title: {
-      text: "Timestamp",
-    },
-  },
-};

@@ -7,7 +7,7 @@ import {
   useBankQuery,
   useInventoryQuery,
 } from "../../../api/hooks/useDatatypeQuery";
-import { EChart } from "../../external/EChart";
+import { EChart } from "../../charting/EChart";
 import { ChartPage } from "../../layout/ChartPage";
 import { primaryChartOptions } from "./primaryChart";
 import { StorageAPIEvent } from "../../../api/internal/types";

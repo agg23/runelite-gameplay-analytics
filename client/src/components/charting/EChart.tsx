@@ -17,6 +17,8 @@ import type {
   MarkLineComponentOption,
 } from "echarts";
 import "echarts/lib/component/markLine";
+import { createStyles } from "@mantine/core";
+import { ZoomControls } from "./ZoomControls";
 
 interface EChartProps {
   options: EChartsOption;
@@ -25,6 +27,11 @@ interface EChartProps {
   activeSeries?: Set<string>;
   markArea?: MarkAreaComponentOption | undefined;
   markLine?: MarkLineComponentOption | undefined;
+
+  /**
+   * If true, show only the `All` option in the chart's zoom buttons
+   */
+  showZoomOnlyAll?: boolean;
 
   height?: number | string;
 
@@ -41,6 +48,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       activeSeries,
       markArea,
       markLine,
+      showZoomOnlyAll,
       height,
       onMarkAreaClick,
       onMarkLineClick,
@@ -102,6 +110,109 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       // We purposefully don't update options.series, just using the initial value
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeSeries, markArea, markLine, data]);
+
+    const onZoomClick = (variant: "all" | "zoomout" | "1d" | "1w" | "1m") => {
+      if (series.length < 1) {
+        return;
+      }
+
+      const data = series[0].data as Array<[number, number]>;
+
+      if (data.length < 1) {
+        return;
+      }
+
+      const firstTimestamp = data[0][0];
+      const lastTimestamp = data[data.length - 1][0];
+
+      const totalPeriodInData = lastTimestamp - firstTimestamp;
+
+      const oldDataZoom: InsideDataZoomComponentOption | undefined = (
+        internalRef.current?.getOption().dataZoom as any
+      )?.[0];
+
+      let desiredTimepan = 0;
+      switch (variant) {
+        case "all": {
+          desiredTimepan = totalPeriodInData;
+          break;
+        }
+        case "zoomout": {
+          if (
+            !oldDataZoom ||
+            oldDataZoom.start === undefined ||
+            oldDataZoom.end === undefined
+          ) {
+            return;
+          }
+
+          internalRef.current?.setOption({
+            dataZoom: {
+              start: Math.max(oldDataZoom.start - 5, 0),
+              end: Math.min(oldDataZoom.end + 5, 100),
+            },
+          });
+
+          return;
+        }
+        case "1d": {
+          desiredTimepan = 24 * 60 * 60 * 1000;
+          break;
+        }
+        case "1w": {
+          desiredTimepan = 7 * 24 * 60 * 60 * 1000;
+          break;
+        }
+        case "1m": {
+          desiredTimepan = 30 * 24 * 60 * 60 * 1000;
+          break;
+        }
+      }
+
+      const percentOfTotal = (desiredTimepan / totalPeriodInData) * 100;
+      let centerPercentOfTotal;
+
+      if (
+        oldDataZoom &&
+        oldDataZoom.start !== undefined &&
+        oldDataZoom.end !== undefined
+      ) {
+        if (oldDataZoom.end >= 99) {
+          // If end bound is within 1% of trailing edge, keep the zoom locked to that edge
+          centerPercentOfTotal = 100 - percentOfTotal / 2;
+        } else {
+          centerPercentOfTotal =
+            oldDataZoom.start + (oldDataZoom.end - oldDataZoom.start) / 2;
+        }
+      } else {
+        // No existing zoom for some reason
+        // Snap to trailing edge
+        centerPercentOfTotal = 100 - percentOfTotal / 2;
+      }
+
+      const lowerBound = centerPercentOfTotal - percentOfTotal / 2;
+      const underfill = lowerBound < 0 ? -lowerBound : 0;
+
+      const upperBound = centerPercentOfTotal + percentOfTotal / 2;
+      const overfill = upperBound > 100 ? upperBound - 100 : 0;
+
+      internalRef.current?.setOption({
+        dataZoom: {
+          start:
+            percentOfTotal === 100
+              ? 0
+              : // If we went off of the trailing edge, subtract that lost length here
+                Math.max(lowerBound - overfill, 0),
+          end:
+            percentOfTotal === 100
+              ? 100
+              : // If we went off of the leading edge, add that lost length here
+                Math.min(upperBound + underfill, 100),
+        },
+      });
+    };
+
+    const { classes } = useStyles();
 
     useEffect(() => {
       console.log(
@@ -285,12 +396,30 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
     }, []);
 
     return (
-      <div
-        ref={elementRef}
-        style={{
-          height,
-        }}
-      ></div>
+      <div className={classes.chartWrapper}>
+        <div className={classes.controls}>
+          <ZoomControls showOnlyAll={showZoomOnlyAll} onClick={onZoomClick} />
+        </div>
+        <div
+          ref={elementRef}
+          style={{
+            height,
+          }}
+        ></div>
+      </div>
     );
   }
 );
+
+const useStyles = createStyles(() => ({
+  chartWrapper: {
+    position: "relative",
+  },
+  controls: {
+    position: "absolute",
+
+    right: 10,
+    // For some reason necessary to cover the chart, which doesn't have z-index set
+    zIndex: 1,
+  },
+}));
