@@ -127,11 +127,10 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
           end = oldDataZoom.end + (delta / 2) * directionMultiplier;
         }
 
-        internalRef.current?.setOption({
-          dataZoom: {
-            start: Math.max(start, 0),
-            end: Math.min(end, 100),
-          },
+        internalRef.current?.dispatchAction({
+          type: "dataZoom",
+          start: Math.max(start, 0),
+          end: Math.min(end, 100),
         });
 
         return;
@@ -195,19 +194,18 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       const upperBound = centerPercentOfTotal + percentOfTotal / 2;
       const overfill = upperBound > 100 ? upperBound - 100 : 0;
 
-      internalRef.current?.setOption({
-        dataZoom: {
-          start:
-            percentOfTotal === 100
-              ? 0
-              : // If we went off of the trailing edge, subtract that lost length here
-                Math.max(lowerBound - overfill, 0),
-          end:
-            percentOfTotal === 100
-              ? 100
-              : // If we went off of the leading edge, add that lost length here
-                Math.min(upperBound + underfill, 100),
-        },
+      internalRef.current?.dispatchAction({
+        type: "dataZoom",
+        start:
+          percentOfTotal === 100
+            ? 0
+            : // If we went off of the trailing edge, subtract that lost length here
+              Math.max(lowerBound - overfill, 0),
+        end:
+          percentOfTotal === 100
+            ? 100
+            : // If we went off of the leading edge, add that lost length here
+              Math.min(upperBound + underfill, 100),
       });
     };
 
