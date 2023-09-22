@@ -34,8 +34,6 @@ export const useCombinedXPActivity = () => {
 
     let lastEvent: XPEvent | undefined = undefined;
 
-    console.log("Length", xpData.length);
-
     let i = 0;
     let totalEventCount = 0;
     for (const activity of activityData) {

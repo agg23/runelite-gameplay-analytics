@@ -180,10 +180,28 @@ export const XPPage: React.FC<{}> = () => {
   const onZoom = useMemo(
     () =>
       debounce((startValue: number, endValue: number) => {
-        setSelectedTimespan(Math.round(startValue), Math.round(endValue));
+        if (showOnlyPlaytime) {
+          // Categories, so we are indexing the data
+          if (seriesData.length < 1) {
+            return;
+          }
+
+          // We can just look in the first series; we just need the timestamp
+          const start = (seriesData[0].data as Array<[number, number]>)[
+            startValue
+          ][0];
+
+          const end = (seriesData[0].data as Array<[number, number]>)[
+            endValue
+          ][0];
+
+          setSelectedTimespan(start, end);
+        } else {
+          setSelectedTimespan(Math.round(startValue), Math.round(endValue));
+        }
       }, 250),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [seriesData, showOnlyPlaytime]
   );
 
   const onMarkAreaClick = useCallback(
