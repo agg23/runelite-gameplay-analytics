@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { LoadingOverlay, createStyles } from "@mantine/core";
+import { LoadingOverlay } from "@mantine/core";
 import { ErrorBoundary } from "react-error-boundary";
 
 import { useStore } from "../../store/store";
@@ -78,5 +78,3 @@ export const LootPage: React.FC<{}> = () => {
     </ErrorBoundary>
   );
 };
-
-const useStyles = createStyles((theme) => ({}));

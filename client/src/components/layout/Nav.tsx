@@ -1,29 +1,23 @@
-import React from "react";
-import { Navbar, createStyles } from "@mantine/core";
+import { AppShell } from "@mantine/core";
+
 import { NavHeader } from "./NavHeader";
 import { NavLinks } from "./NavLinks";
 import { NavAccountSelector } from "./NavAccountSelector";
 
-export const Nav: React.FC<{}> = () => {
-  const { classes } = useStyles();
+import classes from "./Nav.module.scss";
 
+export const Nav: React.FC<{}> = () => {
   return (
-    <Navbar className={classes.nav} p="xs" width={{ base: 200 }}>
-      <Navbar.Section>
+    <AppShell.Navbar className={classes.nav} p="xs">
+      <AppShell.Section>
         <NavHeader />
-      </Navbar.Section>
-      <Navbar.Section grow mt="md">
+      </AppShell.Section>
+      <AppShell.Section grow mt="md">
         <NavLinks />
-      </Navbar.Section>
-      <Navbar.Section>
+      </AppShell.Section>
+      <AppShell.Section>
         <NavAccountSelector />
-      </Navbar.Section>
-    </Navbar>
+      </AppShell.Section>
+    </AppShell.Navbar>
   );
 };
-
-const useStyles = createStyles((theme) => ({
-  nav: {
-    zIndex: 0,
-  },
-}));

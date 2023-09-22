@@ -1,35 +1,24 @@
 /** @jsxImportSource @emotion/react */
 import React from "react";
 import { Nav } from "./Nav";
-import { createStyles } from "@mantine/core";
 import { ErrorBoundary } from "react-error-boundary";
 
-export const Page: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
-  const { classes } = useStyles();
+import classes from "./Page.module.scss";
+import { AppShell } from "@mantine/core";
 
+export const Page: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   return (
     <div className={classes.page}>
-      <Nav />
-      <div className={classes.content}>
-        <ErrorBoundary fallback={<div>An error occured</div>}>
-          {children}
-        </ErrorBoundary>
-      </div>
+      <AppShell navbar={{ width: 180, breakpoint: "sm" }}>
+        <Nav />
+        <AppShell.Main>
+          <div className={classes.content}>
+            <ErrorBoundary fallback={<div>An error occured</div>}>
+              {children}
+            </ErrorBoundary>
+          </div>
+        </AppShell.Main>
+      </AppShell>
     </div>
   );
 };
-
-const useStyles = createStyles((theme) => ({
-  page: {
-    display: "flex",
-  },
-  content: {
-    // Has to be relative so LoadingOverlay is centered in main content
-    position: "relative",
-    flexGrow: 1,
-
-    marginTop: theme.spacing.md,
-    marginLeft: theme.spacing.xs,
-    marginRight: theme.spacing.xs,
-  },
-}));

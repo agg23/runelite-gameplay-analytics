@@ -1,7 +1,11 @@
-import { Loader, Popover, createStyles } from "@mantine/core";
-import { HOSTNAME } from "../../../api/internal/config";
+import { Loader, Popover } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import clsx from "clsx";
+
+import { HOSTNAME } from "../../../api/internal/config";
 import { useItemQuery } from "../../../api/hooks/useDatatypeQuery";
+
+import classes from "./Item.module.scss";
 
 interface ItemProps {
   id: number;
@@ -21,13 +25,11 @@ export const Item: React.FC<ItemProps> = ({
 
   const name = query.isSuccess ? query.data.name : "Loading";
 
-  const { classes, cx } = useStyles();
-
   return (
     <Popover opened={opened}>
       <Popover.Target>
         <div
-          className={cx(classes.item, {
+          className={clsx(classes.item, {
             [classes.activeItem]: !empty,
           })}
           onMouseEnter={!empty ? open : undefined}
@@ -60,22 +62,3 @@ export const Item: React.FC<ItemProps> = ({
     </Popover>
   );
 };
-
-const useStyles = createStyles((theme) => ({
-  item: {
-    height: 36,
-    width: 36,
-  },
-  activeItem: {
-    ":hover": {
-      // TODO: This could probably be chosen within the theme
-      backgroundColor: "rgba(0, 0, 0, 0.2)",
-      borderRadius: 4,
-    },
-  },
-  quantity: {
-    position: "absolute",
-    fontSize: 12,
-    color: "yellow",
-  },
-}));

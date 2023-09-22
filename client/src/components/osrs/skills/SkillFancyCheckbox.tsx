@@ -1,7 +1,8 @@
-import { createStyles } from "@mantine/core";
 import { FancyCheckbox, FancyCheckboxProps } from "./FancyCheckbox";
 import { Skill } from "../../../osrs/types";
 import { skillImageUrl } from "./shared";
+
+import classes from "./SkillFancyCheckbox.module.scss";
 
 interface SkillFancyCheckboxProps
   extends Omit<FancyCheckboxProps, "onChange" | "image" | "description"> {
@@ -19,8 +20,6 @@ export const SkillFancyCheckbox: React.FC<SkillFancyCheckboxProps> = ({
   onChange,
   ...props
 }) => {
-  const { classes } = useStyles();
-
   return (
     <FancyCheckbox
       {...props}
@@ -35,9 +34,3 @@ export const SkillFancyCheckbox: React.FC<SkillFancyCheckboxProps> = ({
     />
   );
 };
-
-const useStyles = createStyles(() => ({
-  checkbox: {
-    height: "2.5rem",
-  },
-}));

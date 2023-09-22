@@ -3,14 +3,14 @@ import { StateSliceCreator } from "./types";
 export interface SettingsState {
   darkTheme: boolean;
 
-  setDarkTheme: (value: boolean) => void;
+  toggleDarkTheme: () => void;
 }
 
 export const createSettingsSlice: StateSliceCreator<SettingsState> = (set) => ({
   darkTheme: true,
 
-  setDarkTheme: (value) =>
+  toggleDarkTheme: () =>
     set((existing) => {
-      existing.settings.darkTheme = value;
+      existing.settings.darkTheme = !existing.settings.darkTheme;
     }),
 });

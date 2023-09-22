@@ -1,7 +1,10 @@
-import { SimpleGrid, createStyles } from "@mantine/core";
+import { useMemo } from "react";
+import { SimpleGrid } from "@mantine/core";
+
 import { Item } from "./Item";
 import { StorageEntry } from "../../../api/internal/types";
-import { useMemo } from "react";
+
+import classes from "./InventoryGrid.module.scss";
 
 interface InventoryGridProps {
   entries: StorageEntry[];
@@ -26,8 +29,6 @@ export const InventoryGrid: React.FC<InventoryGridProps> = ({ entries }) => {
     return array;
   }, [entries]);
 
-  const { classes } = useStyles();
-
   return (
     <SimpleGrid className={classes.grid} cols={4}>
       {orderedSlots.map((entry, index) =>
@@ -45,10 +46,3 @@ export const InventoryGrid: React.FC<InventoryGridProps> = ({ entries }) => {
     </SimpleGrid>
   );
 };
-
-const useStyles = createStyles((theme) => ({
-  grid: {
-    width: 160,
-    rowGap: "0.5rem",
-  },
-}));

@@ -1,13 +1,16 @@
 import { useMemo } from "react";
+import { Image, Tooltip, Text } from "@mantine/core";
+import { intlFormatDistance } from "date-fns";
+
 import { GEEvent } from "../../../api/internal/types";
 import {
   capitalizeFirstLetter,
   formatDatetimeNice,
   formatNumber,
 } from "../../../util/string";
-import { Image, Tooltip, Text, createStyles } from "@mantine/core";
 import { useItemQuery } from "../../../api/hooks/useDatatypeQuery";
-import { intlFormatDistance } from "date-fns";
+
+import classes from "./GEItem.module.scss";
 
 interface GEItemRowProps {
   event: GEEvent;
@@ -62,8 +65,6 @@ export const GEItemRow: React.FC<GEItemRowProps> = ({ event }) => {
     purchaseMessage += " (cancelled)";
   }
 
-  const { classes } = useStyles();
-
   return (
     <tr className={classes.row}>
       <td className={classes.image}>
@@ -109,20 +110,3 @@ export const GEItemRow: React.FC<GEItemRowProps> = ({ event }) => {
     </tr>
   );
 };
-
-const useStyles = createStyles(() => ({
-  row: {
-    textAlign: "left",
-  },
-
-  image: {
-    width: 45,
-
-    img: {
-      height: 45,
-    },
-  },
-  name: {
-    width: 200,
-  },
-}));

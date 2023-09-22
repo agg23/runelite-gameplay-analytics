@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { Checkbox, LoadingOverlay, createStyles } from "@mantine/core";
+import { Checkbox, LoadingOverlay } from "@mantine/core";
 import type {
   EChartsOption,
   EChartsType,
@@ -23,6 +23,8 @@ import { primaryChartOptions } from "./primaryChart";
 import { useCombinedXPActivity } from "./hooks/useCombinedXPActivity";
 import { formatDateToParts, formatDatetimeNice } from "../../../util/string";
 
+import classes from "./XPPage.module.scss";
+
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
 export const XPPage: React.FC<{}> = () => {
@@ -43,9 +45,6 @@ export const XPPage: React.FC<{}> = () => {
   const { data, isLoading: isOverallLoading } = useCombinedXPActivity();
 
   const primaryChartRef = useRef<echarts.ECharts>(null);
-
-  const { classes, theme } = useStyles();
-  const textColor = theme.colorScheme === "dark" ? theme.white : theme.black;
 
   const options = useMemo((): EChartsOption => {
     return showOnlyPlaytime
@@ -158,7 +157,7 @@ export const XPPage: React.FC<{}> = () => {
             data: markerIndexes.map((xAxis) => ({
               xAxis,
               label: {
-                color: textColor,
+                color: "var(--mantine-color-text)",
                 formatter: (params) => {
                   const index: number = (params.data as any).coord[0];
 
@@ -169,13 +168,13 @@ export const XPPage: React.FC<{}> = () => {
                   const timestamp = firstSeries[index][0];
                   return `Session\n${formatDatetimeNice(new Date(timestamp))}`;
                 },
-                textBorderColor: textColor,
+                textBorderColor: "var(--mantine-color-text)",
               },
             })),
             symbol: ["none", "none"],
           }
         : undefined,
-    [seriesData, markerIndexes, textColor]
+    [seriesData, markerIndexes]
   );
 
   const onZoom = useMemo(
@@ -343,22 +342,6 @@ export const XPPage: React.FC<{}> = () => {
     </>
   );
 };
-
-const useStyles = createStyles((theme) => ({
-  chartSettings: {
-    margin: theme.spacing.md,
-  },
-  chartManualSettings: {
-    marginBottom: theme.spacing.md,
-  },
-  allSkills: {
-    width: 550,
-
-    "& > div": {
-      marginTop: theme.spacing.md,
-    },
-  },
-}));
 
 const selectActivitySpan = (
   activity: ActivityEvent,

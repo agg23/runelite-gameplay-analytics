@@ -1,0 +1,53 @@
+.button.button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  transition: background-color 150ms ease, border-color 150ms ease;
+  border-radius: var(--mantine-radius-sm);
+  padding: var(--mantine-spacing-sm);
+  border: 1px solid var(--mantine-color-gray-3);
+  background-color: var(--mantine-color-dark-8);
+  
+  [data-mantine-color-scheme='dark'] & {
+    border-color: var(--mantine-color-dark-8);
+    background-color: var(--mantine-color-dark-8);
+  }
+
+  &[data-checked] {
+    border-color: var(--mantine-color-blue-filled);
+    background-color: var(--mantine-color-blue-light);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    pointer-events: none;
+    background-color: var(--mantine-color-gray-2);
+    border-color: var(--mantine-color-gray-light-color);
+
+    [data-mantine-color-scheme='dark'] & {
+      background-color: var(--mantine-color-dark-filled);
+      border-color: var(--mantine-color-dark-filled-hover);
+    }
+
+    & img:global(.mantine-Image-root) {
+      filter: brightness(50%);
+    }
+
+    & :global(.mantine-Text-root) {
+      color: var(--mantine-color-gray-5);
+
+      [data-mantine-color-scheme='dark'] & {
+        color: var(--mantine-color-dark-4);
+      }
+    }
+  }
+}
+
+.text {
+  line-height: 1;
+}
+
+.body {
+  flex: 1;
+  margin-left: var(--mantine-spacing-xs);
+}

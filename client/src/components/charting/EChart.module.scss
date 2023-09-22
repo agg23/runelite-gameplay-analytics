@@ -1,0 +1,11 @@
+.chartWrapper {
+  position: relative;
+}
+
+.controls {
+  position: absolute;
+
+  right: 10px;
+  // For some reason necessary to cover the chart, which doesn't have z-index set
+  z-index: 1;
+}

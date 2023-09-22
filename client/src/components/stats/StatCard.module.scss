@@ -1,0 +1,29 @@
+.root {
+  padding: calc(var(--mantine-spacing-xl) * 1.5);
+}
+
+.value.value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.diff {
+  display: flex;
+
+  align-items: center;
+
+  line-height: 1;
+}
+
+.icon {
+  color: "--mantine-color-nav-hover"
+    // theme.colorScheme === "dark"
+    //   ? theme.colors.dark[3]
+    //   : theme.colors.gray[4],
+}
+
+.title {
+  font-weight: 700;
+  text-transform: uppercase;
+}

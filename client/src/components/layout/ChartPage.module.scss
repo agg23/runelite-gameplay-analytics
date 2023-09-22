@@ -1,0 +1,13 @@
+.chartWrapper {
+  display: grid;
+  grid-template-columns: 1fr 550px;
+  column-gap: var(--mantine-spacing-md);
+
+  height: 600;
+
+  padding: var(--mantine-spacing-md);
+}
+
+.chartSettings {
+  margin: var(--mantine-spacing-md);
+}

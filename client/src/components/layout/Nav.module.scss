@@ -1,0 +1,26 @@
+.nav {
+  width: 200px;
+
+  z-index: 0;
+}
+
+.link {
+  text-decoration: none;
+}
+
+// Mantine's styles are generally higher priority due to stylesheet order. This increases specificity to bypass that
+.navButton.navButton {
+  display: block;
+  width: 100%;
+  padding: var(--mantine-spacing-xs);
+  border-radius: var(--mantine-radius-sm);
+  color: var(--mantine-color-text);
+
+  &:hover {
+    background-color: var(--mantine-color-nav-hover);
+  }
+}
+
+.active.active {
+  background-color:var(--mantine-color-nav-active);
+}

@@ -19,6 +19,7 @@ import type {
 import "echarts/lib/component/markLine";
 import { createStyles } from "@mantine/core";
 import { ZoomControls } from "./ZoomControls";
+import classes from "./EChart.module.scss";
 
 interface EChartProps {
   options: EChartsOption;
@@ -212,8 +213,6 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       });
     };
 
-    const { classes } = useStyles();
-
     useEffect(() => {
       console.log(
         "Attempting data render with",
@@ -397,9 +396,11 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
 
     return (
       <div className={classes.chartWrapper}>
-        <div className={classes.controls}>
-          <ZoomControls showOnlyAll={showZoomOnlyAll} onClick={onZoomClick} />
-        </div>
+        <ZoomControls
+          className={classes.controls}
+          showOnlyAll={showZoomOnlyAll}
+          onClick={onZoomClick}
+        />
         <div
           ref={elementRef}
           style={{
@@ -410,16 +411,3 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
     );
   }
 );
-
-const useStyles = createStyles(() => ({
-  chartWrapper: {
-    position: "relative",
-  },
-  controls: {
-    position: "absolute",
-
-    right: 10,
-    // For some reason necessary to cover the chart, which doesn't have z-index set
-    zIndex: 1,
-  },
-}));

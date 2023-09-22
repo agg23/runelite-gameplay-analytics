@@ -1,12 +1,7 @@
-import { Image, ImageProps, createStyles } from "@mantine/core";
+import { Image, ImageProps } from "@mantine/core";
 
-export const PixelatedImage: React.FC<ImageProps> = (props) => {
-  const { classes } = useStyles();
-  return <Image className={classes.pixelatedImage} {...props} />;
-};
+import classes from "./PixelatedImage.module.scss";
 
-const useStyles = createStyles((theme) => ({
-  pixelatedImage: {
-    imageRendering: "pixelated",
-  },
-}));
+export const PixelatedImage: React.FC<ImageProps> = (props) => (
+  <Image className={classes.pixelatedImage} {...props} />
+);

@@ -1,0 +1,15 @@
+.chartSettings {
+  margin: var(--mantine-spacing-md);
+}
+
+.chartManualSettings {
+  margin-bottom: var(--mantine-spacing-md);
+}
+
+.allSkills {
+  width: 550px;
+
+  & > div {
+    margin-top: var(--mantine-spacing-md);
+  }
+}

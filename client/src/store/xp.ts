@@ -31,7 +31,7 @@ export const createXPSlice: StateSliceCreator<XPState> = (set, get) => ({
     set: allSkillsSet,
   },
   displayDeltas: true,
-  showOnlyPlaytime: false,
+  showOnlyPlaytime: true,
 
   chart: {
     // Default to now, but will reset when data arrives

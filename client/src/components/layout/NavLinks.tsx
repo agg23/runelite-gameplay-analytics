@@ -1,10 +1,11 @@
-import { Group, UnstyledButton, Text, createStyles } from "@mantine/core";
+import { Group, UnstyledButton, Text } from "@mantine/core";
 import { Link, RegisteredRouter, RoutePaths } from "@tanstack/react-router";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
+import clsx from "clsx";
+
+import classes from "./Nav.module.scss";
 
 export const NavLinks: React.FC<{}> = () => {
-  const { classes } = useStyles();
-
   const links = useMemo(
     (): Array<{
       label: string;
@@ -53,42 +54,14 @@ export const NavLinks: React.FC<{}> = () => {
   );
 };
 
-const useStyles = createStyles((theme) => ({
-  link: {
-    textDecoration: "none",
-  },
-  button: {
-    display: "block",
-    width: "100%",
-    padding: theme.spacing.xs,
-    borderRadius: theme.radius.sm,
-    color: theme.colorScheme === "dark" ? theme.colors.dark[0] : theme.black,
-
-    "&:hover": {
-      backgroundColor:
-        theme.colorScheme === "dark"
-          ? theme.colors.dark[4]
-          : theme.colors.gray[3],
-    },
-  },
-  active: {
-    backgroundColor:
-      theme.colorScheme === "dark"
-        ? theme.colors.dark[5]
-        : theme.colors.gray[2],
-  },
-}));
-
 const NavLink: React.FC<{
   label: string;
   active?: boolean;
   onClick?: () => void;
 }> = ({ label, active, onClick }) => {
-  const { classes, cx } = useStyles();
-
   return (
     <UnstyledButton
-      className={cx(classes.button, {
+      className={clsx(classes.navButton, {
         [classes.active]: active,
       })}
       onClick={onClick}

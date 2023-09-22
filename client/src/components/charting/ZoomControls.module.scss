@@ -1,0 +1,11 @@
+.zoomControls {
+  display: flex;
+
+  column-gap: 8px;
+}
+
+.buttonGroup.buttonGroup {
+  span {
+    color: --mangine-color-dark-2;
+  }
+}

@@ -1,28 +1,36 @@
-import { Button, createStyles } from "@mantine/core";
+import { ActionIcon, Button } from "@mantine/core";
+import { IconPlus, IconMinus } from "@tabler/icons-react";
+import clsx from "clsx";
+
+import classes from "./ZoomControls.module.scss";
 
 interface ZoomControlsProps {
+  className?: string;
+
   showOnlyAll?: boolean;
 
   onClick: (variant: "all" | "zoomout" | "1d" | "1w" | "1m") => void;
 }
 
 export const ZoomControls: React.FC<ZoomControlsProps> = ({
+  className,
   showOnlyAll,
   onClick,
 }) => {
-  const { classes } = useStyles();
-
   return (
-    <div>
-      <Button.Group className={classes.buttonGroup}>
-        <Button
+    <div className={clsx(classes.zoomControls, className)}>
+      <ActionIcon.Group className={classes.buttonGroup}>
+        <ActionIcon
           variant="default"
           size="compact-sm"
           onClick={() => onClick("zoomout")}
         >
-          Zoom Out
-        </Button>
-      </Button.Group>
+          <IconMinus />
+        </ActionIcon>
+        <ActionIcon variant="default" size="compact-sm">
+          <IconPlus />
+        </ActionIcon>
+      </ActionIcon.Group>
       <Button.Group className={classes.buttonGroup}>
         {/* For some reason default variant is needed for proper grouped styles */}
         <Button
@@ -61,15 +69,3 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({
     </div>
   );
 };
-
-const useStyles = createStyles((theme) => ({
-  buttonGroup: {
-    display: "inline-block",
-
-    marginLeft: 8,
-
-    span: {
-      color: theme.colors.dark[2],
-    },
-  },
-}));
