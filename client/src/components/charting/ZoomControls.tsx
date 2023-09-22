@@ -4,12 +4,20 @@ import clsx from "clsx";
 
 import classes from "./ZoomControls.module.scss";
 
+export type ZoomClickVariant =
+  | "all"
+  | "zoomout"
+  | "zoomin"
+  | "1d"
+  | "1w"
+  | "1m";
+
 interface ZoomControlsProps {
   className?: string;
 
   showOnlyAll?: boolean;
 
-  onClick: (variant: "all" | "zoomout" | "1d" | "1w" | "1m") => void;
+  onClick: (variant: ZoomClickVariant) => void;
 }
 
 export const ZoomControls: React.FC<ZoomControlsProps> = ({
@@ -27,7 +35,11 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({
         >
           <IconMinus />
         </ActionIcon>
-        <ActionIcon variant="default" size="compact-sm">
+        <ActionIcon
+          variant="default"
+          size="compact-sm"
+          onClick={() => onClick("zoomin")}
+        >
           <IconPlus />
         </ActionIcon>
       </ActionIcon.Group>

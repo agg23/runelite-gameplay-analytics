@@ -2,7 +2,6 @@ import {
   MutableRefObject,
   forwardRef,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -16,10 +15,11 @@ import type {
   MarkAreaComponentOption,
   MarkLineComponentOption,
 } from "echarts";
-import "echarts/lib/component/markLine";
-import { createStyles } from "@mantine/core";
-import { ZoomControls } from "./ZoomControls";
+import { ZoomClickVariant, ZoomControls } from "./ZoomControls";
+import { useSeriesWithMarkings } from "./hooks/useSeriesWithMarkings";
+
 import classes from "./EChart.module.scss";
+import { assertUnreachable } from "../../util/error";
 
 interface EChartProps {
   options: EChartsOption;
@@ -66,53 +66,14 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
     // Track when ref has the chart object
     const [isChartSet, setIsChartSet] = useState(false);
 
-    const { series, seriesNames } = useMemo(() => {
-      if (!data) {
-        return { series: [], seriesNames: [] };
-      }
+    const { series, seriesNames } = useSeriesWithMarkings(
+      data,
+      activeSeries,
+      markArea,
+      markLine
+    );
 
-      const seriesArray = Array.isArray(data)
-        ? data
-        : data !== undefined
-        ? [data]
-        : [];
-
-      const series: SeriesOption[] = [];
-      const seriesNames: Array<string | undefined> = [];
-      let isFirst = true;
-
-      for (const seriesItem of seriesArray) {
-        const active = seriesItem.name
-          ? activeSeries?.has(seriesItem.name as string)
-          : false;
-
-        series.push(
-          isFirst && active
-            ? {
-                ...seriesItem,
-                markLine,
-                markArea,
-              }
-            : seriesItem
-        );
-
-        seriesNames.push(seriesItem.name as string);
-
-        if (active) {
-          isFirst = false;
-        }
-      }
-
-      return {
-        series,
-        seriesNames,
-      };
-
-      // We purposefully don't update options.series, just using the initial value
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [activeSeries, markArea, markLine, data]);
-
-    const onZoomClick = (variant: "all" | "zoomout" | "1d" | "1w" | "1m") => {
+    const onZoomClick = (variant: ZoomClickVariant) => {
       if (series.length < 1) {
         return;
       }
@@ -132,6 +93,50 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         internalRef.current?.getOption().dataZoom as any
       )?.[0];
 
+      const dynamicZoom = (zoomIn: boolean) => {
+        if (
+          !oldDataZoom ||
+          oldDataZoom.start === undefined ||
+          oldDataZoom.end === undefined
+        ) {
+          return;
+        }
+
+        const directionMultiplier = zoomIn ? -1 : 1;
+
+        const distance = oldDataZoom.end - oldDataZoom.start;
+
+        let delta: number;
+
+        if (distance > 20) {
+          delta = 10;
+        } else {
+          delta = distance * 0.4;
+        }
+
+        let start: number;
+        let end: number;
+
+        if (oldDataZoom.end >= 99 && oldDataZoom.start > 1) {
+          // If end bound is within 1% of trailing edge, and start bound is not within 1% of leading edge,
+          // keep the zoom locked to that edge
+          start = oldDataZoom.start - delta * directionMultiplier;
+          end = 100;
+        } else {
+          start = oldDataZoom.start - (delta / 2) * directionMultiplier;
+          end = oldDataZoom.end + (delta / 2) * directionMultiplier;
+        }
+
+        internalRef.current?.setOption({
+          dataZoom: {
+            start: Math.max(start, 0),
+            end: Math.min(end, 100),
+          },
+        });
+
+        return;
+      };
+
       let desiredTimepan = 0;
       switch (variant) {
         case "all": {
@@ -139,21 +144,11 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
           break;
         }
         case "zoomout": {
-          if (
-            !oldDataZoom ||
-            oldDataZoom.start === undefined ||
-            oldDataZoom.end === undefined
-          ) {
-            return;
-          }
-
-          internalRef.current?.setOption({
-            dataZoom: {
-              start: Math.max(oldDataZoom.start - 5, 0),
-              end: Math.min(oldDataZoom.end + 5, 100),
-            },
-          });
-
+          dynamicZoom(false);
+          return;
+        }
+        case "zoomin": {
+          dynamicZoom(true);
           return;
         }
         case "1d": {
@@ -167,6 +162,9 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         case "1m": {
           desiredTimepan = 30 * 24 * 60 * 60 * 1000;
           break;
+        }
+        default: {
+          desiredTimepan = assertUnreachable(variant);
         }
       }
 
