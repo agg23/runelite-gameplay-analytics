@@ -21,7 +21,12 @@ export const useCombinedXPActivity = () => {
     useActivityQuery();
 
   const data = useMemo((): ActivityWithXP[] => {
-    if (!xpData || !activityData) {
+    if (
+      !xpData ||
+      xpData.length < 1 ||
+      !activityData ||
+      activityData.length < 1
+    ) {
       return [];
     }
 
@@ -29,10 +34,15 @@ export const useCombinedXPActivity = () => {
 
     let lastEvent: XPEvent | undefined = undefined;
 
+    console.log("Length", xpData.length);
+
     let i = 0;
     let totalEventCount = 0;
     for (const activity of activityData) {
-      while (xpData[i].timestamp < activity.startTimestamp) {
+      while (
+        i < xpData.length &&
+        xpData[i].timestamp < activity.startTimestamp
+      ) {
         // Reject datapoints
         i += 1;
       }
@@ -40,6 +50,7 @@ export const useCombinedXPActivity = () => {
       const events: XPEvent[] = [];
 
       while (
+        i < xpData.length &&
         xpData[i].timestamp >= activity.startTimestamp &&
         xpData[i].timestamp <= activity.endTimestamp
       ) {
