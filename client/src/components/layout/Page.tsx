@@ -1,10 +1,10 @@
-/** @jsxImportSource @emotion/react */
 import React from "react";
-import { Nav } from "./Nav";
 import { ErrorBoundary } from "react-error-boundary";
+import { AppShell } from "@mantine/core";
+
+import { Nav } from "./Nav";
 
 import classes from "./Page.module.scss";
-import { AppShell } from "@mantine/core";
 
 export const Page: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
   return (

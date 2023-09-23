@@ -8,8 +8,8 @@ import type {
   SeriesOption,
 } from "echarts";
 
-import { useStore } from "../../../store/store";
-import { AllSkills } from "../../osrs/skills/AllSkills";
+import { useStore } from "store/store";
+import { AllSkills } from "components/osrs/skills/AllSkills";
 import { ALL_SKILLS, Skill } from "../../../osrs/types";
 import { EChart } from "../../charting/EChart";
 import { useActivityQuery } from "../../../api/hooks/useDatatypeQuery";
