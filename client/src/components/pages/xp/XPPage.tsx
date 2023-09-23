@@ -15,13 +15,13 @@ import { EChart } from "../../charting/EChart";
 import { useActivityQuery } from "../../../api/hooks/useDatatypeQuery";
 import { ActivityEvent, XPEvent } from "../../../api/internal/types";
 import { ActivityNavigator } from "./ActivityNavigator";
-import { debounce } from "../../../util/util";
+import { throttle } from "../../../util/util";
 import { XPTopStats } from "./XPTopStats";
 import { SkillFancyCheckbox } from "../../osrs/skills/SkillFancyCheckbox";
 import { ChartPage } from "../../layout/ChartPage";
 import { primaryChartOptions } from "./primaryChart";
 import { useCombinedXPActivity } from "./hooks/useCombinedXPActivity";
-import { formatDateToParts, formatDatetimeNice } from "../../../util/string";
+import { formatDatetimeNice } from "../../../util/string";
 
 import classes from "./XPPage.module.scss";
 
@@ -179,7 +179,7 @@ export const XPPage: React.FC<{}> = () => {
 
   const onZoom = useMemo(
     () =>
-      debounce((startValue: number, endValue: number) => {
+      throttle((startValue: number, endValue: number) => {
         if (showOnlyPlaytime) {
           // Categories, so we are indexing the data
           if (seriesData.length < 1) {
