@@ -2,6 +2,7 @@ import { ActionIcon, Button } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { IconPlus, IconMinus } from "@tabler/icons-react";
 import clsx from "clsx";
+import { useMemo } from "react";
 
 import classes from "./ZoomControls.module.scss";
 
@@ -18,6 +19,7 @@ interface ZoomControlsProps {
 
   showOnlyAll?: boolean;
   validDayTimestamps?: Set<number>;
+  zoomedDayTimestamp?: number;
 
   onZoomClick: (variant: ZoomClickVariant) => void;
   onDatePickerSelect?: (date: Date) => void;
@@ -27,12 +29,19 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({
   className,
   showOnlyAll,
   validDayTimestamps,
+  zoomedDayTimestamp,
   onZoomClick,
   onDatePickerSelect,
 }) => {
+  const zoomedDayDate = useMemo(
+    () => (!!zoomedDayTimestamp ? new Date(zoomedDayTimestamp) : undefined),
+    [zoomedDayTimestamp]
+  );
+
   return (
     <div className={clsx(classes.zoomControls, className)}>
       <DatePickerInput
+        value={zoomedDayDate}
         onChange={(date) => {
           console.log(date);
           if (!date) {

@@ -29,7 +29,7 @@ import classes from "./XPPage.module.scss";
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
 export const XPPage: React.FC<{}> = () => {
-  const { setSelectedTimespan } = useStore((state) => state.shared);
+  const { timespan, setSelectedTimespan } = useStore((state) => state.shared);
   const {
     displayDeltas,
     showOnlyPlaytime,
@@ -154,6 +154,11 @@ export const XPPage: React.FC<{}> = () => {
     return set;
   }, [activityData]);
 
+  const zoomedDayTimestamp = useMemo(
+    () => (!!timespan ? startOfDay(timespan.start).getTime() : undefined),
+    [timespan]
+  );
+
   const markArea = useMemo(
     (): MarkAreaComponentOption | undefined =>
       activityData
@@ -268,8 +273,6 @@ export const XPPage: React.FC<{}> = () => {
 
         const firstSeriesData = seriesData[0].data as Array<[number, number]>;
 
-        // TODO: Handle empty cases
-
         if (closestAbove) {
           // Iterate from bottom, find first node that's higher
           for (let i = 0; i < firstSeriesData.length; i++) {
@@ -300,8 +303,6 @@ export const XPPage: React.FC<{}> = () => {
         timestamp + 24 * 60 * 60 * 1000,
         false
       );
-
-      console.log(lowerBound, upperBound);
 
       if (lowerBound !== undefined && upperBound !== undefined) {
         primaryChartRef.current?.dispatchAction({
@@ -423,6 +424,7 @@ export const XPPage: React.FC<{}> = () => {
                     : totalSelectedSkillSet
                 }
                 validDayTimestamps={validDayTimestamps}
+                zoomedDayTimestamp={zoomedDayTimestamp}
                 options={options}
                 markArea={markArea}
                 markLine={markLine}

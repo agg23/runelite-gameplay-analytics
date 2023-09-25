@@ -27,6 +27,8 @@ interface EChartProps {
   data?: SeriesOption | SeriesOption[];
   activeSeries?: Set<string>;
   validDayTimestamps?: Set<number>;
+  zoomedDayTimestamp?: number;
+
   markArea?: MarkAreaComponentOption | undefined;
   markLine?: MarkLineComponentOption | undefined;
 
@@ -47,13 +49,17 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
   (
     {
       options,
+
       data,
       activeSeries,
       validDayTimestamps,
+      zoomedDayTimestamp,
+
       markArea,
       markLine,
       showZoomOnlyAll,
       height,
+
       onZoom,
       onDatePickerSelect,
       onMarkAreaClick,
@@ -400,6 +406,7 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
           className={classes.controls}
           showOnlyAll={showZoomOnlyAll}
           validDayTimestamps={validDayTimestamps}
+          zoomedDayTimestamp={zoomedDayTimestamp}
           onZoomClick={onZoomClick}
           onDatePickerSelect={onDatePickerSelect}
         />
