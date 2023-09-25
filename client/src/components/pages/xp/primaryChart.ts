@@ -36,6 +36,8 @@ export const primaryChartOptions: EChartsOption = {
       const timestamp = (arrayParams[0].data as number[])[0];
       const formatedDate = formatDatetimeNice(new Date(timestamp));
 
+      const dataIndex = arrayParams[0].dataIndex;
+
       const items = arrayParams
         .map((param) => {
           const [, y] = param.data as number[];
@@ -47,7 +49,7 @@ export const primaryChartOptions: EChartsOption = {
         })
         .join("");
 
-      return `<div class="xpTooltip"><div>${timestamp}</div><div>${formatedDate}</div><div class="xpTooltipItems">${items}</div></div>`;
+      return `<div class="xpTooltip"><div>${timestamp} + ${dataIndex}</div><div>${formatedDate}</div><div class="xpTooltipItems">${items}</div></div>`;
     },
   },
   yAxis: {

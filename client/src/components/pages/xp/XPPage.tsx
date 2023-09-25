@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Checkbox, LoadingOverlay } from "@mantine/core";
 import type {
   EChartsOption,
@@ -39,10 +39,10 @@ export const XPPage: React.FC<{}> = () => {
     toggleSelectedTotalSkills,
   } = useStore((state) => state.xp);
 
-  // const { data: xpData, isLoading: isXPLoading } = useXPQuery();
   const { data: activityData, isSuccess: activitySuccess } = useActivityQuery();
 
-  const { data, isLoading: isOverallLoading } = useCombinedXPActivity();
+  const { data: activityAndXPData, isLoading: isOverallLoading } =
+    useCombinedXPActivity();
 
   const primaryChartRef = useRef<echarts.ECharts>(null);
 
@@ -60,7 +60,7 @@ export const XPPage: React.FC<{}> = () => {
 
   const { series: seriesData, markerIndexes } = useMemo(() => {
     console.log("reload series");
-    if (data.length < 1) {
+    if (activityAndXPData.length < 1) {
       return {
         series: [],
         markerIndexes: [],
@@ -71,10 +71,10 @@ export const XPPage: React.FC<{}> = () => {
 
     const markerIndexes: number[] = [];
 
-    for (const entry of data) {
+    for (const activity of activityAndXPData) {
       markerIndexes.push(trimmedXPEvents.length);
 
-      trimmedXPEvents.push(...entry.xpData);
+      trimmedXPEvents.push(...activity.xpData);
     }
 
     const lastValue = trimmedXPEvents[trimmedXPEvents.length - 1];
@@ -133,7 +133,7 @@ export const XPPage: React.FC<{}> = () => {
       series,
       markerIndexes,
     };
-  }, [displayDeltas, data]);
+  }, [displayDeltas, activityAndXPData]);
 
   const markArea = useMemo(
     (): MarkAreaComponentOption | undefined =>
@@ -234,58 +234,122 @@ export const XPPage: React.FC<{}> = () => {
     [seriesData, showOnlyPlaytime]
   );
 
-  const onMarkAreaClick = useCallback(
-    (_: number, markIndex: number) => {
-      if (!activityData) {
-        return;
+  const onDatePickerSelect = (date: Date) => {
+    const timestamp = date.getTime();
+
+    if (showOnlyPlaytime) {
+      // Need to find closest datapoints
+      const closestDatapointIndexTo = (
+        timestamp: number,
+        closestAbove: boolean
+      ) => {
+        if (activityAndXPData.length < 1) {
+          return undefined;
+        }
+
+        const firstSeriesData = seriesData[0].data as Array<[number, number]>;
+
+        // TODO: Handle empty cases
+
+        if (closestAbove) {
+          // Iterate from bottom, find first node that's higher
+          for (let i = 0; i < firstSeriesData.length; i++) {
+            const entry = firstSeriesData[i];
+
+            if (entry[0] >= timestamp) {
+              return i;
+            }
+          }
+        } else {
+          // Iterate from top, find first node that's lower
+          for (let i = firstSeriesData.length - 1; i >= 0; i--) {
+            const entry = firstSeriesData[i];
+
+            if (entry[0] <= timestamp) {
+              return i;
+            }
+          }
+        }
+
+        return undefined;
+      };
+
+      // First entry at or above the timestamp
+      const lowerBound = closestDatapointIndexTo(timestamp, true);
+      // First entry at or below the end timestamp
+      const upperBound = closestDatapointIndexTo(
+        timestamp + 24 * 60 * 60 * 1000,
+        false
+      );
+
+      console.log(lowerBound, upperBound);
+
+      if (lowerBound !== undefined && upperBound !== undefined) {
+        primaryChartRef.current?.dispatchAction({
+          type: "dataZoom",
+          startValue: lowerBound,
+          endValue: upperBound,
+        });
       }
-
-      const activity = activityData[markIndex];
-
+    } else {
+      // Just jump to the timestamp
       primaryChartRef.current?.dispatchAction({
         type: "dataZoom",
-        startValue: activity.startTimestamp,
-        endValue: activity.endTimestamp,
+        startValue: timestamp,
+        endValue: timestamp + 24 * 60 * 60 * 1000,
       });
-    },
-    [activityData]
-  );
+    }
+  };
 
-  const onMarkLineClick = useCallback(
-    (xIndex: number) => {
-      for (let i = 0; i < data.length; i++) {
-        const { eventStartIndex } = data[i];
+  const onMarkAreaClick = (_: number, markIndex: number) => {
+    if (!activityData) {
+      return;
+    }
 
-        if (eventStartIndex === xIndex) {
-          let endIndex = 0;
-          if (i + 1 >= data.length) {
-            endIndex = data[i].eventStartIndex + data[i].xpData.length - 1;
-          } else {
-            endIndex = data[i + 1].eventStartIndex;
-          }
+    const activity = activityData[markIndex];
 
-          primaryChartRef.current?.dispatchAction({
-            type: "dataZoom",
-            startValue: eventStartIndex,
-            endValue: endIndex,
-          });
-          return;
+    primaryChartRef.current?.dispatchAction({
+      type: "dataZoom",
+      startValue: activity.startTimestamp,
+      endValue: activity.endTimestamp,
+    });
+  };
+
+  const onMarkLineClick = (xIndex: number) => {
+    for (let i = 0; i < activityAndXPData.length; i++) {
+      const { eventStartIndex } = activityAndXPData[i];
+
+      if (eventStartIndex === xIndex) {
+        let endIndex = 0;
+        if (i + 1 >= activityAndXPData.length) {
+          endIndex =
+            activityAndXPData[i].eventStartIndex +
+            activityAndXPData[i].xpData.length -
+            1;
+        } else {
+          endIndex = activityAndXPData[i + 1].eventStartIndex;
         }
-      }
 
-      for (const { activity, eventStartIndex } of data) {
-        if (eventStartIndex === xIndex) {
-          primaryChartRef.current?.dispatchAction({
-            type: "dataZoom",
-            startValue: activity.startTimestamp,
-            endValue: activity.endTimestamp,
-          });
-          return;
-        }
+        primaryChartRef.current?.dispatchAction({
+          type: "dataZoom",
+          startValue: eventStartIndex,
+          endValue: endIndex,
+        });
+        return;
       }
-    },
-    [data]
-  );
+    }
+
+    for (const { activity, eventStartIndex } of activityAndXPData) {
+      if (eventStartIndex === xIndex) {
+        primaryChartRef.current?.dispatchAction({
+          type: "dataZoom",
+          startValue: activity.startTimestamp,
+          endValue: activity.endTimestamp,
+        });
+        return;
+      }
+    }
+  };
 
   useEffect(() => {
     if (!activityData || activityData.length < 1) {
@@ -345,6 +409,7 @@ export const XPPage: React.FC<{}> = () => {
                 showZoomOnlyAll={showOnlyPlaytime}
                 height={600}
                 onZoom={onZoom}
+                onDatePickerSelect={onDatePickerSelect}
                 onMarkAreaClick={onMarkAreaClick}
                 onMarkLineClick={onMarkLineClick}
               />

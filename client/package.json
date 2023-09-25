@@ -4,11 +4,13 @@
   "private": true,
   "dependencies": {
     "@mantine/core": "^7.0.0",
+    "@mantine/dates": "^7.0.0",
     "@mantine/hooks": "^7.0.0",
     "@tabler/icons-react": "^2.33.0",
     "@tanstack/react-router": "^0.0.1-beta.185",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
+    "dayjs": "^1.11.10",
     "deep-equal": "^2.2.2",
     "echarts": "^5.4.3",
     "immer": "^10.0.2",

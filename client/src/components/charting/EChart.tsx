@@ -37,6 +37,7 @@ interface EChartProps {
   height?: number | string;
 
   onZoom?: (startValue: number, endValue: number) => void;
+  onDatePickerSelect?: (date: Date) => void;
   onMarkAreaClick?: (xAxis: number, markIndex: number) => void;
   onMarkLineClick?: (xIndex: number) => void;
 }
@@ -51,9 +52,10 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
       markLine,
       showZoomOnlyAll,
       height,
+      onZoom,
+      onDatePickerSelect,
       onMarkAreaClick,
       onMarkLineClick,
-      onZoom,
     },
     ref
   ) => {
@@ -395,7 +397,8 @@ export const EChart = forwardRef<echarts.ECharts, EChartProps>(
         <ZoomControls
           className={classes.controls}
           showOnlyAll={showZoomOnlyAll}
-          onClick={onZoomClick}
+          onZoomClick={onZoomClick}
+          onDatePickerSelect={onDatePickerSelect}
         />
         <div
           ref={elementRef}

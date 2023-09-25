@@ -2,6 +2,18 @@
   display: flex;
 
   column-gap: 8px;
+
+  :global(.mantine-DatePickerInput-root) button {
+    padding-top: 4px;
+    padding-bottom: 4px;
+
+    color: var(--mantine-color-default-color);
+
+    font-weight: 700;
+    line-height: 14px;
+
+    --_input-size: 26px;
+  }
 }
 
 .buttonGroup.buttonGroup {

@@ -1,4 +1,5 @@
 import { ActionIcon, Button } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import { IconPlus, IconMinus } from "@tabler/icons-react";
 import clsx from "clsx";
 
@@ -17,28 +18,40 @@ interface ZoomControlsProps {
 
   showOnlyAll?: boolean;
 
-  onClick: (variant: ZoomClickVariant) => void;
+  onZoomClick: (variant: ZoomClickVariant) => void;
+  onDatePickerSelect?: (date: Date) => void;
 }
 
 export const ZoomControls: React.FC<ZoomControlsProps> = ({
   className,
   showOnlyAll,
-  onClick,
+  onZoomClick,
+  onDatePickerSelect,
 }) => {
   return (
     <div className={clsx(classes.zoomControls, className)}>
+      <DatePickerInput
+        onChange={(date) => {
+          console.log(date);
+          if (!date) {
+            return;
+          }
+
+          onDatePickerSelect?.(date);
+        }}
+      />
       <ActionIcon.Group className={classes.buttonGroup}>
         <ActionIcon
           variant="default"
           size="compact-sm"
-          onClick={() => onClick("zoomout")}
+          onClick={() => onZoomClick("zoomout")}
         >
           <IconMinus />
         </ActionIcon>
         <ActionIcon
           variant="default"
           size="compact-sm"
-          onClick={() => onClick("zoomin")}
+          onClick={() => onZoomClick("zoomin")}
         >
           <IconPlus />
         </ActionIcon>
@@ -48,7 +61,7 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({
         <Button
           variant="default"
           size="compact-sm"
-          onClick={() => onClick("all")}
+          onClick={() => onZoomClick("all")}
         >
           All
         </Button>
@@ -57,21 +70,21 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({
             <Button
               variant="default"
               size="compact-sm"
-              onClick={() => onClick("1d")}
+              onClick={() => onZoomClick("1d")}
             >
               1D
             </Button>
             <Button
               variant="default"
               size="compact-sm"
-              onClick={() => onClick("1w")}
+              onClick={() => onZoomClick("1w")}
             >
               1W
             </Button>
             <Button
               variant="default"
               size="compact-sm"
-              onClick={() => onClick("1m")}
+              onClick={() => onZoomClick("1m")}
             >
               1M
             </Button>

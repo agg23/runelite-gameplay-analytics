@@ -5,6 +5,7 @@ import { init as syncSettingsInit } from "./api/internal/syncedSettings";
 import { open as openWebsocket } from "./api/internal/websocket";
 
 import "@mantine/core/styles.css";
+import "@mantine/dates/styles.css";
 import "leaflet/dist/leaflet.css";
 import "./index.css";
 
