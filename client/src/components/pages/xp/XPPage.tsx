@@ -177,9 +177,33 @@ export const XPPage: React.FC<{}> = () => {
     [seriesData, markerIndexes]
   );
 
+  const zoomSelectionBugHackRef = useRef<
+    | {
+        startValue: number;
+        endValue: number;
+      }
+    | undefined
+  >(undefined);
+
   const onZoom = useMemo(
     () =>
       throttle((startValue: number, endValue: number) => {
+        if (startValue === endValue) {
+          // Weird zero edgecase. Prevent this transform
+          if (!zoomSelectionBugHackRef.current) {
+            // Can't do anything
+            return;
+          }
+
+          primaryChartRef.current?.dispatchAction({
+            type: "dataZoom",
+            startValue: zoomSelectionBugHackRef.current.startValue,
+            endValue: zoomSelectionBugHackRef.current.endValue,
+          });
+
+          return;
+        }
+
         if (showOnlyPlaytime) {
           // Categories, so we are indexing the data
           if (seriesData.length < 1) {
@@ -199,6 +223,12 @@ export const XPPage: React.FC<{}> = () => {
         } else {
           setSelectedTimespan(Math.round(startValue), Math.round(endValue));
         }
+
+        // Save the last valid zoom selection if the chart decides to zoom to 0 selection
+        zoomSelectionBugHackRef.current = {
+          startValue,
+          endValue,
+        };
       }, 250),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [seriesData, showOnlyPlaytime]
