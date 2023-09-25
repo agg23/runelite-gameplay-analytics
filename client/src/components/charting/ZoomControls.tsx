@@ -17,6 +17,7 @@ interface ZoomControlsProps {
   className?: string;
 
   showOnlyAll?: boolean;
+  validDayTimestamps?: Set<number>;
 
   onZoomClick: (variant: ZoomClickVariant) => void;
   onDatePickerSelect?: (date: Date) => void;
@@ -25,6 +26,7 @@ interface ZoomControlsProps {
 export const ZoomControls: React.FC<ZoomControlsProps> = ({
   className,
   showOnlyAll,
+  validDayTimestamps,
   onZoomClick,
   onDatePickerSelect,
 }) => {
@@ -39,6 +41,9 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({
 
           onDatePickerSelect?.(date);
         }}
+        excludeDate={(date) =>
+          !!validDayTimestamps && !validDayTimestamps.has(date.getTime())
+        }
       />
       <ActionIcon.Group className={classes.buttonGroup}>
         <ActionIcon

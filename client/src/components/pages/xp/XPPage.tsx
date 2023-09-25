@@ -7,6 +7,7 @@ import type {
   MarkLineComponentOption,
   SeriesOption,
 } from "echarts";
+import { startOfDay } from "date-fns";
 
 import { useStore } from "store/store";
 import { AllSkills } from "components/osrs/skills/AllSkills";
@@ -134,6 +135,24 @@ export const XPPage: React.FC<{}> = () => {
       markerIndexes,
     };
   }, [displayDeltas, activityAndXPData]);
+
+  const validDayTimestamps = useMemo(() => {
+    const set = new Set<number>();
+
+    if (!activityData) {
+      return set;
+    }
+
+    for (const activity of activityData) {
+      const start = startOfDay(activity.startTimestamp).getTime();
+      const end = startOfDay(activity.endTimestamp).getTime();
+
+      set.add(start);
+      set.add(end);
+    }
+
+    return set;
+  }, [activityData]);
 
   const markArea = useMemo(
     (): MarkAreaComponentOption | undefined =>
@@ -403,6 +422,7 @@ export const XPPage: React.FC<{}> = () => {
                     ? selectedSkills.set
                     : totalSelectedSkillSet
                 }
+                validDayTimestamps={validDayTimestamps}
                 options={options}
                 markArea={markArea}
                 markLine={markLine}
