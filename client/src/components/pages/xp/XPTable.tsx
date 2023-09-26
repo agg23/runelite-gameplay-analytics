@@ -17,37 +17,48 @@ import classes from "./XPTable.module.scss";
 
 interface XPTableProps {
   activityAndXPData: ActivityWithXP[];
+
+  onActivityClick: (activity: ActivityWithXP) => void;
 }
 
-export const XPTable: React.FC<XPTableProps> = ({ activityAndXPData }) => {
+export const XPTable: React.FC<XPTableProps> = ({
+  activityAndXPData,
+  onActivityClick,
+}) => {
   return (
-    <Table>
-      <thead>
-        <tr>
-          <th>Session Start</th>
-          <th>Duration</th>
-          <th>Total Gained</th>
-          <th>Average Rate</th>
-          <th>Affected Skills</th>
-        </tr>
-      </thead>
-      <tbody>
-        {/* {(query.data ?? []).map((event) => (
-          <GEItemRow event={event} />
-        ))} */}
+    <Table highlightOnHover>
+      <Table.Thead>
+        <Table.Tr>
+          <Table.Td>Session Start</Table.Td>
+          <Table.Td>Duration</Table.Td>
+          <Table.Td>Total Gained</Table.Td>
+          <Table.Td>Average Rate</Table.Td>
+          <Table.Td>Affected Skills</Table.Td>
+        </Table.Tr>
+      </Table.Thead>
+      <Table.Tbody>
         {[...activityAndXPData].reverse().map((activity) => (
-          <XPTableRow key={activity.eventStartIndex} activity={activity} />
+          <XPTableRow
+            key={activity.eventStartIndex}
+            activity={activity}
+            onActivityClick={onActivityClick}
+          />
         ))}
-      </tbody>
+      </Table.Tbody>
     </Table>
   );
 };
 
 interface XPTableRowProps {
   activity: ActivityWithXP;
+
+  onActivityClick: (activity: ActivityWithXP) => void;
 }
 
-const XPTableRow: React.FC<XPTableRowProps> = ({ activity }) => {
+const XPTableRow: React.FC<XPTableRowProps> = ({
+  activity,
+  onActivityClick,
+}) => {
   const { sessionStart, durationText } = useMemo(
     () => ({
       sessionStart: formatDatetimeNice(
@@ -113,15 +124,15 @@ const XPTableRow: React.FC<XPTableRowProps> = ({ activity }) => {
   }, [activity]);
 
   return (
-    <tr>
-      <td>{sessionStart}</td>
-      <td>{durationText}</td>
-      <td>{totalGained}</td>
-      <td>{ratePerHour}</td>
-      <td className={classes.badgeColumn}>
+    <Table.Tr onClick={() => onActivityClick(activity)}>
+      <Table.Td>{sessionStart}</Table.Td>
+      <Table.Td>{durationText}</Table.Td>
+      <Table.Td>{totalGained}</Table.Td>
+      <Table.Td>{ratePerHour}</Table.Td>
+      <Table.Td className={classes.badgeColumn}>
         <BadgeCollection changedSkills={changedSkills} duration={duration} />
-      </td>
-    </tr>
+      </Table.Td>
+    </Table.Tr>
   );
 };
 
@@ -177,8 +188,6 @@ const BadgeCollection: React.FC<BadgeCollectionProps> = ({
                   <td>{capitalizeFirstLetter(skill)}</td>
                   <td>{formatNumber(diff)} XP</td>
                   <td>{formatNumber(ratePerHour)} XP/hr</td>
-                  {/* {capitalizeFirstLetter(skill)}: {formatNumber(diff)} XP (
-                    {formatNumber(ratePerHour)} XP/hr) */}
                 </tr>
               );
             })}

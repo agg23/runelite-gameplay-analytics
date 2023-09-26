@@ -226,7 +226,14 @@ export const XPPage: React.FC<{}> = () => {
                 );
               }}
             /> */}
-            <XPTable activityAndXPData={activityAndXPData} />
+            <XPTable
+              activityAndXPData={activityAndXPData}
+              onActivityClick={(activity) =>
+                // This could potentially be optimized somewhat, but we wouldn't easily get the
+                // n+1 upper bound on the activity
+                onMarkLineClick(activity.eventStartIndex)
+              }
+            />
           </>
         }
         chartSettings={

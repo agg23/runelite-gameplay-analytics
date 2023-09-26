@@ -151,36 +151,34 @@ export const useXPCallbacks = (
 
   const onMarkLineClick = (xIndex: number) => {
     for (let i = 0; i < activityAndXPData.length; i++) {
-      const { eventStartIndex } = activityAndXPData[i];
+      const { activity, eventStartIndex } = activityAndXPData[i];
 
       if (eventStartIndex === xIndex) {
-        let endIndex = 0;
-        if (i + 1 >= activityAndXPData.length) {
-          endIndex =
-            activityAndXPData[i].eventStartIndex +
-            activityAndXPData[i].xpData.length -
-            1;
+        if (showOnlyPlaytime) {
+          // Use indexes
+          let endIndex = 0;
+          if (i + 1 >= activityAndXPData.length) {
+            endIndex =
+              activityAndXPData[i].eventStartIndex +
+              activityAndXPData[i].xpData.length -
+              1;
+          } else {
+            endIndex = activityAndXPData[i + 1].eventStartIndex;
+          }
+
+          primaryChartRef.current?.dispatchAction({
+            type: "dataZoom",
+            startValue: eventStartIndex,
+            endValue: endIndex,
+          });
         } else {
-          endIndex = activityAndXPData[i + 1].eventStartIndex;
+          // Use actual activity bounds
+          primaryChartRef.current?.dispatchAction({
+            type: "dataZoom",
+            startValue: activity.startTimestamp,
+            endValue: activity.endTimestamp,
+          });
         }
-
-        primaryChartRef.current?.dispatchAction({
-          type: "dataZoom",
-          startValue: eventStartIndex,
-          endValue: endIndex,
-        });
-        return;
-      }
-    }
-
-    for (const { activity, eventStartIndex } of activityAndXPData) {
-      if (eventStartIndex === xIndex) {
-        primaryChartRef.current?.dispatchAction({
-          type: "dataZoom",
-          startValue: activity.startTimestamp,
-          endValue: activity.endTimestamp,
-        });
-        return;
       }
     }
   };
