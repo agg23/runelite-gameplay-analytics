@@ -9,7 +9,7 @@ import {
   eventEquals,
 } from "../../../../api/internal/types";
 
-interface ActivityWithXP {
+export interface ActivityWithXP {
   activity: ActivityEvent;
   eventStartIndex: number;
   xpData: XPEvent[];
