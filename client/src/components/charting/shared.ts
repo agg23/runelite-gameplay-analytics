@@ -4,29 +4,27 @@ import { formatDateToParts, formatDatetimeNice } from "../../util/string";
 
 export const sharedChartOptions: EChartsOption = {
   animation: false,
-  dataZoom: [
-    {
-      type: "slider",
-      start: 0,
-      end: 10,
-      // Any filtering results in lines not drawing
-      filterMode: "none",
-      labelFormatter: (value, string): string => {
-        if (value > 1000000000) {
-          // There will never be this many datapoints. This must be an actual Unix timestamp
-          return formatDatetimeNice(new Date(value));
-        }
+  dataZoom: {
+    type: "slider",
+    start: 0,
+    end: 10,
+    // Any filtering results in lines not drawing
+    filterMode: "none",
+    labelFormatter: (value, string): string => {
+      if (value > 1000000000) {
+        // There will never be this many datapoints. This must be an actual Unix timestamp
+        return formatDatetimeNice(new Date(value));
+      }
 
-        if (!string) {
-          return "";
-        }
+      if (!string) {
+        return "";
+      }
 
-        // This must be a category, so the string has our timestamp
-        const number = parseInt(string, 10);
-        return formatDatetimeNice(new Date(number));
-      },
+      // This must be a category, so the string has our timestamp
+      const number = parseInt(string, 10);
+      return formatDatetimeNice(new Date(number));
     },
-  ],
+  },
   grid: {
     top: 30,
     left: 70,

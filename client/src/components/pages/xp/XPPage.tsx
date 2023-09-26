@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from "react";
 import { Checkbox, LoadingOverlay } from "@mantine/core";
 import type {
+  DataZoomComponentOption,
   EChartsOption,
   EChartsType,
   MarkAreaComponentOption,
@@ -46,18 +47,6 @@ export const XPPage: React.FC<{}> = () => {
     useCombinedXPActivity();
 
   const primaryChartRef = useRef<echarts.ECharts>(null);
-
-  const options = useMemo((): EChartsOption => {
-    return showOnlyPlaytime
-      ? {
-          ...primaryChartOptions,
-          xAxis: {
-            ...primaryChartOptions.xAxis,
-            type: "category",
-          },
-        }
-      : primaryChartOptions;
-  }, [showOnlyPlaytime]);
 
   const { series: seriesData, markerIndexes } = useMemo(() => {
     console.log("reload series");
@@ -135,6 +124,105 @@ export const XPPage: React.FC<{}> = () => {
       markerIndexes,
     };
   }, [displayDeltas, activityAndXPData]);
+
+  const { dataZoomOptions, newTimespan } = useMemo((): {
+    dataZoomOptions: DataZoomComponentOption | undefined;
+    newTimespan: { start: number; end: number } | undefined;
+  } => {
+    if (seriesData.length < 1) {
+      return { dataZoomOptions: undefined, newTimespan: undefined };
+    }
+
+    // We can't react to changes in this, otherwise we'd constantly be updating options
+    const timespan = useStore.getState().shared.timespan;
+
+    const firstSeries = seriesData[0];
+    const data = firstSeries.data as Array<[number, number]>;
+
+    type BoundValue =
+      | {
+          value: number | undefined;
+          timestamp: number | undefined;
+        }
+      | undefined;
+
+    let startValue: BoundValue = timespan
+      ? { value: timespan.start, timestamp: timespan.start }
+      : undefined;
+    let endValue: BoundValue = timespan
+      ? {
+          value: timespan.end,
+          timestamp: timespan.end,
+        }
+      : undefined;
+
+    if (timespan && showOnlyPlaytime) {
+      let playtimeStart: BoundValue = undefined;
+      let playtimeEnd: BoundValue = undefined;
+
+      for (let i = 0; i < data.length; i++) {
+        const [timestamp, _] = data[i];
+
+        if (playtimeStart === undefined && timespan.start <= timestamp) {
+          playtimeStart = {
+            value: i,
+            timestamp,
+          };
+        } else if (timespan.end >= timestamp) {
+          // Keep track of the highest in range index we found
+          playtimeEnd = {
+            value: i,
+            timestamp,
+          };
+        }
+      }
+
+      if (
+        playtimeStart !== undefined &&
+        playtimeEnd !== undefined &&
+        playtimeStart.value !== playtimeEnd.value
+      ) {
+        startValue = playtimeStart;
+        endValue = playtimeEnd;
+      }
+    }
+
+    return {
+      dataZoomOptions: {
+        ...primaryChartOptions.dataZoom,
+        start: undefined,
+        end: undefined,
+        startValue: startValue?.value,
+        endValue: endValue?.value,
+      },
+      newTimespan:
+        !!startValue?.timestamp && !!endValue?.timestamp
+          ? {
+              start: startValue.timestamp,
+              end: endValue.timestamp,
+            }
+          : undefined,
+    };
+  }, [showOnlyPlaytime, seriesData]);
+
+  console.log(dataZoomOptions);
+
+  const options = useMemo((): EChartsOption => {
+    return showOnlyPlaytime
+      ? {
+          ...primaryChartOptions,
+          // dataZoomOptions contains all of dataZoom data, not just the updated zoom
+          dataZoom: dataZoomOptions,
+          xAxis: {
+            ...primaryChartOptions.xAxis,
+            type: "category",
+          },
+        }
+      : {
+          ...primaryChartOptions,
+          dataZoom: dataZoomOptions,
+        };
+  }, [showOnlyPlaytime, dataZoomOptions]);
 
   const validDayTimestamps = useMemo(() => {
     const set = new Set<number>();
@@ -394,6 +482,15 @@ export const XPPage: React.FC<{}> = () => {
 
     selectActivitySpan(lastActivity, primaryChartRef.current);
   }, [activityData]);
+
+  useEffect(() => {
+    if (!newTimespan) {
+      return;
+    }
+
+    setSelectedTimespan(newTimespan.start, newTimespan.end);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newTimespan]);
 
   return (
     <>
