@@ -1,0 +1,9 @@
+.skillBadge {
+  :global(.mantine-Badge-label) {
+    text-transform: none;
+  }
+
+  img {
+    width: 13px;
+  }
+}

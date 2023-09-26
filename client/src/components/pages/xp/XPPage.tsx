@@ -26,6 +26,7 @@ import { useXPCallbacks } from "./hooks/useXPCallbacks";
 import { useSeriesData } from "./hooks/useSeriesData";
 
 import classes from "./XPPage.module.scss";
+import { XPTable } from "./XPTable";
 
 const totalSelectedSkillSet = new Set(["xpTotal"]);
 
@@ -41,7 +42,7 @@ export const XPPage: React.FC<{}> = () => {
     toggleSelectedTotalSkills,
   } = useStore((state) => state.xp);
 
-  const { data: activityData, isSuccess: activitySuccess } = useActivityQuery();
+  const { data: activityData } = useActivityQuery();
 
   const { data: activityAndXPData, isLoading: isOverallLoading } =
     useCombinedXPActivity();
@@ -211,7 +212,8 @@ export const XPPage: React.FC<{}> = () => {
                 onMarkLineClick={onMarkLineClick}
               />
             </div>
-            <ActivityNavigator
+            {/* TODO: This isn't used */}
+            {/* <ActivityNavigator
               activityCount={activityData?.length ?? 0}
               onChange={(newActivityIndex) => {
                 if (!activitySuccess) {
@@ -223,7 +225,8 @@ export const XPPage: React.FC<{}> = () => {
                   primaryChartRef.current
                 );
               }}
-            />
+            /> */}
+            <XPTable activityAndXPData={activityAndXPData} />
           </>
         }
         chartSettings={
