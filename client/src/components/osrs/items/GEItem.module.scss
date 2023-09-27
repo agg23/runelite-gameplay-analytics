@@ -13,3 +13,18 @@
 .name {
   width: 200px;
 }
+
+.lastUpdateCell {
+  // Ugly, dirty, no good hack to override standard td padding
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  
+    height: 100%;
+    width: fit-content;  
+  }
+}

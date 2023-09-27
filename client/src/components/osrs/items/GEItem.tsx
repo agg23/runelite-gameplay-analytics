@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Image, Tooltip, Text } from "@mantine/core";
+import { Image, Tooltip, Text, Table } from "@mantine/core";
 import { intlFormatDistance } from "date-fns";
 
 import { GEEvent } from "../../../api/internal/types";
@@ -66,29 +66,29 @@ export const GEItemRow: React.FC<GEItemRowProps> = ({ event }) => {
   }
 
   return (
-    <tr className={classes.row}>
-      <td className={classes.image}>
+    <Table.Tr className={classes.row}>
+      <Table.Td className={classes.image}>
         <Image
           src={`https://secure.runescape.com/m=itemdb_oldschool/obj_big.gif?id=${event.itemId}`}
           width={45}
           height={45}
         />
-      </td>
-      <td className={classes.name}>
+      </Table.Td>
+      <Table.Td className={classes.name}>
         <div>{query.data?.name ?? "Undefined"}</div>
         <Text size="xs" color="dimmed">
           x{formatNumber(event.totalQuantity)} at{" "}
           {formatNumber(event.pricePerItem)}
           gp each
         </Text>
-      </td>
-      <td>
+      </Table.Td>
+      <Table.Td>
         {formatNumber(event.totalQuantity * event.pricePerItem)}
         gp
-      </td>
-      <td>{transferredMessage}</td>
-      <td>{purchaseMessage}</td>
-      <td>
+      </Table.Td>
+      <Table.Td>{transferredMessage}</Table.Td>
+      <Table.Td>{purchaseMessage}</Table.Td>
+      <Table.Td className={classes.lastUpdateCell}>
         <Tooltip
           label={
             <>
@@ -98,15 +98,17 @@ export const GEItemRow: React.FC<GEItemRowProps> = ({ event }) => {
           }
         >
           <div>
-            {capitalizeFirstLetter(
-              intlFormatDistance(
-                event.completedTimestamp ?? event.firstSeenTimestamp,
-                new Date()
-              )
-            )}
+            <div>
+              {capitalizeFirstLetter(
+                intlFormatDistance(
+                  event.completedTimestamp ?? event.firstSeenTimestamp,
+                  new Date()
+                )
+              )}
+            </div>
           </div>
         </Tooltip>
-      </td>
-    </tr>
+      </Table.Td>
+    </Table.Tr>
   );
 };
