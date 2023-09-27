@@ -40,20 +40,22 @@ export const ZoomControls: React.FC<ZoomControlsProps> = ({
 
   return (
     <div className={clsx(classes.zoomControls, className)}>
-      <DatePickerInput
-        value={zoomedDayDate}
-        onChange={(date) => {
-          console.log(date);
-          if (!date) {
-            return;
-          }
+      {zoomedDayDate !== undefined && (
+        <DatePickerInput
+          value={zoomedDayDate}
+          onChange={(date) => {
+            console.log(date);
+            if (!date) {
+              return;
+            }
 
-          onDatePickerSelect?.(date);
-        }}
-        excludeDate={(date) =>
-          !!validDayTimestamps && !validDayTimestamps.has(date.getTime())
-        }
-      />
+            onDatePickerSelect?.(date);
+          }}
+          excludeDate={(date) =>
+            !!validDayTimestamps && !validDayTimestamps.has(date.getTime())
+          }
+        />
+      )}
       <ActionIcon.Group className={classes.buttonGroup}>
         <ActionIcon
           variant="default"
