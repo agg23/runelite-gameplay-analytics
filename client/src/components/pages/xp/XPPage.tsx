@@ -9,7 +9,7 @@ import type {
 import { startOfDay } from "date-fns";
 
 import { useStore } from "store/store";
-import { AllSkills } from "components/osrs/skills/AllSkills";
+import { AllSkillsCheckboxes } from "components/osrs/skills/AllSkillsCheckboxes";
 import { ALL_SKILLS } from "../../../osrs/types";
 import { EChart } from "../../charting/EChart";
 import { useActivityQuery } from "../../../api/hooks/useDatatypeQuery";
@@ -254,7 +254,7 @@ export const XPPage: React.FC<{}> = () => {
                 checked={selectedSkills.type === "totals"}
                 onChange={toggleSelectedTotalSkills}
               />
-              <AllSkills disable={selectedSkills.type === "totals"} />
+              <AllSkillsCheckboxes disable={selectedSkills.type === "totals"} />
             </div>
           </>
         }

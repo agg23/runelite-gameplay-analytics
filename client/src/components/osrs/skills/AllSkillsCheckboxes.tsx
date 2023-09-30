@@ -8,7 +8,7 @@ interface AllSkillsProps {
   disable?: boolean;
 }
 
-export const AllSkills: React.FC<AllSkillsProps> = ({ disable }) => {
+export const AllSkillsCheckboxes: React.FC<AllSkillsProps> = ({ disable }) => {
   const { selectedSkills, addSkill, removeSkill } = useStore(
     (state) => state.xp
   );

@@ -7,6 +7,7 @@ import { ActivityPage } from "./components/pages/ActivityPage";
 import { MapPage } from "./components/pages/MapPage";
 import { WealthPage } from "./components/pages/wealth/WealthPage";
 import { GEPage } from "./components/pages/GEPage";
+import { SummaryPage } from "components/pages/SummaryPage";
 
 const rootRoute = new RootRoute({
   component: () => <RootPage />,
@@ -14,8 +15,14 @@ const rootRoute = new RootRoute({
 
 const indexRoute = new Route({
   getParentRoute: () => rootRoute,
-  component: () => <XPPage />,
+  component: () => <SummaryPage />,
   path: "/",
+});
+
+const xpRoute = new Route({
+  getParentRoute: () => rootRoute,
+  component: () => <XPPage />,
+  path: "/xp",
 });
 
 const activityRoute = new Route({

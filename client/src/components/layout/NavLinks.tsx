@@ -12,8 +12,12 @@ export const NavLinks: React.FC<{}> = () => {
       link: RoutePaths<RegisteredRouter["routeTree"]>;
     }> => [
       {
-        label: "XP",
+        label: "Summary",
         link: "/",
+      },
+      {
+        label: "XP",
+        link: "/xp",
       },
       {
         label: "Wealth",

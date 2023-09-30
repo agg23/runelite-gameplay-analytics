@@ -1,7 +1,7 @@
 import { Group, Text } from "@mantine/core";
 
-import { PixelatedImage } from "../PixelatedImage";
 import { Skill } from "../../../osrs/types";
+import { SkillImage } from "./SkillImage";
 import { SKILL_ENTRY_MAP } from "./shared";
 
 import classes from "./SkillTitle.module.scss";
@@ -15,7 +15,7 @@ export const SkillTitle: React.FC<SkillTitleProps> = ({ skill }) => {
 
   return (
     <Group>
-      <PixelatedImage src={skillEntry.image} w={23} h={23} />
+      <SkillImage skill={skill} />
       <Text className={classes.text} size="sm">
         {skillEntry.title}
       </Text>
