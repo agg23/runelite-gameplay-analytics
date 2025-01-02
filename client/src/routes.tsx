@@ -1,7 +1,7 @@
 import { RootRoute, Route, Router } from "@tanstack/react-router";
 import { RootPage } from "./components/pages/RootPage";
 import { XPPage } from "./components/pages/xp/XPPage";
-import { LootPage } from "./components/pages/LootPage";
+import { LootPage } from "./components/pages/loot/LootPage";
 import { InventoryPage } from "./components/pages/InventoryPage";
 import { ActivityPage } from "./components/pages/ActivityPage";
 import { MapPage } from "./components/pages/MapPage";
@@ -69,6 +69,7 @@ const routeTree = rootRoute.addChildren([
   lootRoute,
   mapRoute,
   wealthRoute,
+  xpRoute,
 ]);
 
 export const router = new Router({ routeTree });

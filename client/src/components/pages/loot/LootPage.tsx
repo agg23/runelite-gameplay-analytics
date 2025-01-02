@@ -1,12 +1,13 @@
 import { useMemo } from "react";
-import { LoadingOverlay } from "@mantine/core";
+import { LoadingOverlay, Table } from "@mantine/core";
 import { ErrorBoundary } from "react-error-boundary";
 
-import { useStore } from "../../store/store";
+import { useStore } from "../../../store/store";
 import { Timeline } from "react-svg-timeline";
-import { LootEvent } from "../../api/internal/types";
-import { NPC } from "../osrs/npc/NPC";
-import { useLootQuery } from "../../api/hooks/useDatatypeQuery";
+import { LootEvent } from "../../../api/internal/types";
+import { NPC } from "../../osrs/npc/NPC";
+import { useLootQuery } from "../../../api/hooks/useDatatypeQuery";
+import { LootTableItem } from "./LootTableItem";
 
 export const LootPage: React.FC<{}> = () => {
   const { selectedEntry, setSelectedEntry } = useStore((state) => state.loot);
@@ -36,6 +37,10 @@ export const LootPage: React.FC<{}> = () => {
       eventId: `${event.timestamp}`,
       startTimeMillis: event.timestamp,
     }));
+  }, [query]);
+
+  const sortedLootEvents = useMemo(() => {
+    return query.data ? [...query.data].reverse() : [];
   }, [query]);
 
   return (
@@ -75,6 +80,14 @@ export const LootPage: React.FC<{}> = () => {
       {/* <ItemGrid
           itemIds={selectedEntry?.entries.map((entry) => entry.itemId) ?? []}
         /> */}
+      <Table highlightOnHover>
+        <Table.Thead></Table.Thead>
+        <Table.Tbody>
+          {sortedLootEvents.map((event) => (
+            <LootTableItem key={event.timestamp} event={event} />
+          ))}
+        </Table.Tbody>
+      </Table>
     </ErrorBoundary>
   );
 };
